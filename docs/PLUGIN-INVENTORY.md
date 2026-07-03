@@ -154,12 +154,12 @@ Nearest ancestors exist but the connectors are new builds.
 |---|---|---|---|
 | joget-status-framework | 5 | clean | foundation · consolidated |
 | form-creator-api | 26 | clean | foundation · consolidated |
-| joget-lookup-field | 4 | clean | foundation · as-is |
-| joget-concat-field | 3 | clean | foundation · as-is |
-| joget-advanced-filters | 6 | clean | foundation · as-is |
-| embedded-datalist | 2 | clean | foundation · as-is |
-| wf-activator | 4 | clean | foundation · as-is |
-| form-quality-runtime | 11 | status-framework | foundation · as-is |
+| joget-lookup-field | 4 | clean | foundation · consolidated |
+| joget-concat-field | 3 | clean | foundation · consolidated |
+| joget-advanced-filters | 6 | clean | foundation · consolidated |
+| embedded-datalist | 2 | clean | foundation · deferred (jakarta dep) |
+| wf-activator | 4 | clean | foundation · consolidated |
+| form-quality-runtime | 11 | status-framework | foundation · consolidated |
 | joget-smart-search | 7 | clean | foundation · genericise (naming) |
 | rules-grammar | 12 | clean | foundation · as-is (rules set) |
 | joget-rules-api | 16 | rules-grammar | foundation · as-is (rules set) |
@@ -181,7 +181,7 @@ Nearest ancestors exist but the connectors are new builds.
 
 | Plugin | Size | Coupling | Tier · Effort |
 |---|---|---|---|
-| tree-menu | 6 | clean (provided Joget/Spring) | foundation · as-is |
+| tree-menu | 6 | clean (provided Joget/Spring) | foundation · consolidated |
 | enrichment-workspace | 3 | clean | foundation · genericise (pattern) |
 | enrichment-api | 9 | gam-framework | foundation · genericise (pattern) |
 | gam-framework | 5 | status-framework | project (thin extension) |

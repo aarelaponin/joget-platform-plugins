@@ -1,0 +1,217 @@
+[{
+    "title" : "@@userview.treeMenu.config@@",
+    "properties" : [{
+        "name" : "id",
+        "label" : "Id",
+        "type" : "hidden"
+    },
+    {
+        "name" : "customId",
+        "label" : "@@userview.treeMenu.customId@@",
+        "type" : "textfield",
+        "regex_validation" : "^[a-zA-Z0-9_]+$",
+        "validation_message" : "@@userview.treeMenu.invalidId@@"
+    },
+    {
+        "name" : "label",
+        "label" : "@@userview.treeMenu.label@@",
+        "type" : "textfield",
+        "required" : "True"
+    },
+    {
+        "name" : "mode",
+        "label" : "@@userview.treeMenu.mode@@",
+        "type" : "selectbox",
+        "value" : "legacy",
+        "options" : [
+            {"value" : "demo", "label" : "@@userview.treeMenu.mode.demo@@"},
+            {"value" : "metamodel", "label" : "@@userview.treeMenu.mode.metamodel@@"},
+            {"value" : "legacy", "label" : "@@userview.treeMenu.mode.legacy@@"}
+        ]
+    }]
+},
+{
+    "title" : "@@userview.treeMenu.configuredConfig@@",
+    "properties" : [{
+        "name" : "configTableName",
+        "label" : "@@userview.treeMenu.configured.configTable@@",
+        "description" : "@@userview.treeMenu.configured.configTableDesc@@",
+        "type" : "textfield",
+        "value" : "tm_tree_config",
+        "control_field" : "mode",
+        "control_value" : "metamodel",
+        "control_use_regex" : "false"
+    }]
+},
+{
+    "title" : "@@userview.treeMenu.appearance@@",
+    "properties" : [{
+        "name" : "treePanelWidth",
+        "label" : "@@userview.treeMenu.appearance.treePanelWidth@@",
+        "type" : "textfield",
+        "value" : "300",
+        "control_field" : "mode",
+        "control_value" : "metamodel",
+        "control_use_regex" : "false"
+    },
+    {
+        "name" : "showSearch",
+        "label" : "@@userview.treeMenu.appearance.showSearch@@",
+        "type" : "checkbox",
+        "value" : "true",
+        "options" : [
+            {"value" : "true", "label" : ""}
+        ],
+        "control_field" : "mode",
+        "control_value" : "metamodel",
+        "control_use_regex" : "false"
+    },
+    {
+        "name" : "showBreadcrumb",
+        "label" : "@@userview.treeMenu.appearance.showBreadcrumb@@",
+        "type" : "checkbox",
+        "value" : "true",
+        "options" : [
+            {"value" : "true", "label" : ""}
+        ],
+        "control_field" : "mode",
+        "control_value" : "metamodel",
+        "control_use_regex" : "false"
+    },
+    {
+        "name" : "pageSize",
+        "label" : "@@userview.treeMenu.appearance.pageSize@@",
+        "type" : "textfield",
+        "value" : "50",
+        "control_field" : "mode",
+        "control_value" : "metamodel",
+        "control_use_regex" : "false"
+    },
+    {
+        "name" : "defaultContentHtml",
+        "label" : "@@userview.treeMenu.appearance.defaultContent@@",
+        "type" : "codeeditor",
+        "mode" : "html",
+        "control_field" : "mode",
+        "control_value" : "metamodel",
+        "control_use_regex" : "false"
+    }]
+},
+{
+    "title" : "@@userview.treeMenu.legacyConfig@@",
+    "properties" : [{
+        "name" : "binder",
+        "label" : "@@userview.treeMenu.legacy.binder@@",
+        "type" : "elementselect",
+        "options_ajax" : "[CONTEXT_PATH]/web/property/json/getElements?classname=org.joget.apps.datalist.model.DataListBinderDefault",
+        "url" : "[CONTEXT_PATH]/web/property/json[APP_PATH]/getPropertyOptions",
+        "control_field" : "mode",
+        "control_value" : "legacy",
+        "control_use_regex" : "false"
+    },
+    {
+        "name" : "depth",
+        "label" : "@@userview.treeMenu.depth@@",
+        "type" : "textfield",
+        "value" : "2",
+        "control_field" : "mode",
+        "control_value" : "legacy",
+        "control_use_regex" : "false"
+    }]
+},
+{
+    "title" : "@@userview.treeMenu.mapping@@",
+    "properties" : [{
+        "name" : "treeNodeLabel",
+        "label" : "@@userview.treeMenu.mapping.treeNodeLabel@@",
+        "type" : "selectbox",
+        "options_ajax_on_change" : "id:binder.className;binderId:binder.className;binderJson:binder.properties",
+        "options_ajax" : "[CONTEXT_PATH]/web/json/console/app[APP_PATH]/builder/binder/columns",
+        "options_ajax_mapping" : {"arrayObj": "columns", "value": "name", "label": "name", "addEmpty": true},
+        "options_ajax_method" : "POST",
+        "control_field" : "mode",
+        "control_value" : "legacy",
+        "control_use_regex" : "false"
+    },
+    {
+        "name" : "treeNodeParentId",
+        "label" : "@@userview.treeMenu.mapping.treeNodeParentId@@",
+        "type" : "selectbox",
+        "options_ajax_on_change" : "id:binder.className;binderId:binder.className;binderJson:binder.properties",
+        "options_ajax" : "[CONTEXT_PATH]/web/json/console/app[APP_PATH]/builder/binder/columns",
+        "options_ajax_mapping" : {"arrayObj": "columns", "value": "name", "label": "name", "addEmpty": true},
+        "options_ajax_method" : "POST",
+        "control_field" : "mode",
+        "control_value" : "legacy",
+        "control_use_regex" : "false"
+    },
+    {
+        "name" : "rootParentId",
+        "label" : "@@userview.treeMenu.mapping.rootParentId@@",
+        "type" : "textfield",
+        "control_field" : "mode",
+        "control_value" : "legacy",
+        "control_use_regex" : "false"
+    },
+    {
+        "name" : "treeNodeParams",
+        "label" : "@@userview.treeMenu.mapping.params@@",
+        "type" : "grid",
+        "columns" : [
+        {
+            "key" : "paramName",
+            "label" : "@@userview.treeMenu.mapping.params.paramName@@",
+            "required" : "True"
+        },
+        {
+            "key" : "column",
+            "label" : "@@userview.treeMenu.mapping.params.columnId@@",
+            "options_ajax_on_change" : "id:binder.className;binderId:binder.className;binderJson:binder.properties",
+            "options_ajax" : "[CONTEXT_PATH]/web/json/console/app[APP_PATH]/builder/binder/columns",
+            "options_ajax_mapping" : {"arrayObj": "columns", "value": "name", "label": "name", "addEmpty": true},
+            "options_ajax_method" : "POST",
+            "required" : "True"
+        },
+        {
+            "key" : "defaultValue",
+            "label" : "@@userview.treeMenu.mapping.params.defaultValue@@"
+        }],
+        "control_field" : "mode",
+        "control_value" : "legacy",
+        "control_use_regex" : "false"
+    },
+    {
+        "name" : "orderBy",
+        "label" : "@@dbuilder.orderBy@@",
+        "type" : "selectbox",
+        "options_ajax_on_change" : "id:binder.className;binderId:binder.className;binderJson:binder.properties",
+        "options_ajax" : "[CONTEXT_PATH]/web/json/console/app[APP_PATH]/builder/binder/columns",
+        "options_ajax_mapping" : {"arrayObj": "columns", "value": "name", "label": "name", "addEmpty": true},
+        "options_ajax_method" : "POST",
+        "control_field" : "mode",
+        "control_value" : "legacy",
+        "control_use_regex" : "false"
+    },
+    {
+        "name" : "order",
+        "label" : "@@dbuilder.order@@",
+        "type" : "selectbox",
+        "options" : [
+            {"label" : "@@dbuilder.order.asc@@", "value" : "false"},
+            {"label" : "@@dbuilder.order.desc@@", "value" : "true"}
+        ],
+        "control_field" : "mode",
+        "control_value" : "legacy",
+        "control_use_regex" : "false"
+    },
+    {
+        "name" : "innerMenu",
+        "label" : "@@userview.treeMenu.innerMenu@@",
+        "type" : "elementselect",
+        "options_ajax" : "[CONTEXT_PATH]/web/property/json/getElements?classname=org.joget.apps.userview.model.UserviewMenu&exclude=org.joget.TreeMenu",
+        "url" : "[CONTEXT_PATH]/web/property/json[APP_PATH]/getPropertyOptions",
+        "control_field" : "mode",
+        "control_value" : "legacy",
+        "control_use_regex" : "false"
+    }]
+}]

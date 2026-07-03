@@ -37,6 +37,8 @@
         <module>plugins/joget-concat-field</module>
         <module>plugins/joget-advanced-filters</module>
         <module>plugins/wf-activator</module>
+        <module>plugins/form-quality-runtime</module>
+        <module>plugins/tree-menu</module>
     </modules>
 
     <dependencyManagement>
