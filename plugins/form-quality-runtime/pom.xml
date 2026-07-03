@@ -29,19 +29,6 @@
         <jogetVersion>8.1-SNAPSHOT</jogetVersion>
     </properties>
 
-    <repositories>
-        <repository>
-            <id>joget-internal</id>
-            <url>https://developer.joget.org/archiva/repository/internal</url>
-        </repository>
-        <repository>
-            <id>joget-snapshots</id>
-            <url>https://developer.joget.org/archiva/repository/snapshots</url>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
 
     <build>
         <plugins>

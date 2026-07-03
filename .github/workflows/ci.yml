@@ -1,0 +1,60 @@
+name: CI
+
+# Self-contained CI: builds and tests the whole reactor with NO external Joget
+# repository and NO secrets. The Joget build-time artifacts (wflow-*, apibuilder_api),
+# the Apache-2.0 joget-status-framework, and Joget's bundled Enhydra Shark / Together
+# engine are vendored into build-support/m2 (an in-project file Maven repository declared
+# in the reactor pom). A bare runner therefore resolves everything from Maven Central plus
+# that in-project repo. See build-support/README.md for provenance and how to refresh it.
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    name: mvn verify + manifest smoke
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+
+      # L1 (unit tests) + L2 compile/package all run inside `verify`.
+      # No -s settings.xml: the runner's empty default settings + the in-project
+      # file repo declared in the pom is exactly the "clean room" that was verified.
+      - name: Build and test (mvn verify)
+        run: mvn -B -ntp clean verify
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install PyYAML
+        run: python -m pip install --quiet pyyaml
+
+      # L2: assert every registered plugin's Bundle-Activator and each registers: class
+      # is actually present in the built JAR (registry.yaml is the source of truth).
+      - name: Manifest smoke (registry ↔ built jars)
+        run: python tests/manifest_smoke.py
+
+      - name: Upload built plugin JARs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: plugin-jars
+          path: plugins/*/target/*.jar
+          if-no-files-found: warn

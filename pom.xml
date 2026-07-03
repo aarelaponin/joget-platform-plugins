@@ -44,6 +44,27 @@
         <module>plugins/joget-rule-editor</module>
     </modules>
 
+    <!--
+      Self-contained dependency sourcing.
+
+      The Joget build-time artifacts (wflow-*, apibuilder_api) and the Apache-2.0
+      joget-status-framework are NOT on Maven Central, and Joget's public Archiva is
+      credential-gated. To keep the build reproducible on any clean machine or CI
+      runner with no external Joget repository and no secrets, those exact artifacts
+      are vendored into an in-project file-based Maven repository under build-support/m2
+      (see build-support/README.md for provenance and licensing). This repository is
+      listed first so it is consulted before Maven Central.
+    -->
+    <repositories>
+        <repository>
+            <id>in-project-joget</id>
+            <name>Vendored Joget build-time dependencies</name>
+            <url>file://${maven.multiModuleProjectDirectory}/build-support/m2</url>
+            <releases><enabled>true</enabled><updatePolicy>never</updatePolicy></releases>
+            <snapshots><enabled>true</enabled><updatePolicy>never</updatePolicy><checksumPolicy>ignore</checksumPolicy></snapshots>
+        </repository>
+    </repositories>
+
     <dependencyManagement>
         <dependencies>
             <dependency>

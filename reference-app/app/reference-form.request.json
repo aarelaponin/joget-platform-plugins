@@ -5,7 +5,8 @@
   "targetAppId": "platformRef",
   "targetAppVersion": "1",
   "createApiEndpoint": false,
-  "createCrud": true,
+  "createCrud": false,
+  "_note": "form-creator-api expects formDefinition as a STRING (create-reference-app.sh stringifies it). form-prefill is exercised by its 12 unit tests + live DMBB use; it needs a full prefill config (near-empty config is not registration-safe \u2014 hardening follow-up), so this reference form uses the standard load binder.",
   "formDefinition": {
     "className": "org.joget.apps.form.model.Form",
     "properties": {
@@ -13,15 +14,8 @@
       "name": "Platform Plugins Reference Form",
       "tableName": "pp_ref",
       "loadBinder": {
-        "className": "com.fiscaladmin.joget.formprefill.FormPrefillLoadBinder",
-        "properties": {
-          "enabled": "true",
-          "onlyOnAdd": "true",
-          "keySources": [{ "source": "requestParam", "name": "ref" }],
-          "formId": "ppRefForm",
-          "matchField": "id",
-          "mappings": []
-        }
+        "className": "org.joget.apps.form.lib.WorkflowFormBinder",
+        "properties": {}
       },
       "storeBinder": {
         "className": "org.joget.apps.form.lib.WorkflowFormBinder",
@@ -31,29 +25,71 @@
     "elements": [
       {
         "className": "org.joget.apps.form.model.Section",
-        "properties": { "id": "s1", "label": "Reference" },
+        "properties": {
+          "id": "sMain",
+          "label": "Reference"
+        },
         "elements": [
           {
             "className": "org.joget.apps.form.model.Column",
-            "properties": { "width": "100%" },
+            "properties": {
+              "width": "100%"
+            },
             "elements": [
-              { "className": "org.joget.apps.form.lib.TextField",
-                "properties": { "id": "firstName", "label": "First name" } },
-              { "className": "org.joget.apps.form.lib.TextField",
-                "properties": { "id": "lastName", "label": "Last name" } },
-              { "className": "global.govstack.concatfield.element.ConcatFieldElement",
-                "properties": { "id": "fullName", "label": "Full name (concat plugin)",
-                  "sourceFields": "firstName;lastName", "separator": " ",
-                  "skipEmpty": "true", "updateOn": "change" } },
-              { "className": "global.govstack.lookupfield.element.LookupFieldElement",
-                "properties": { "id": "lookupDemo", "label": "Lookup (lookup-field plugin)",
-                  "sourceFieldId": "firstName", "lookupFormId": "ppRefForm",
-                  "lookupColumn": "lastName", "lookupKeyColumn": "firstName", "updateOn": "change" } },
-              { "className": "global.govstack.ruleeditor.element.RuleEditorElement",
-                "properties": { "id": "ruleDemo", "label": "Rule editor (rule-editor + rules-api plugins)",
-                  "scopeCode": "platformRef", "showDictionary": "true", "showSaveButton": "true" } },
-              { "className": "global.govstack.formquality.element.QualityBannerElement",
-                "properties": { "id": "qualityBanner", "label": "Quality banner (form-quality plugin)" } }
+              {
+                "className": "org.joget.apps.form.lib.TextField",
+                "properties": {
+                  "id": "firstName",
+                  "label": "First name"
+                }
+              },
+              {
+                "className": "org.joget.apps.form.lib.TextField",
+                "properties": {
+                  "id": "lastName",
+                  "label": "Last name"
+                }
+              },
+              {
+                "className": "global.govstack.concatfield.element.ConcatFieldElement",
+                "properties": {
+                  "id": "fullName",
+                  "label": "Full name (concat plugin)",
+                  "sourceFields": "firstName;lastName",
+                  "separator": " ",
+                  "skipEmpty": "true",
+                  "updateOn": "change"
+                }
+              },
+              {
+                "className": "global.govstack.lookupfield.element.LookupFieldElement",
+                "properties": {
+                  "id": "lookupDemo",
+                  "label": "Lookup (lookup-field plugin)",
+                  "sourceFieldId": "firstName",
+                  "lookupFormId": "ppRefForm",
+                  "lookupColumn": "lastName",
+                  "lookupKeyColumn": "firstName",
+                  "updateOn": "change"
+                }
+              },
+              {
+                "className": "global.govstack.ruleeditor.element.RuleEditorElement",
+                "properties": {
+                  "id": "ruleDemo",
+                  "label": "Rule editor (rule-editor + rules-api)",
+                  "scopeCode": "platformRef",
+                  "showDictionary": "true",
+                  "showSaveButton": "true"
+                }
+              },
+              {
+                "className": "global.govstack.formquality.element.QualityBannerElement",
+                "properties": {
+                  "id": "qualityBanner",
+                  "label": "Quality banner (form-quality plugin)"
+                }
+              }
             ]
           }
         ]

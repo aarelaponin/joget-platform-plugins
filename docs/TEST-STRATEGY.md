@@ -51,8 +51,20 @@ Deploy = copy the 11 plugin JARs (+ pinned `joget-status-framework`) into `<jdx7
 
 ## L4 — CI + conformance
 
-GitHub Actions runs `mvn -B verify` (L1+L2) on every push. Add the registry↔build drift check and the
-provenance forbidden-strings gate (Phase 4). Optionally a containerised Joget for L3 smoke.
+GitHub Actions (`.github/workflows/ci.yml`) runs `mvn -B verify` (L1 unit tests + L2 package) and
+then `tests/manifest_smoke.py` (registry↔built-jar drift check) on every push and PR.
+
+**Self-contained, secret-free.** Joget's build-time artifacts are not on Maven Central and Joget's
+Archiva is credential-gated (returns 401), so a bare runner cannot resolve them. Instead the exact
+non-Central closure — `wflow-*`, `apibuilder_api`, the Apache-2.0 `joget-status-framework`, and
+Joget's bundled Enhydra Shark / Together engine (67 jars, ~15 MB) — is vendored into an in-project
+file Maven repository at `build-support/m2`, declared in the reactor pom. CI therefore needs **no
+Joget repository and no secrets**: `mvn clean verify` resolves everything from Central + the
+in-project repo. This exact setup was proven in a clean room (empty local repo, Central only):
+**208 unit tests green + manifest smoke 11/11**. Regenerate the vendored set with
+`build-support/refresh.sh` after a Joget version bump. See `build-support/README.md`.
+
+Still open (Phase 4): the provenance forbidden-strings gate; optionally a containerised Joget for L3 smoke.
 
 ## Two-track note
 

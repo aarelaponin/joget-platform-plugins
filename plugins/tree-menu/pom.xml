@@ -19,23 +19,6 @@
     <url>http://www.joget.org</url>
 
     <!-- Add Joget repository -->
-    <repositories>
-        <repository>
-            <id>joget-repo</id>
-            <url>https://dev.joget.org/archiva/repository/snapshots</url>
-            <snapshots>
-                <enabled>true</enabled>
-                <updatePolicy>always</updatePolicy>
-            </snapshots>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-        </repository>
-        <repository>
-            <id>central</id>
-            <url>https://repo.maven.apache.org/maven2</url>
-        </repository>
-    </repositories>
 
     <pluginRepositories>
         <pluginRepository>
