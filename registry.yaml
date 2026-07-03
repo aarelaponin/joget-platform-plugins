@@ -307,6 +307,34 @@ plugins:
     provenance: extracted + genericised from a collection-management building block (Phase 2, item 6)
     source_of_truth: this repo
 
+  - id: joget-status-manager
+    module: plugins/joget-status-manager
+    artifact: com.fiscaladmin.joget:joget-status-manager
+    version: 1.0.0
+    category: foundation
+    tier: P
+    status: active
+    ships: code
+    license: proprietary            # FiscalAdmin OÜ
+    dx_compat: ["8.1", "9.x"]
+    java_release: 11
+    depends_on: [joget-event-chain]
+    summary: >
+      Config-driven status state machine (StatusManager) whose lifecycle lives in metamodel
+      tables (states + transitions, read via MmConfigService), with per-dimension scope
+      resolution and audited transitions to the event chain. Also ships the guard-phase SPI
+      (GuardPhase + GuardContext) so a consumer composes its own case-envelope guard from
+      its own phases. Library bundle (exports com.fiscaladmin.joget.statusmanager).
+    registers: []                   # library — exports a package, registers no Joget plugins
+    contract:
+      exports_package: com.fiscaladmin.joget.statusmanager
+      classes: [StatusManager, MmConfigService, GuardContext, GuardPhase, InvalidTransitionException]
+      metamodel_tables: [mmCaseType, mmState, mmTransition, mmDocReq, mmEntityState, mmEntityTransition]
+      config_keys: [caseFormId, taskFormId, docFormId]   # GuardContext.setFormIds; event id via event-chain
+    provenance: extracted + genericised from a collection-management building block (Phase 2, item 5);
+                domain phases (open/pre-close/close) + the case-envelope plugin stay in the consumer
+    source_of_truth: this repo
+
 # ---------------------------------------------------------------------------
 # Planned — see docs/MIGRATION-BACKLOG.md and docs/CONSOLIDATION-PLAN.md.
 # ---------------------------------------------------------------------------
