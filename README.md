@@ -89,3 +89,14 @@ joget-spec-kit (jkit) → the how-to-build engine (spec → artefacts); reads re
 joget-platform-plugins→ THIS repo — the runtime extensions (the JARs Joget loads)
 project repos         → depend on all three by version pin; own only their app model + assets
 ```
+
+## Documentation & vision
+
+Start with the **[Vision](docs/VISION.md)** — why plugins become a platform, what it is, and how
+it works, with diagrams. The [`docs/`](docs/) folder is the home for all canonical documents
+(Markdown, rendered on GitHub with figures); see [docs/README.md](docs/README.md) for the index and
+the convention (polished DOCX/PDF are published as GitHub Release assets, not committed).
+
+![Capability taxonomy](docs/img/taxonomy.png)
+
+*Foundation (horizontal) + Domain packs (GovStack-BB tagged). Solid = shipped; dashed = planned.*

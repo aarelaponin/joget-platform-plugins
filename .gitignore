@@ -26,3 +26,7 @@ secrets*.yml
 
 # --- No client data in this platform repo (see docs/CONVENTIONS in README §Provenance) ---
 # App-level artefacts, seed CSVs with real identifiers, or client demo apps do NOT belong here.
+
+# Delivery renders (DOCX/PDF) are published as GitHub Release assets, not committed
+docs/*.docx
+docs/*.pdf

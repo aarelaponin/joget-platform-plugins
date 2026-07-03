@@ -1,0 +1,11 @@
+digraph rm {
+  graph [rankdir=TB, nodesep=0.3, ranksep=0.42, bgcolor="white", fontname="Helvetica"];
+  node [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=12.5, penwidth=1.5, margin="0.24,0.15", color="#263238", width=3.4];
+  edge [color="#90A4AE", penwidth=1.8, arrowsize=0.85];
+  p0 [label=<<b>Phase 0 · Scaffold</b>&#160;&#160;<font color="#2E7D32">✔ DONE</font><br/><font point-size="11">repo · parent POM · registry · docs</font>>, fillcolor="#E8F5E9", color="#2E7D32"];
+  p1 [label=<<b>Phase 1 · Easy wins</b>&#160;&#160;<font color="#2E7D32">✔ DONE</font><br/><font point-size="11">form-prefill · form-creator-api · status-framework</font>>, fillcolor="#E8F5E9", color="#2E7D32"];
+  p2 [label=<<b>Phase 2 · Foundation core</b>&#160;&#160;<font color="#E65100">➜ NEXT</font><br/><font point-size="11">extract event-chain → status-manager → decision-approval</font>>, fillcolor="#FFF3E0", color="#E65100", penwidth=2.0];
+  p3 [label=<<b>Phase 3 · Domain packs</b>&#160;&#160;<font color="#90A4AE">later</font><br/><font point-size="11">registration · payments · information-mediator</font>>, fillcolor="#F7F7F7", color="#90A4AE", style="rounded,filled,dashed"];
+  p4 [label=<<b>Phase 4 · Publish + CI</b>&#160;&#160;<font color="#90A4AE">later</font><br/><font point-size="11">GitHub Packages · registry↔build drift gate</font>>, fillcolor="#F7F7F7", color="#90A4AE", style="rounded,filled,dashed"];
+  p0 -> p1 -> p2 -> p3 -> p4;
+}

@@ -1,0 +1,27 @@
+digraph tax {
+  graph [rankdir=TB, nodesep=0.22, ranksep=0.4, bgcolor="white", fontname="Helvetica"];
+  node [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=12.5, penwidth=1.4, margin="0.14,0.11", color="#263238", width=1.5];
+  edge [style=invis];
+  subgraph cluster_f {
+    label="  FOUNDATION — horizontal, domain-agnostic"; labeljust="l";
+    fontsize=13; fontname="Helvetica-Bold"; color="#5E35B1"; bgcolor="#F7F4FC"; style="rounded"; penwidth=1.5;
+    fp  [label="form-prefill", fillcolor="#EDE7F6", color="#5E35B1"];
+    fca [label="form-creator-api", fillcolor="#EDE7F6", color="#5E35B1"];
+    sf  [label="status-framework", fillcolor="#EDE7F6", color="#5E35B1"];
+    ec  [label="event-chain", fillcolor="#F3EEFB", color="#5E35B1", style="rounded,filled,dashed"];
+    sm  [label="status-manager", fillcolor="#F3EEFB", color="#5E35B1", style="rounded,filled,dashed"];
+    da  [label="decision-approval", fillcolor="#F3EEFB", color="#5E35B1", style="rounded,filled,dashed"];
+    fp -> ec; fca -> sm; sf -> da;
+    { rank=same; fp; fca; sf; }
+    { rank=same; ec; sm; da; }
+  }
+  subgraph cluster_p {
+    label="  DOMAIN PACKS — GovStack-BB tagged"; labeljust="l";
+    fontsize=13; fontname="Helvetica-Bold"; color="#00838F"; bgcolor="#F1FAFB"; style="rounded"; penwidth=1.5;
+    pr  [label=<<b>pack:registration</b><br/><font point-size="11" color="#00838F">Registration · Identity</font>>, fillcolor="#E0F2F1", color="#00838F", style="rounded,filled,dashed"];
+    pp  [label=<<b>pack:payments</b><br/><font point-size="11" color="#00838F">Payments</font>>, fillcolor="#E0F2F1", color="#00838F", style="rounded,filled,dashed"];
+    pim [label=<<b>pack:info-mediator</b><br/><font point-size="11" color="#00838F">Information Mediator</font>>, fillcolor="#E0F2F1", color="#00838F", style="rounded,filled,dashed"];
+    { rank=same; pr; pp; pim; }
+  }
+  da -> pr;
+}
