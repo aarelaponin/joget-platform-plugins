@@ -111,7 +111,7 @@ public class FieldMapping {
     /**
      * Create default mapping for applicant Eligibility scope.
      */
-    public static FieldMapping createFarmerEligibilityMapping() {
+    public static FieldMapping createSampleEligibilityMapping() {
         FieldMapping mapping = new FieldMapping();
         mapping.setMainTable("app_fd_applicant", "f");
 

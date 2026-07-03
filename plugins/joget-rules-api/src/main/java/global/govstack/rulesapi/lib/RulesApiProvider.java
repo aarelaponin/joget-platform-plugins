@@ -261,7 +261,7 @@ public class RulesApiProvider extends ApiPluginAbstract implements PropertyEdita
             List<Rule> rules = parseResult.getRules();
 
             // Compile to SQL
-            FieldMapping fieldMapping = FieldMapping.createFarmerEligibilityMapping();
+            FieldMapping fieldMapping = FieldMapping.createSampleEligibilityMapping();
             RuleScriptCompiler compiler = new RuleScriptCompiler(fieldMapping);
             CompiledRuleset compiled = compiler.compile(rules, rulesetCode, scopeCode);
 
