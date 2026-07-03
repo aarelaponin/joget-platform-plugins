@@ -127,6 +127,17 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- JSON-Java (org.json). Declared BEFORE wflow-core so its classes win the
+             surefire test classpath: wflow-core's fat jar shades an ancient org.json
+             whose JSONTokener lacks nextSimpleValue(char); putting the modern jar first
+             keeps JSONObject and JSONTokener consistent under test. The OSGi bundle embeds
+             this same modern json via Include-Resource, so runtime is unaffected. -->
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>20230227</version>
+        </dependency>
+
         <!-- Joget dependencies (provided scope) -->
         <dependency>
             <groupId>org.joget</groupId>
@@ -181,12 +192,6 @@
             <version>2.15.2</version>
         </dependency>
 
-        <!-- JSON-Java (org.json) -->
-        <dependency>
-            <groupId>org.json</groupId>
-            <artifactId>json</artifactId>
-            <version>20230227</version>
-        </dependency>
     </dependencies>
 
     <distributionManagement>
