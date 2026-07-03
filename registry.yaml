@@ -82,9 +82,9 @@ plugins:
       Form element that watches a SelectBox and auto-populates fields from a related record
       (field-level, live). Complements joget-form-prefill (form-level, on-load).
     registers:
-      - global.govstack.lookupfield.LookupFieldElement
+      - global.govstack.lookupfield.element.LookupFieldElement
     contract:
-      element_class: global.govstack.lookupfield.LookupFieldElement
+      element_class: global.govstack.lookupfield.element.LookupFieldElement
       config_keys: [sourceFieldId, lookupFormId, lookupColumn, lookupKeyColumn, updateOn, displayType]
     provenance: promoted from lst-frm-prj/plugins (project-neutral source)
     source_of_truth: this repo
@@ -151,7 +151,7 @@ plugins:
       Workflow activator utility — starts a Joget process programmatically for a named
       service (multi-service support), returning a structured response.
     registers:
-      - global.govstack.workflow.WorkflowActivator
+      - global.govstack.workflow.activator.lib.WorkflowActivator
     contract:
       config_keys: [serviceId]
     provenance: promoted from lst-frm-prj/plugins (example service ids genericised)

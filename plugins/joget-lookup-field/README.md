@@ -25,7 +25,7 @@ Java-11 modules without issue.
 cp target/joget-lookup-field-8.1-SNAPSHOT.jar <joget>/wflow/app_plugins/
 ```
 
-Registers one form element: `global.govstack.lookupfield.LookupFieldElement`.
+Registers one form element: `global.govstack.lookupfield.element.LookupFieldElement`.
 
 ## Configure
 
