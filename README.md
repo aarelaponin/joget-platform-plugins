@@ -5,6 +5,12 @@ consumed by projects — and by [`joget-spec-kit`](https://github.com/aarelaponi
 by **version pin, never by copy**. These are extensions of the Joget development platform,
 not components of any one project.
 
+This is the shared runtime-extension library for **any spec-to-code-on-Joget development** —
+it is not GovStack-specific. Plugins are organised by capability: **foundation** (horizontal,
+domain-agnostic) and **domain packs** (`pack:<domain>`). GovStack Building Blocks are an optional
+tagging vocabulary on the packs that align to one, not the organising axis. See
+`docs/CONSOLIDATION-PLAN.md` for the taxonomy and roadmap.
+
 ## The invariant
 
 > **A plugin here NEVER depends on a consuming project.**

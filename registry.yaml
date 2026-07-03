@@ -1,15 +1,24 @@
 # joget-platform-plugins — plugin registry (single source of truth)
 #
-# One entry per reusable plugin. This is the seam between this repo (the Java runtime
-# artefacts) and joget-spec-kit (which generates config against the `contract` below
-# WITHOUT importing any Java). A CI check keeps this file in step with the built modules
-# (see docs/CONVENTIONS in README). Schema: docs/registry.schema.yaml.
+# This is the shared runtime-extension library for ANY spec-to-code-on-Joget development.
+# It is NOT GovStack-specific: GovStack Building Blocks are one (important) tagging vocabulary,
+# not the organising axis. joget-spec-kit generates config against the `contract` of each entry
+# WITHOUT importing any Java. Schema: docs/registry.schema.yaml.
 #
-# tier:     G = generic-Joget (any app) · P = pattern-reusable (genericised then shipped)
-# status:   active | planned | deprecated
-# ships:    code | pattern            (code = the JAR ships; pattern = design ships, not code)
+# TAXONOMY
+#   category:
+#     foundation        horizontal capability, domain-agnostic — works for any Joget app
+#     pack:<domain>      capability aligned to a domain (e.g. pack:registration, pack:payments)
+#   govstack_bb:         OPTIONAL tag on packs that align to a GovStack Building Block. Verified
+#                        vocabulary (specs.govstack.global, 2025 release):
+#                        Cloud Infrastructure · Consent · Content Management System ·
+#                        Digital Registries · E-Marketplace · E-Signature · GIS · Identity ·
+#                        Information Mediator · Messaging · Payments · Registration · Scheduler · Wallet
+#
+# tier:   G = generic-Joget (any app) · P = pattern-reusable (genericised then shipped)
+# status: active | planned | deprecated      ships: code | pattern
 
-registry_version: 0.2.0
+registry_version: 0.3.0
 
 plugins:
 
@@ -17,6 +26,7 @@ plugins:
     module: plugins/joget-form-prefill
     artifact: com.fiscaladmin.joget:joget-form-prefill
     version: 1.0.0
+    category: foundation
     tier: G
     status: active
     ships: code
@@ -25,53 +35,35 @@ plugins:
     java_release: 11
     summary: >
       Configurable form LOAD binder that pre-populates a NEW record from a related
-      record by configuration only (no per-form Java). Replaces URL-param prefill and
-      hand-written per-form load binders.
+      record by configuration only (no per-form Java).
     registers:
       - com.fiscaladmin.joget.formprefill.FormPrefillLoadBinder
-    contract:                       # config keys = public API generators target (MAJOR bump if changed)
+    contract:
       binder_class: com.fiscaladmin.joget.formprefill.FormPrefillLoadBinder
-      config_keys:
-        - enabled
-        - onlyOnAdd
-        - keySources          # [{source: requestParam|loginUser|currentField, name}]
-        - formId
-        - table
-        - matchField
-        - filters             # [{field, op: eq|ne, value}]
-        - orderBy
-        - orderNumeric
-        - pickFirst
-        - related             # [{formId, table, keyFrom, alias}]
-        - mappings            # [{from, to}]
-        - constants           # [{to, value}]
+      config_keys: [enabled, onlyOnAdd, keySources, formId, table, matchField,
+                    filters, orderBy, orderNumeric, pickFirst, related, mappings, constants]
     provenance: proven in production public-sector implementations (DX8 + DX9), multi-instance
-    source_of_truth: this repo   # promoted from 03_debt_management/shared-plugins (now retired)
+    source_of_truth: this repo   # promoted from 03_debt_management/shared-plugins
 
   - id: form-creator-api
     module: plugins/form-creator-api
     artifact: global.govstack:form-creator-api
     version: 8.1-SNAPSHOT
+    category: foundation
     tier: G
     status: active
     ships: code
-    license: govstack             # global.govstack
-    dx_compat: ["8.1"]            # 9.x not yet verified
+    license: govstack
+    dx_compat: ["8.1"]
     java_release: 11
     summary: >
       Programmatic Joget artefact-creation backbone: creates forms, datalists, userviews,
-      CRUD and API-Builder endpoints, and seeds fixtures, over a REST API. The push-tooling
-      spine used by the spec-driven pipelines.
+      CRUD and API-Builder endpoints, and seeds fixtures, over a REST API.
     registers:
       - global.govstack.formcreator.lib.FormCreatorServiceProvider
-    contract:                       # this is an API plugin — its contract is the OpenAPI + payload keys
+    contract:
       api_spec: docs/formCreatorApi-openapi.yaml
-      config_keys:
-        - appId
-        - formJson
-        - formIds
-        - datalistJson
-        - userviewJson
+      config_keys: [appId, formJson, formIds, datalistJson, userviewJson]
     provenance: proven push tooling across production public-sector implementations
     source_of_truth: this repo   # promoted from lst-frm-prj/plugins (client refs scrubbed)
 
@@ -79,6 +71,7 @@ plugins:
     module: "(external — own repo)"
     artifact: global.govstack:joget-status-framework
     version: 8.1-SNAPSHOT
+    category: foundation
     tier: G
     status: active
     ships: code
@@ -92,25 +85,47 @@ plugins:
     source_of_truth: https://github.com/aarelaponin/joget-status-framework
 
 # ---------------------------------------------------------------------------
-# Planned promotions — see docs/MIGRATION-BACKLOG.md for the full extraction plan.
-# Listed here so the registry is the one place to see the whole platform surface.
+# Planned — see docs/MIGRATION-BACKLOG.md and docs/CONSOLIDATION-PLAN.md.
 # ---------------------------------------------------------------------------
 planned:
 
-  - id: joget-decision-approval        # DAS
+  # Foundation capabilities currently trapped inside a case-management app (cmbb-plugins).
+  # Horizontal, NOT case-specific — extract in dependency order (event-chain first).
+  - id: joget-event-chain
+    category: foundation
+    tier: P
+    ships: code
+    note: CaseEventWriter/ChainVerifyService/CaseRefGenerator (hash-chained integrity log).
+  - id: joget-status-manager
+    category: foundation
+    tier: P
+    ships: code
+    note: StatusManager/MmConfigService/GuardContext/TransitionGuard/GuardPhase (config-driven state machine).
+  - id: joget-decision-approval
+    category: foundation
     tier: P
     ships: code
     note: >
-      extract ApprovalService/ApprovalEffects/ApprovalInbox/AuthorityResolver/MatrixValidator
-      + gate/delegate/sweep engines from cmbb-plugins; INVERT the ApprovalEffects->engine
-      coupling (consumer-registered effects). See docs/DAS-EXTRACTION-PLAN.md.
+      ApprovalService/ApprovalInbox/AuthorityResolver/MatrixValidator + gate/delegate/sweep engines.
+      INVERT the ApprovalEffects->engine coupling (consumer-registered DecisionEffect SPI).
+      See docs/DAS-EXTRACTION-PLAN.md.
 
-  - id: joget-status-manager           # StatusManager + mm metamodel
+  # Domain packs — sourced from across projects + the KP4 net-new BB connectors.
+  - id: pack-registration
+    category: pack:registration
+    govstack_bb: [Registration, Identity]
     tier: P
     ships: code
-    note: StatusManager/MmConfigService/GuardContext/TransitionGuard/GuardPhase from cmbb-plugins.
-
-  - id: joget-event-chain              # integrity log
+    note: identity-resolver (Identity adapter) + application wizard + decision/entitlement, from lst-frm gs-plugins.
+  - id: pack-payments
+    category: pack:payments
+    govstack_bb: [Payments]
     tier: P
     ships: code
-    note: CaseEventWriter/ChainVerifyService/CaseRefGenerator (hash-chained event log).
+    note: payment-rail disbursement adapter (net-new; nearest ancestor = internal PaymentEngine + GAM reconciliation).
+  - id: pack-information-mediator
+    category: pack:information-mediator
+    govstack_bb: [Information Mediator]
+    tier: P
+    ships: code
+    note: X-Road / GovStack-IM client connector (net-new; server-side seed = govstack-api-sample).

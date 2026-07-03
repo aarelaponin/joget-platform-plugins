@@ -10,10 +10,14 @@ properties:
     type: array
     items:
       type: object
-      required: [id, artifact, version, tier, status, ships, dx_compat]
+      required: [id, category, artifact, version, tier, status, ships, dx_compat]
       additionalProperties: true
       properties:
         id:        { type: string, pattern: "^[a-z0-9-]+$" }
+        category:  { type: string, pattern: "^(foundation|pack:[a-z0-9-]+)$",
+                     description: "foundation (horizontal) or pack:<domain>" }
+        govstack_bb: { type: array, items: { type: string },
+                     description: "OPTIONAL GovStack BB tag(s); vocabulary from specs.govstack.global" }
         module:    { type: string, description: "path to the Maven module dir" }
         artifact:  { type: string, pattern: "^[^:]+:[^:]+$", description: "groupId:artifactId" }
         version:   { type: string, pattern: "^[0-9]+\\.[0-9]+\\.[0-9]+" }

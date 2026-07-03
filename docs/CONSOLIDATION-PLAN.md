@@ -21,6 +21,10 @@ is duplication and copy-paste reuse: no single home, no versioning, no way to pi
 Make plugins **extensions of the Joget development platform, not components of any one project** —
 accessible to any project, version-controlled, and free of project dependencies.
 
+Scope: this platform serves **any spec-to-code-on-Joget development**. It is not GovStack-specific
+and not case-specific — GovStack Building Blocks and domains like tax administration or banking are
+lenses over the same horizontal platform, not its boundary.
+
 > **The invariant: a plugin NEVER depends on a consuming project.**
 > Projects (and `joget-spec-kit`) depend on plugins; the arrow only points one way. A plugin that
 > imports project code is disqualified until it is genericised.
@@ -48,20 +52,35 @@ joget-platform-plugins → THIS repo — the runtime extensions (the JARs Joget 
 project repos          → depend on all three by version pin; own only their app model + assets
 ```
 
-## 5. Phased roadmap
+## 5. Capability taxonomy
+
+Plugins are organised by **capability**, not by source project:
+
+- **Foundation** (`category: foundation`) — horizontal, domain-agnostic capability that works for
+  any Joget app: form-prefill, form-creator-api, status-framework, and the three coming out of the
+  case app (event-chain, status-manager, decision-approval).
+- **Domain packs** (`category: pack:<domain>`) — capability aligned to a domain: `pack:registration`,
+  `pack:payments`, `pack:information-mediator`, etc. A pack that maps to a GovStack Building Block
+  also carries a `govstack_bb` tag (verified vocabulary from specs.govstack.global: Cloud
+  Infrastructure, Consent, Content Management System, Digital Registries, E-Marketplace, E-Signature,
+  GIS, Identity, Information Mediator, Messaging, Payments, Registration, Scheduler, Wallet).
+
+GovStack BBs are a tagging overlay on the packs, not the organising axis.
+
+## 6. Phased roadmap
 
 | Phase | Scope | Risk | Status |
 |---|---|---|---|
 | **0 — Scaffold** | mono-repo, parent POM, registry + schema, README, backlog, DAS plan | low | ✅ done (`190bf0f`) |
 | **1 — Easy wins** | promote the already-generic plugins: `joget-form-prefill`, `form-creator-api`; register `joget-status-framework` in place | low | ✅ done (`7cd1298`) |
-| **2 — cmbb extractions** | extract the trapped P-tier core: `joget-event-chain` → `joget-status-manager` → `joget-decision-approval` (DAS); re-point DMBB; regression | **high** | ▢ next |
-| **3 — gs-plugins patterns** | genericise & promote identity-resolver → *Identity BB adapter*, application-engine → *Application wizard*, decision-engine → *Decision & entitlement*, form-quality-runtime | medium | ▢ later |
+| **2 — Foundation core** | extract the horizontal capabilities trapped in the case app (`cmbb-plugins`): `joget-event-chain` → `joget-status-manager` → `joget-decision-approval`; re-point DMBB; regression | **high** | ▢ next |
+| **3 — Domain packs** | promote BB-aligned packs from across projects + KP4 net-new connectors: `pack:registration` (FRS gs-plugins), `pack:payments`, `pack:information-mediator`; each `govstack_bb`-tagged | medium | ▢ later |
 | **4 — Publish + CI** | enable `mvn deploy` to GitHub Packages; registry↔build drift check; provenance forbidden-strings gate in CI | low | ▢ later |
 
 Phases 0–1 are complete. Phase 2 is the substance of the effort; phase 4 can run in parallel once
 the first `mvn deploy` credentials are in place.
 
-## 6. Current status snapshot
+## 7. Current status snapshot
 
 Three plugins consolidated, registry at v0.2.0, reactor builds green to `~/.m2`:
 
@@ -73,7 +92,7 @@ Three plugins consolidated, registry at v0.2.0, reactor builds green to `~/.m2`:
 
 Commits on `origin/main`: `190bf0f` (scaffold + module 1) · `7cd1298` (module 2 + registration).
 
-## 7. Phase 2 — the hard part (cmbb extractions)
+## 8. Phase 2 — Foundation core (capabilities trapped in the case app)
 
 The `cmbb-plugins` bundle is one monolith (~26 plugin entrypoints, ~40 services under
 `com.fiscaladmin.mtca.cmbb`). Three generic capabilities come out, in dependency order so each new
@@ -91,7 +110,7 @@ module only depends on already-promoted modules — never back on the project:
 Each extraction also does the namespace rename `com.fiscaladmin.mtca.cmbb.*` →
 `com.fiscaladmin.joget.*` and updates the moved engines' `properties/*.json` descriptors.
 
-## 8. Distribution & publishing
+## 9. Distribution & publishing
 
 - **Build** on a workstation (JDK + Maven); the Cowork sandbox has no Maven.
 - **Local proof:** `mvn -pl plugins/<m> -am clean install` → JAR to `~/.m2` (done for both modules).
@@ -100,7 +119,7 @@ Each extraction also does the namespace rename `com.fiscaladmin.mtca.cmbb.*` →
 - **Consume:** projects and `joget-spec-kit` pin `groupId:artifactId:version` (`provided` scope);
   the deploy step drops the pinned JAR into `<joget>/wflow/app_plugins/` (hot-reload ~10s).
 
-## 9. Governance & definition of done
+## 10. Governance & definition of done
 
 Per promoted plugin:
 
@@ -111,7 +130,7 @@ Per promoted plugin:
 - [ ] Consuming project re-pointed to the pinned artifact; its in-project copy retired; regression green.
 - [ ] (Phase 4) `mvn deploy` to GitHub Packages; CI drift + forbidden-strings checks pass.
 
-## 10. Risks & mitigations
+## 11. Risks & mitigations
 
 | Risk | Mitigation |
 |---|---|
@@ -121,7 +140,7 @@ Per promoted plugin:
 | Client identifiers leak into a shipped plugin | provenance grep is a DoD gate and a CI forbidden-strings check |
 | Version-pin churn across projects | semver + the config contract as the public API; breaking = major bump only |
 
-## 11. Decisions log
+## 12. Decisions log
 
 - Names **`joget-spec-kit` / `jkit`** and **`joget-platform-plugins`** confirmed.
 - **Mono-repo** (multi-module Maven), not one-repo-per-plugin — the cmbb three have internal deps.
@@ -130,7 +149,7 @@ Per promoted plugin:
   Apache-2.0 repo, so absorbing it would fork it and lose its history.
 - Registry schema **relaxed** so external entries need no `module`/`contract`.
 
-## 12. Immediate next actions
+## 13. Immediate next actions
 
 1. Phase 2, step 1: extract **`joget-event-chain`** (leaf, lowest risk) as module 3; build green.
 2. Then **`joget-status-manager`**, then **`joget-decision-approval`** with the SPI inversion.
