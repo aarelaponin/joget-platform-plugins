@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.fiscaladmin.joget</groupId>
+    <artifactId>joget-platform-plugins</artifactId>
+    <version>1.0.0</version>
+    <packaging>pom</packaging>
+    <name>Joget Platform Plugins</name>
+    <description>
+        Reusable, project-neutral Joget DX OSGi plugins, published as versioned
+        artifacts and consumed by projects (and by joget-spec-kit) via version pin.
+        Platform extensions, not project components: a plugin here NEVER depends on
+        a consuming project. See docs/CONVENTIONS in the README and registry.yaml.
+    </description>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.release>11</maven.compiler.release>
+        <!-- Joget API against which plugins compile (provided scope). -->
+        <joget.version>8.1-SNAPSHOT</joget.version>
+        <!-- Shared plugin/test tool versions. -->
+        <servlet.version>4.0.1</servlet.version>
+        <junit.version>4.13.2</junit.version>
+        <mockito.version>4.11.0</mockito.version>
+        <felix.bundle.version>5.1.9</felix.bundle.version>
+        <compiler.plugin.version>3.13.0</compiler.plugin.version>
+        <surefire.plugin.version>3.2.5</surefire.plugin.version>
+    </properties>
+
+    <modules>
+        <module>plugins/joget-form-prefill</module>
+    </modules>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.joget</groupId>
+                <artifactId>wflow-core</artifactId>
+                <version>${joget.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>javax.servlet</groupId>
+                <artifactId>javax.servlet-api</artifactId>
+                <version>${servlet.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>junit</groupId>
+                <artifactId>junit</artifactId>
+                <version>${junit.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-core</artifactId>
+                <version>${mockito.version}</version>
+                <scope>test</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>${compiler.plugin.version}</version>
+                    <configuration>
+                        <release>${maven.compiler.release}</release>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>${surefire.plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.felix</groupId>
+                    <artifactId>maven-bundle-plugin</artifactId>
+                    <version>${felix.bundle.version}</version>
+                    <extensions>true</extensions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <name>GitHub Packages</name>
+            <url>https://maven.pkg.github.com/aarelaponin/joget-platform-plugins</url>
+        </repository>
+    </distributionManagement>
+</project>

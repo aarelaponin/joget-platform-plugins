@@ -1,0 +1,28 @@
+# --- Build output ---
+target/
+*.class
+dependency-reduced-pom.xml
+
+# --- IDE ---
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+*.code-workspace
+.zed/
+
+# --- OS ---
+.DS_Store
+Thumbs.db
+
+# --- Secrets / never commit ---
+# GitHub Packages / publish credentials live in ~/.m2/settings.xml, never here.
+settings.xml
+*.env
+.env
+secrets*.yml
+
+# --- No client data in this platform repo (see docs/CONVENTIONS in README §Provenance) ---
+# App-level artefacts, seed CSVs with real identifiers, or client demo apps do NOT belong here.

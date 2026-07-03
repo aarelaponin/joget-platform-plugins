@@ -1,0 +1,84 @@
+# joget-platform-plugins — plugin registry (single source of truth)
+#
+# One entry per reusable plugin. This is the seam between this repo (the Java runtime
+# artefacts) and joget-spec-kit (which generates config against the `contract` below
+# WITHOUT importing any Java). A CI check keeps this file in step with the built modules
+# (see docs/CONVENTIONS in README). Schema: docs/registry.schema.yaml.
+#
+# tier:     G = generic-Joget (any app) · P = pattern-reusable (genericised then shipped)
+# status:   active | planned | deprecated
+# ships:    code | pattern            (code = the JAR ships; pattern = design ships, not code)
+
+registry_version: 0.1.0
+
+plugins:
+
+  - id: joget-form-prefill
+    module: plugins/joget-form-prefill
+    artifact: com.fiscaladmin.joget:joget-form-prefill
+    version: 1.0.0
+    tier: G
+    status: active
+    ships: code
+    license: proprietary            # FiscalAdmin OÜ; candidate to open-source (see backlog)
+    dx_compat: ["8.1", "9.x"]
+    java_release: 11
+    summary: >
+      Configurable form LOAD binder that pre-populates a NEW record from a related
+      record by configuration only (no per-form Java). Replaces URL-param prefill and
+      hand-written per-form load binders.
+    registers:
+      - com.fiscaladmin.joget.formprefill.FormPrefillLoadBinder
+    # The config contract = the public API generators target. Changing a key is a MAJOR bump.
+    contract:
+      binder_class: com.fiscaladmin.joget.formprefill.FormPrefillLoadBinder
+      config_keys:
+        - enabled
+        - onlyOnAdd
+        - keySources          # [{source: requestParam|loginUser|currentField, name}]
+        - formId
+        - table
+        - matchField
+        - filters             # [{field, op: eq|ne, value}]
+        - orderBy
+        - orderNumeric
+        - pickFirst
+        - related             # [{formId, table, keyFrom, alias}]
+        - mappings            # [{from, to}]
+        - constants           # [{to, value}]
+    provenance: proven in production public-sector implementations (DX8 + DX9), multi-instance
+    source_of_truth: this repo   # promoted from 03_debt_management/shared-plugins (now retired)
+
+# ---------------------------------------------------------------------------
+# Planned promotions — see docs/MIGRATION-BACKLOG.md for full extraction plan.
+# Listed here so the registry is the one place to see the whole platform surface.
+# ---------------------------------------------------------------------------
+planned:
+
+  - id: joget-status-framework
+    tier: G
+    ships: code
+    note: already Apache-2.0 standalone repo; register/import as-is (no surgery).
+
+  - id: form-creator-api
+    tier: G
+    ships: code
+    note: programmatic push backbone; promote from lst-frm-prj/plugins.
+
+  - id: joget-decision-approval        # DAS
+    tier: P
+    ships: code
+    note: >
+      extract ApprovalService/ApprovalEffects/ApprovalInbox/AuthorityResolver/MatrixValidator
+      + gate/delegate/sweep engines from cmbb-plugins; INVERT the ApprovalEffects->engine
+      coupling (consumer-registered effects). See docs/DAS-EXTRACTION-PLAN.md.
+
+  - id: joget-status-manager           # StatusManager + mm metamodel
+    tier: P
+    ships: code
+    note: StatusManager/MmConfigService/GuardContext/TransitionGuard/GuardPhase from cmbb-plugins.
+
+  - id: joget-event-chain              # integrity log
+    tier: P
+    ships: code
+    note: CaseEventWriter/ChainVerifyService/CaseRefGenerator (hash-chained event log).

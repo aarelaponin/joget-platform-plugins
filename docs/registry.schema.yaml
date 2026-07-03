@@ -1,0 +1,39 @@
+# JSON-Schema (YAML form) for registry.yaml `plugins[]` entries.
+# Keep intentionally small — the registry is config, not code.
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: joget-platform-plugins registry
+type: object
+required: [registry_version, plugins]
+properties:
+  registry_version: { type: string }
+  plugins:
+    type: array
+    items:
+      type: object
+      required: [id, module, artifact, version, tier, status, ships, dx_compat, contract]
+      additionalProperties: true
+      properties:
+        id:        { type: string, pattern: "^[a-z0-9-]+$" }
+        module:    { type: string, description: "path to the Maven module dir" }
+        artifact:  { type: string, pattern: "^[^:]+:[^:]+$", description: "groupId:artifactId" }
+        version:   { type: string, pattern: "^[0-9]+\\.[0-9]+\\.[0-9]+" }
+        tier:      { enum: [G, P] }
+        status:    { enum: [active, planned, deprecated] }
+        ships:     { enum: [code, pattern] }
+        license:   { type: string }
+        dx_compat: { type: array, items: { type: string } }
+        java_release: { type: integer }
+        summary:   { type: string }
+        registers: { type: array, items: { type: string }, description: "OSGi plugin class names" }
+        contract:
+          type: object
+          description: "Public API generators target. Changing it is a MAJOR version bump."
+          required: [config_keys]
+          properties:
+            binder_class: { type: string }
+            config_keys:  { type: array, items: { type: string } }
+        provenance:     { type: string }
+        source_of_truth:{ type: string }
+  planned:
+    type: array
+    items: { type: object }
