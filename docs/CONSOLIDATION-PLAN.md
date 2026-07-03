@@ -73,12 +73,17 @@ GovStack BBs are a tagging overlay on the packs, not the organising axis.
 |---|---|---|---|
 | **0 — Scaffold** | mono-repo, parent POM, registry + schema, README, backlog, DAS plan | low | ✅ done (`190bf0f`) |
 | **1 — Easy wins** | promote the already-generic plugins: `joget-form-prefill`, `form-creator-api`; register `joget-status-framework` in place | low | ✅ done (`7cd1298`) |
-| **2 — Foundation core** | extract the horizontal capabilities trapped in the case app (`cmbb-plugins`): `joget-event-chain` → `joget-status-manager` → `joget-decision-approval`; re-point DMBB; regression | **high** | ▢ next |
-| **3 — Domain packs** | promote BB-aligned packs from across projects + KP4 net-new connectors: `pack:registration` (FRS gs-plugins), `pack:payments`, `pack:information-mediator`; each `govstack_bb`-tagged | medium | ▢ later |
+| **2 — Foundation core** | extract the horizontal capabilities trapped in the case app (`cmbb-plugins`): `joget-event-chain` → `joget-status-manager` → `joget-decision-approval`; re-point DMBB; regression | **high** | ▢ in progress |
+| **2b — Foundation (as-is)** | promote the clean, generic Lesotho/GAM plugins: `joget-lookup-field`, `joget-concat-field`, `joget-advanced-filters`, `embedded-datalist`, `wf-activator`, `tree-menu`, `form-quality-runtime` | low | ▢ ready — independent of Phase 2 |
+| **2c — Rules engine** | promote the self-contained business-rules DSL: `rules-grammar` + `joget-rules-api` + `joget-rule-editor` | low–med | ▢ ready — independent of Phase 2 |
+| **3 — Domain packs** | promote BB-aligned packs: `pack:registration` and `pack:gis` (both exist as code in FRS), then `pack:payments`, `pack:information-mediator` (net-new); each `govstack_bb`-tagged | medium | ▢ later |
 | **4 — Publish + CI** | enable `mvn deploy` to GitHub Packages; registry↔build drift check; provenance forbidden-strings gate in CI | low | ▢ later |
 
-Phases 0–1 are complete. Phase 2 is the substance of the effort; phase 4 can run in parallel once
-the first `mvn deploy` credentials are in place.
+Phases 0–1 are complete. **This table is the single authoritative roadmap.** Phases **2b** and
+**2c** are the cheapest reuse wins on the board (clean coupling, no cmbb dependency) and can run
+before or in parallel with the harder Phase 2 extraction; phase 4 can run in parallel once the
+first `mvn deploy` credentials are in place. The evidence behind 2b/2c/3 — every plugin classified
+with its coupling — is in [PLUGIN-INVENTORY.md](PLUGIN-INVENTORY.md).
 
 ## 7. Current status snapshot
 

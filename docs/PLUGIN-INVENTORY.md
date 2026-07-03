@@ -196,21 +196,13 @@ One monolithic bundle. Foundation capabilities to extract (Phase 2): event-chain
 decision-approval (see §A.5). Everything else is debt/tax domain (see §C). Bundle-level coupling:
 openpdf, clickhouse-jdbc (used by reporting / gold-mart engines, not by the foundation classes).
 
-## F. Recommended reuse roadmap (updated)
+## F. Reuse roadmap
 
-The phased plan (`CONSOLIDATION-PLAN.md`) widens with these findings:
-
-| Phase | Scope | Why now |
-|---|---|---|
-| **0–1** ✅ | scaffold + first 3 (form-prefill, form-creator-api, status-framework) | done |
-| **2** ▶ | Foundation core from cmbb: event-chain → status-manager → decision-approval | unblocks DMBB decoupling |
-| **2b** (new) | **Promote-as-is Lesotho/GAM foundation** — lookup-field, concat-field, advanced-filters, embedded-datalist, wf-activator, tree-menu, form-quality-runtime | clean coupling, low risk, immediate reuse |
-| **2c** (new) | **Rules engine** — rules-grammar + joget-rules-api + joget-rule-editor | self-contained, high value |
-| **3** | Domain packs — `pack:registration`, `pack:gis` (exist) ; then `pack:payments`, `pack:information-mediator` (new) | BB-aligned reuse |
-| **4** | Publish (GitHub Packages) + CI drift/provenance gates | make pins real |
-
-Phases 2b and 2c are independent of the cmbb extraction and could run first — they are the cheapest
-reuse wins on the board.
+This inventory feeds the **single authoritative roadmap** in
+[CONSOLIDATION-PLAN.md §6](CONSOLIDATION-PLAN.md#6-phased-roadmap). The findings here added phases
+**2b** (promote-as-is Lesotho/GAM foundation) and **2c** (the rules engine) — both independent of
+the cmbb extraction and the cheapest reuse wins on the board. See that table for phase status; this
+document is the evidence (what exists, coupling, effort) behind it.
 
 ---
 
