@@ -96,3 +96,52 @@ for the moved engines.
 - [ ] A throwaway second consumer registering one dummy effect drives an approval end-to-end —
       proving the SPI works without DMBB (the reuse proof).
 - [ ] `cmbb-plugins` no longer contains `ApprovalService`; it pins `joget-decision-approval` instead.
+
+
+---
+
+## Execution log & the two-increment split (added during Phase 2)
+
+The recon confirmed the inversion was already structural: `DecisionEffect` was an inner
+interface of `ApprovalService`, and `ApprovalService` took the `Map<String,DecisionEffect>`
+registry via its constructor — it names no domain service. `ApprovalEffects` (cmbb) is just
+the factory that wires the three domain bodies. Two hidden couplings were found and resolved:
+
+1. **`ApprovalEffects.service(dao)` is a platform→consumer back-reference.** The four engines
+   (`ApprovalGateEngine`, `ApprovalDelegateEngine`, `ApprovalSweepEngine`, and — via
+   `MatrixValidator` — `AuthorityMatrixEngine`) call the cmbb factory to build a configured
+   `ApprovalService`. **Fix:** ship a static `DecisionEffects` registry in the platform; the
+   engines read `DecisionEffects.snapshot()`; cmbb's Activator calls
+   `DecisionEffects.register(actionType, effect)` for its three effects at start-up.
+2. **`DecisionService`/`AuthorityResolver` borrow `DeadlineService.prop/parseLong`** — static
+   helpers on a cmbb domain service that stays put. **Fix:** a small platform `Rows` helper
+   (`prop`/`parseLong`/`parseDouble`); ported classes use it.
+
+### Increment 3a — SHIPPED (this repo, `com.fiscaladmin.joget.approval`)
+- `DecisionEffect` (top-level SPI) + `DecisionEffects` (static registry: register/get/snapshot/clear).
+- `Rows` (row-property + numeric helper; de-couples from `DeadlineService`).
+- `DecisionService` (authority rank / collegial quorum / reasoned-grounds decision logic), ported.
+- 13 unit tests. Module builds green in the reactor; provenance clean.
+
+### Increment 3b — REMAINING (next session)
+Port, scrubbed, onto the same package + `Rows`:
+- **`ApprovalService`** (~674 lines) — the router. Promote its inner `DecisionEffect` to use the
+  top-level SPI; its constructor keeps taking `Map<String,DecisionEffect>` (fed by
+  `DecisionEffects.snapshot()`). It also uses `StatusManager` + `MmConfigService` (already in
+  joget-status-manager) and `CaseEventWriter` (event-chain).
+- **`AuthorityResolver`**, **`MatrixValidator`**, **`ApprovalInbox`** — supporting services
+  (use `Rows`, `DecisionService`).
+- **`ApprovalInboxBinder`** (Joget FormBinder/element) + the four `DefaultApplicationPlugin`
+  engines: `ApprovalGateEngine`, `ApprovalDelegateEngine`, `ApprovalSweepEngine`,
+  `AuthorityMatrixEngine` — with their `properties/*.json` descriptors and a Bundle-Activator;
+  the engines call `DecisionEffects.snapshot()` (NOT the cmbb factory). registry.yaml `registers:`
+  gains these classes; L2 manifest-smoke then checks them.
+
+### cmbb-side (part of the DMBB re-point task)
+- `ApprovalEffects` becomes an **Activator-time registrar**: at start-up it calls
+  `DecisionEffects.register("INSTALMENT_PLAN", …reliefService…)`, `("WRITE_OFF", …writeOff…)`,
+  `("ENFORCE_ACTION"/"ENFORCE_JUDICIAL", …enforcement…)`. Its `service(dao)`/`registry(dao)`
+  factory methods are removed once the engines read the platform registry.
+- cmbb keeps `DeadlineService` (and its `prop/parseLong`), the three effect bodies
+  (`ReliefService`/`WriteOffService`/`EnforcementActionService`), and re-points
+  `ClosePhase` to the platform `DecisionService`.

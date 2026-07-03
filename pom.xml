@@ -44,6 +44,7 @@
         <module>plugins/joget-rule-editor</module>
         <module>plugins/joget-event-chain</module>
         <module>plugins/joget-status-manager</module>
+        <module>plugins/joget-decision-approval</module>
     </modules>
 
     <!--

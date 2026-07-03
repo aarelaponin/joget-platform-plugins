@@ -335,6 +335,33 @@ plugins:
                 domain phases (open/pre-close/close) + the case-envelope plugin stay in the consumer
     source_of_truth: this repo
 
+  - id: joget-decision-approval
+    module: plugins/joget-decision-approval
+    artifact: com.fiscaladmin.joget:joget-decision-approval
+    version: 1.0.0
+    category: foundation
+    tier: P
+    status: active            # increment 3a shipped; ApprovalService + gate/sweep/delegate engines pending (3b)
+    ships: code
+    license: proprietary            # FiscalAdmin OÜ
+    dx_compat: ["8.1", "9.x"]
+    java_release: 11
+    depends_on: [joget-event-chain, joget-status-manager]
+    summary: >
+      Configurable decision & approval service. Ships the inversion seam — the DecisionEffect SPI
+      and a static DecisionEffects registry the consumer's Activator populates, so the approval
+      engine never names a domain service — plus DecisionService (authority rank / collegial quorum /
+      reasoned-grounds decision logic) and a Rows helper. The routing ApprovalService + the
+      gate/sweep/delegate/authority-matrix engines are the next increment (see DAS-EXTRACTION-PLAN.md).
+    registers: []                   # library — exports a package, registers no Joget plugins (yet)
+    contract:
+      exports_package: com.fiscaladmin.joget.approval
+      classes: [DecisionEffect, DecisionEffects, DecisionService, Rows]
+      spi: "consumer registers DecisionEffects.register(actionType, effect) at Activator start-up"
+      carriers: [cmDecision, mmAuthority]
+    provenance: extracted + genericised from a collection-management building block (Phase 2, item 4)
+    source_of_truth: this repo
+
 # ---------------------------------------------------------------------------
 # Planned — see docs/MIGRATION-BACKLOG.md and docs/CONSOLIDATION-PLAN.md.
 # ---------------------------------------------------------------------------

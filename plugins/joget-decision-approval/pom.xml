@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.fiscaladmin.joget</groupId>
+        <artifactId>joget-platform-plugins</artifactId>
+        <version>1.0.0</version>
+        <relativePath>../../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>joget-decision-approval</artifactId>
+    <version>1.0.0</version>
+    <packaging>bundle</packaging>
+    <name>joget-decision-approval</name>
+    <description>Configurable decision &amp; approval service for Joget DX: authority-matrix
+        routing (rank/quorum), reasoned-grounds enforcement and audited decisions. Ships the
+        DecisionEffect SPI + a static DecisionEffects registry so the effect run on approval is
+        supplied by the consumer (the platform never names a domain service — the inversion).
+        Library bundle (exports com.fiscaladmin.joget.approval); depends on joget-status-manager
+        and joget-event-chain and the Joget form/commons API only.</description>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Export-Package>com.fiscaladmin.joget.approval</Export-Package>
+                        <Import-Package>com.fiscaladmin.joget.eventchain,com.fiscaladmin.joget.statusmanager,org.joget.apps.form.dao,org.joget.apps.form.model,*</Import-Package>
+                        <DynamicImport-Package>*</DynamicImport-Package>
+                    </instructions>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.fiscaladmin.joget</groupId>
+            <artifactId>joget-event-chain</artifactId>
+            <version>1.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.fiscaladmin.joget</groupId>
+            <artifactId>joget-status-manager</artifactId>
+            <version>1.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.joget</groupId>
+            <artifactId>wflow-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+        </dependency>
+    </dependencies>
+</project>
