@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.fiscaladmin.joget</groupId>
+        <artifactId>joget-platform-plugins</artifactId>
+        <version>1.0.0</version>
+        <relativePath>../../pom.xml</relativePath>
+    </parent>
+
+    <groupId>global.govstack</groupId>
+    <artifactId>joget-lookup-field</artifactId>
+    <version>8.1-SNAPSHOT</version>
+    <packaging>bundle</packaging>
+    <name>Joget Lookup Field Plugin</name>
+    <description>Form element that watches a SelectBox and auto-populates from a related form record.
+        Project-neutral OSGi bundle: depends only on the Joget form/commons API.</description>
+
+    <properties>
+        <maven.compiler.release>17</maven.compiler.release>
+    </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Export-Package></Export-Package>
+                        <Private-Package>{local-packages}</Private-Package>
+                        <Bundle-Activator>global.govstack.lookupfield.Activator</Bundle-Activator>
+                        <Include-Resource>
+                            {maven-resources},
+                            static=src/main/resources/static,
+                            templates=src/main/resources/templates,
+                            properties=src/main/resources/properties
+                        </Include-Resource>
+                        <Import-Package>
+                            org.joget.commons.util,
+                            org.joget.plugin.base,
+                            org.joget.plugin.property.model,
+                            org.joget.plugin.property.service,
+                            org.joget.apps.app.dao,
+                            org.joget.apps.app.model,
+                            org.joget.apps.app.service,
+                            org.joget.apps.form.model,
+                            org.joget.apps.form.service,
+                            org.joget.apps.form.dao,
+                            org.osgi.framework;version="1.3.0",
+                            *;resolution:=optional
+                        </Import-Package>
+                        <DynamicImport-Package>*</DynamicImport-Package>
+                    </instructions>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.joget</groupId>
+            <artifactId>wflow-core</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>javax.servlet</groupId>
+                    <artifactId>javax.servlet-api</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>20230227</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+</project>

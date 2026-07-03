@@ -18,7 +18,7 @@
 # tier:   G = generic-Joget (any app) · P = pattern-reusable (genericised then shipped)
 # status: active | planned | deprecated      ships: code | pattern
 
-registry_version: 0.3.0
+registry_version: 0.4.0
 
 plugins:
 
@@ -66,6 +66,28 @@ plugins:
       config_keys: [appId, formJson, formIds, datalistJson, userviewJson]
     provenance: proven push tooling across production public-sector implementations
     source_of_truth: this repo   # promoted from lst-frm-prj/plugins (client refs scrubbed)
+
+  - id: joget-lookup-field
+    module: plugins/joget-lookup-field
+    artifact: global.govstack:joget-lookup-field
+    version: 8.1-SNAPSHOT
+    category: foundation
+    tier: G
+    status: active
+    ships: code
+    license: govstack
+    dx_compat: ["8.1", "9.x"]
+    java_release: 17
+    summary: >
+      Form element that watches a SelectBox and auto-populates fields from a related record
+      (field-level, live). Complements joget-form-prefill (form-level, on-load).
+    registers:
+      - global.govstack.lookupfield.LookupFieldElement
+    contract:
+      element_class: global.govstack.lookupfield.LookupFieldElement
+      config_keys: [sourceFieldId, lookupFormId, lookupColumn, lookupKeyColumn, updateOn, displayType]
+    provenance: promoted from lst-frm-prj/plugins (project-neutral source)
+    source_of_truth: this repo
 
   - id: joget-status-framework
     module: "(external — own repo)"
