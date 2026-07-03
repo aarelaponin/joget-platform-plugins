@@ -42,6 +42,7 @@
         <module>plugins/rules-grammar</module>
         <module>plugins/joget-rules-api</module>
         <module>plugins/joget-rule-editor</module>
+        <module>plugins/joget-event-chain</module>
     </modules>
 
     <!--

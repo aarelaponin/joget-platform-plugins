@@ -282,6 +282,31 @@ plugins:
     provenance: proven in production public-sector implementations (multi-project)
     source_of_truth: https://github.com/aarelaponin/joget-status-framework
 
+  - id: joget-event-chain
+    module: plugins/joget-event-chain
+    artifact: com.fiscaladmin.joget:joget-event-chain
+    version: 1.0.0
+    category: foundation
+    tier: P
+    status: active
+    ships: code
+    license: proprietary            # FiscalAdmin OÜ
+    dx_compat: ["8.1", "9.x"]
+    java_release: 11
+    summary: >
+      Tamper-evident, append-only case event log: a SHA-256 hash-chained event writer,
+      a read-only chain verifier, and a configurable human case-reference generator.
+      Library bundle (exports com.fiscaladmin.joget.eventchain) — no Joget plugin descriptors;
+      consumed by other engine plugins. The event/case table ids are configurable so any
+      consumer points it at its own carriers.
+    registers: []                   # library — exports a package, registers no Joget plugins
+    contract:
+      exports_package: com.fiscaladmin.joget.eventchain
+      classes: [CaseEventWriter, ChainVerifyService, CaseRefGenerator]
+      config_keys: [eventFormId, caseFormId]   # via constructor arg or setDefaultEventFormId
+    provenance: extracted + genericised from a collection-management building block (Phase 2, item 6)
+    source_of_truth: this repo
+
 # ---------------------------------------------------------------------------
 # Planned — see docs/MIGRATION-BACKLOG.md and docs/CONSOLIDATION-PLAN.md.
 # ---------------------------------------------------------------------------
