@@ -26,3 +26,25 @@ export JOGET_HOME=/Users/aarelaponin/joget-enterprise-linux-9.0.5
 #   ... (re)start the instance: (cd $JOGET_HOME && ./tomcat.sh start) ...
 ./reference-app/verify-load.sh       # assert every bundle started, no OSGi errors  (exit 0/1)
 ```
+
+## Create the functional reference app (credential-gated)
+
+`app/reference-form.request.json` is a `form-creator-api` payload that builds a form embedding five
+plugins at once — the **form-prefill** load binder plus the **concat-field**, **lookup-field**,
+**rule-editor** (which drives **rules-api** + **rules-grammar**) and **form-quality** quality-banner
+elements. Creating it is itself a functional check: `form-creator-api` validates and instantiates
+each element's plugin class server-side, so a wrong or unloadable class fails the call.
+
+The API key is **not** stored in this repo (it is a `password_env` secret). Export it, then run:
+
+```bash
+export JDX7_FORMCREATOR_API_KEY=...          # from your password manager
+./reference-app/create-reference-app.sh      # POST -> jdx7; PASS on HTTP 2xx
+```
+
+Then open the form (`http://localhost:8077/jw/web/embed/form/platformRef/ppRefForm`) to see the
+five plugins render together.
+
+**Still to author** (same pattern, `/formcreator/datalists` and `/formcreator/userviews`): a datalist
+using **advanced-filters** and a userview using **tree-menu**; `wf-activator` (a process tool) and
+`form-creator-api` itself are exercised by this very flow.
