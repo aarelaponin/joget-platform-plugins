@@ -21,6 +21,7 @@ pom.xml                     # parent (multi-module reactor; shared versions; GH 
 registry.yaml               # single source of truth: every plugin + its config contract
 docs/
   registry.schema.yaml      # schema for registry entries
+  CONSOLIDATION-PLAN.md     # THE program plan: phases, status, roadmap, decisions
   MIGRATION-BACKLOG.md      # what moves here, in what order, with provenance rules
   DAS-EXTRACTION-PLAN.md    # how the trapped approval service comes out of cmbb-plugins
 plugins/
