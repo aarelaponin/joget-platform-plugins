@@ -18,7 +18,7 @@
 # tier:   G = generic-Joget (any app) · P = pattern-reusable (genericised then shipped)
 # status: active | planned | deprecated      ships: code | pattern
 
-registry_version: 0.6.0
+registry_version: 0.7.0
 
 plugins:
 
@@ -200,6 +200,69 @@ plugins:
       menu_class: org.joget.TreeMenu
       config_keys: [mode, configTableName, binder, treeNodeLabel, treeNodeParentId, rootParentId, depth, showSearch, showBreadcrumb, pageSize, orderBy, order]
     provenance: promoted from gam-bank/_plugins (generic tree menu, no client refs)
+    source_of_truth: this repo
+
+  - id: rules-grammar
+    module: plugins/rules-grammar
+    artifact: global.govstack:rules-grammar
+    version: 1.0.0-SNAPSHOT
+    category: foundation
+    tier: G
+    status: active
+    ships: code
+    license: govstack
+    dx_compat: ["8.1", "9.x"]
+    java_release: 17
+    summary: >
+      ANTLR parser + AST for the Rules Script DSL (lexer/parser grammar + model). A library
+      embedded by joget-rules-api; not a Joget plugin on its own.
+    registers: []
+    provenance: promoted from lst-frm-prj/plugins
+    source_of_truth: this repo
+
+  - id: joget-rules-api
+    module: plugins/joget-rules-api
+    artifact: global.govstack:joget-rules-api
+    version: 8.1-SNAPSHOT
+    category: foundation
+    tier: G
+    status: active
+    ships: code
+    license: govstack
+    dx_compat: ["8.1"]
+    java_release: 17
+    depends_on: [global.govstack:rules-grammar]
+    summary: >
+      Rules Management API: parse/compile Rules Script to SQL, field dictionary, ruleset CRUD —
+      exposed as an API Builder plugin. The engine behind the business-rules DSL.
+    registers:
+      - global.govstack.rulesapi.lib.RulesApiProvider
+    contract:
+      api_class: global.govstack.rulesapi.lib.RulesApiProvider
+      config_keys: [info, fieldDefinitionForm, rulesetForm]
+    provenance: promoted from lst-frm-prj/plugins (demo FieldMapping table/fields genericised)
+    source_of_truth: this repo
+
+  - id: joget-rule-editor
+    module: plugins/joget-rule-editor
+    artifact: global.govstack:joget-rule-editor
+    version: 8.1-SNAPSHOT
+    category: foundation
+    tier: G
+    status: active
+    ships: code
+    license: govstack
+    dx_compat: ["8.1", "9.x"]
+    java_release: 17
+    summary: >
+      CodeMirror form element for authoring/validating Rules Script, with a field dictionary and
+      live compile against joget-rules-api.
+    registers:
+      - global.govstack.ruleeditor.element.RuleEditorElement
+    contract:
+      element_class: global.govstack.ruleeditor.element.RuleEditorElement
+      config_keys: [scopeCode, showDictionary, showSaveButton, rulesetCodeField, rulesetNameField, filterCategories, filterFieldTypes, filterLookupFormId, apiEndpoint, apiId, apiKey]
+    provenance: promoted from lst-frm-prj/plugins (example text genericised)
     source_of_truth: this repo
 
   - id: joget-status-framework

@@ -39,6 +39,9 @@
         <module>plugins/wf-activator</module>
         <module>plugins/form-quality-runtime</module>
         <module>plugins/tree-menu</module>
+        <module>plugins/rules-grammar</module>
+        <module>plugins/joget-rules-api</module>
+        <module>plugins/joget-rule-editor</module>
     </modules>
 
     <dependencyManagement>
