@@ -10,7 +10,7 @@ properties:
     type: array
     items:
       type: object
-      required: [id, module, artifact, version, tier, status, ships, dx_compat, contract]
+      required: [id, artifact, version, tier, status, ships, dx_compat]
       additionalProperties: true
       properties:
         id:        { type: string, pattern: "^[a-z0-9-]+$" }

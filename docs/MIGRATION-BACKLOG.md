@@ -18,8 +18,8 @@ Easy wins first (prove the build→publish→pin loop cheaply), then the hard ex
 | # | Plugin | From | Tier | Action | Status |
 |---|--------|------|------|--------|--------|
 | 1 | **joget-form-prefill** | `03_debt_management/shared-plugins/` | G | Move as-is; parent-inherit pom; build green | ✅ DONE (module 1) |
-| 2 | **joget-status-framework** | `rsr/joget-status-framework` (Apache-2.0) | G | Register/import as-is; add as module or submodule | ▢ |
-| 3 | **form-creator-api** | `lst-frm-prj/plugins/form-creator-api` | G | Promote; provenance scrub; pom inherit | ▢ |
+| 2 | **joget-status-framework** | `rsr/joget-status-framework` (Apache-2.0) | G | Register/import as-is; add as module or submodule | ✅ DONE (registered in place — own repo, not vendored) |
+| 3 | **form-creator-api** | `lst-frm-prj/plugins/form-creator-api` | G | Promote; provenance scrub; pom inherit | ✅ DONE (module 2; farmersPortal scrubbed) |
 | 4 | **joget-decision-approval** (DAS) | `cmbb/plugins/cmbb-plugins` | P | Extract + INVERT effects coupling — see DAS-EXTRACTION-PLAN.md | ▢ |
 | 5 | **joget-status-manager** (+ mm metamodel) | `cmbb-plugins` | P | Extract StatusManager/MmConfigService/GuardContext/TransitionGuard/GuardPhase | ▢ |
 | 6 | **joget-event-chain** | `cmbb-plugins` | P | Extract CaseEventWriter/ChainVerifyService/CaseRefGenerator | ▢ |

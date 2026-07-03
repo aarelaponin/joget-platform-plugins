@@ -32,6 +32,7 @@
 
     <modules>
         <module>plugins/joget-form-prefill</module>
+        <module>plugins/form-creator-api</module>
     </modules>
 
     <dependencyManagement>

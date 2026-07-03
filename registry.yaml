@@ -9,7 +9,7 @@
 # status:   active | planned | deprecated
 # ships:    code | pattern            (code = the JAR ships; pattern = design ships, not code)
 
-registry_version: 0.1.0
+registry_version: 0.2.0
 
 plugins:
 
@@ -29,8 +29,7 @@ plugins:
       hand-written per-form load binders.
     registers:
       - com.fiscaladmin.joget.formprefill.FormPrefillLoadBinder
-    # The config contract = the public API generators target. Changing a key is a MAJOR bump.
-    contract:
+    contract:                       # config keys = public API generators target (MAJOR bump if changed)
       binder_class: com.fiscaladmin.joget.formprefill.FormPrefillLoadBinder
       config_keys:
         - enabled
@@ -49,21 +48,54 @@ plugins:
     provenance: proven in production public-sector implementations (DX8 + DX9), multi-instance
     source_of_truth: this repo   # promoted from 03_debt_management/shared-plugins (now retired)
 
+  - id: form-creator-api
+    module: plugins/form-creator-api
+    artifact: global.govstack:form-creator-api
+    version: 8.1-SNAPSHOT
+    tier: G
+    status: active
+    ships: code
+    license: govstack             # global.govstack
+    dx_compat: ["8.1"]            # 9.x not yet verified
+    java_release: 11
+    summary: >
+      Programmatic Joget artefact-creation backbone: creates forms, datalists, userviews,
+      CRUD and API-Builder endpoints, and seeds fixtures, over a REST API. The push-tooling
+      spine used by the spec-driven pipelines.
+    registers:
+      - global.govstack.formcreator.lib.FormCreatorServiceProvider
+    contract:                       # this is an API plugin — its contract is the OpenAPI + payload keys
+      api_spec: docs/formCreatorApi-openapi.yaml
+      config_keys:
+        - appId
+        - formJson
+        - formIds
+        - datalistJson
+        - userviewJson
+    provenance: proven push tooling across production public-sector implementations
+    source_of_truth: this repo   # promoted from lst-frm-prj/plugins (client refs scrubbed)
+
+  - id: joget-status-framework
+    module: "(external — own repo)"
+    artifact: global.govstack:joget-status-framework
+    version: 8.1-SNAPSHOT
+    tier: G
+    status: active
+    ships: code
+    license: Apache-2.0
+    dx_compat: ["8.1", "9.x"]
+    java_release: 11
+    summary: >
+      Config-driven status lifecycle + audit-trail framework for Joget records. Already a
+      standalone, open-licensed repo — consumed here by version pin, NOT vendored.
+    provenance: proven in production public-sector implementations (multi-project)
+    source_of_truth: https://github.com/aarelaponin/joget-status-framework
+
 # ---------------------------------------------------------------------------
-# Planned promotions — see docs/MIGRATION-BACKLOG.md for full extraction plan.
+# Planned promotions — see docs/MIGRATION-BACKLOG.md for the full extraction plan.
 # Listed here so the registry is the one place to see the whole platform surface.
 # ---------------------------------------------------------------------------
 planned:
-
-  - id: joget-status-framework
-    tier: G
-    ships: code
-    note: already Apache-2.0 standalone repo; register/import as-is (no surgery).
-
-  - id: form-creator-api
-    tier: G
-    ships: code
-    note: programmatic push backbone; promote from lst-frm-prj/plugins.
 
   - id: joget-decision-approval        # DAS
     tier: P
