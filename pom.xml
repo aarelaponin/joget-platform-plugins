@@ -34,6 +34,9 @@
         <module>plugins/joget-form-prefill</module>
         <module>plugins/form-creator-api</module>
         <module>plugins/joget-lookup-field</module>
+        <module>plugins/joget-concat-field</module>
+        <module>plugins/joget-advanced-filters</module>
+        <module>plugins/wf-activator</module>
     </modules>
 
     <dependencyManagement>

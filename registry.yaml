@@ -18,7 +18,7 @@
 # tier:   G = generic-Joget (any app) · P = pattern-reusable (genericised then shipped)
 # status: active | planned | deprecated      ships: code | pattern
 
-registry_version: 0.4.0
+registry_version: 0.5.0
 
 plugins:
 
@@ -87,6 +87,74 @@ plugins:
       element_class: global.govstack.lookupfield.LookupFieldElement
       config_keys: [sourceFieldId, lookupFormId, lookupColumn, lookupKeyColumn, updateOn, displayType]
     provenance: promoted from lst-frm-prj/plugins (project-neutral source)
+    source_of_truth: this repo
+
+  - id: joget-concat-field
+    module: plugins/joget-concat-field
+    artifact: global.govstack:joget-concat-field
+    version: 8.1-SNAPSHOT
+    category: foundation
+    tier: G
+    status: active
+    ships: code
+    license: govstack
+    dx_compat: ["8.1", "9.x"]
+    java_release: 17
+    summary: >
+      Form element that concatenates multiple field values with configurable separator,
+      format, prefix/suffix and empty-skipping — recomputed live as inputs change.
+    registers:
+      - global.govstack.concatfield.element.ConcatFieldElement
+    contract:
+      element_class: global.govstack.concatfield.element.ConcatFieldElement
+      config_keys: [sourceFields, separator, formatPattern, prefix, suffix, skipEmpty, updateOn, displayType]
+    provenance: promoted from lst-frm-prj/plugins (project-neutral source)
+    source_of_truth: this repo
+
+  - id: joget-advanced-filters
+    module: plugins/joget-advanced-filters
+    artifact: org.joget.lst:joget-advanced-filters
+    version: 8.1.0
+    category: foundation
+    tier: G
+    status: active
+    ships: code
+    license: govstack
+    dx_compat: ["8.1"]
+    java_release: 11
+    summary: >
+      Datalist/report filter toolkit: a collapsible filter-panel decorator plus reusable
+      filter types (date-range, MDM select, cascading MDM select).
+    registers:
+      - org.joget.lst.ReportFilterPanel
+      - org.joget.lst.FilterPanelDecorator
+      - org.joget.lst.DateRangeFilterType
+      - org.joget.lst.MdmSelectFilterType
+      - org.joget.lst.CascadingMdmSelectFilterType
+    contract:
+      config_keys: [targetMenuId, panelTitle, columns, applyLabel, collapsedByDefault, frameMinHeight, parameters]
+    provenance: promoted from lst-frm-prj/plugins (project-neutral; groupId org.joget.lst retained, rename optional)
+    source_of_truth: this repo
+
+  - id: wf-activator
+    module: plugins/wf-activator
+    artifact: global.govstack:wf-activator
+    version: 8.1-SNAPSHOT
+    category: foundation
+    tier: G
+    status: active
+    ships: code
+    license: govstack
+    dx_compat: ["8.1", "9.x"]
+    java_release: 11
+    summary: >
+      Workflow activator utility — starts a Joget process programmatically for a named
+      service (multi-service support), returning a structured response.
+    registers:
+      - global.govstack.workflow.WorkflowActivator
+    contract:
+      config_keys: [serviceId]
+    provenance: promoted from lst-frm-prj/plugins (example service ids genericised)
     source_of_truth: this repo
 
   - id: joget-status-framework
