@@ -17,6 +17,7 @@ repo diff-able and light while still giving stakeholders a formatted document to
 |---|---|
 | [VISION.md](VISION.md) | The vision — why plugins become a platform, what it is, how it works (with figures) |
 | [CONSOLIDATION-PLAN.md](CONSOLIDATION-PLAN.md) | The program plan — phases, status, taxonomy, roadmap, risks, decisions |
+| [PLUGIN-INVENTORY.md](PLUGIN-INVENTORY.md) | Cross-project plugin catalogue — every plugin classified (foundation / pack / project) with coupling + reuse roadmap |
 | [MIGRATION-BACKLOG.md](MIGRATION-BACKLOG.md) | Per-plugin migration list, tiers, provenance rules |
 | [DAS-EXTRACTION-PLAN.md](DAS-EXTRACTION-PLAN.md) | How the approval service comes out of the case bundle (effects-coupling inversion) |
 | [registry.schema.yaml](registry.schema.yaml) | Schema for `../registry.yaml` entries |
