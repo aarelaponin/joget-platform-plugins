@@ -22,19 +22,22 @@ public class DecisionEffectsTest {
     @Test
     public void registeredEffect_isReturnedAndRunnable() {
         AtomicReference<String> ran = new AtomicReference<String>();
-        DecisionEffects.register("WRITE_OFF",
-                (entity, recordId, actor, now) -> ran.set(recordId + "/" + actor));
+        DecisionEffects.register("WRITE_OFF", (entity, recordId, actor, now) -> {
+            ran.set(recordId + "/" + actor);
+            return "written off " + recordId;
+        });
 
         assertTrue(DecisionEffects.isRegistered("WRITE_OFF"));
-        DecisionEffects.get("WRITE_OFF").execute("dmWriteOff", "W1", "alice", null);
+        String result = DecisionEffects.get("WRITE_OFF").run("dmWriteOff", "W1", "alice", null);
         assertEquals("the consumer's effect body ran", "W1/alice", ran.get());
+        assertEquals("written off W1", result);
     }
 
     @Test
     public void snapshot_isDetachedCopy() {
-        DecisionEffects.register("A", (e, r, a, n) -> { });
+        DecisionEffects.register("A", (e, r, a, n) -> "a");
         assertEquals(1, DecisionEffects.snapshot().size());
-        DecisionEffects.register("B", (e, r, a, n) -> { });
+        DecisionEffects.register("B", (e, r, a, n) -> "b");
         assertEquals("earlier snapshot is not mutated by later registration",
                 2, DecisionEffects.snapshot().size());
     }
@@ -46,7 +49,7 @@ public class DecisionEffectsTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void register_blankActionType_rejected() {
-        DecisionEffects.register("  ", (e, r, a, n) -> { });
+        DecisionEffects.register("  ", (e, r, a, n) -> "x");
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -57,9 +60,7 @@ public class DecisionEffectsTest {
     @Test
     public void lastRegistrationWins() {
         DecisionEffects.register("A", (e, r, a, n) -> { throw new RuntimeException("old"); });
-        AtomicReference<Boolean> ran = new AtomicReference<Boolean>(false);
-        DecisionEffects.register("A", (e, r, a, n) -> ran.set(true));
-        DecisionEffects.get("A").execute("e", "r", "a", null);
-        assertTrue(ran.get());
+        DecisionEffects.register("A", (e, r, a, n) -> "new");
+        assertEquals("new", DecisionEffects.get("A").run("e", "r", "a", null));
     }
 }

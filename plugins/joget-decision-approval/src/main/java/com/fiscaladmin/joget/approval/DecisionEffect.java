@@ -15,12 +15,14 @@ import java.time.LocalDateTime;
 public interface DecisionEffect {
 
     /**
-     * Execute the approved action.
+     * Execute the approved action and return a short human summary of what it did (echoed
+     * into the approval service's result string).
      *
      * @param entity   logical entity name the record belongs to (informational)
      * @param recordId id of the record the decision was about
      * @param actor    the approver (or the system, for auto-passed actions)
      * @param now      decision timestamp
+     * @return a short result message
      */
-    void execute(String entity, String recordId, String actor, LocalDateTime now);
+    String run(String entity, String recordId, String actor, LocalDateTime now);
 }
