@@ -38,8 +38,9 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
+                        <Bundle-Activator>com.fiscaladmin.joget.approval.Activator</Bundle-Activator>
                         <Export-Package>com.fiscaladmin.joget.approval</Export-Package>
-                        <Import-Package>com.fiscaladmin.joget.eventchain,com.fiscaladmin.joget.statusmanager,org.joget.apps.form.dao,org.joget.apps.form.model,*</Import-Package>
+                        <Import-Package>com.fiscaladmin.joget.eventchain,com.fiscaladmin.joget.statusmanager,org.joget.apps.app.service,org.joget.apps.datalist.model,org.joget.apps.form.dao,org.joget.apps.form.model,org.joget.commons.util,org.joget.plugin.base,org.joget.workflow.util,org.osgi.framework,*</Import-Package>
                         <DynamicImport-Package>*</DynamicImport-Package>
                     </instructions>
                 </configuration>

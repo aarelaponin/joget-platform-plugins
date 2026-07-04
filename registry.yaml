@@ -356,11 +356,19 @@ plugins:
       DecisionService, AuthorityResolver (directory-resolved rank), MatrixValidator, ApprovalInbox,
       and a Rows helper. The Joget-plugin wrappers (gate/sweep/delegate/authority-matrix engines +
       inbox binder + Activator/descriptors) are the next increment (see DAS-EXTRACTION-PLAN.md §3c).
-    registers: []                   # library — exports a package; Joget plugin wrappers land in 3c
+    registers:
+      - com.fiscaladmin.joget.approval.ApprovalGateEngine
+      - com.fiscaladmin.joget.approval.ApprovalSweepEngine
+      - com.fiscaladmin.joget.approval.ApprovalDelegateEngine
+      - com.fiscaladmin.joget.approval.AuthorityMatrixEngine
+      - com.fiscaladmin.joget.approval.ApprovalInboxBinder
     contract:
       exports_package: com.fiscaladmin.joget.approval
       classes: [DecisionEffect, DecisionEffects, ApprovalService, DecisionService, AuthorityResolver,
                 MatrixValidator, ApprovalInbox, Rows]
+      plugins: [ApprovalGateEngine, ApprovalSweepEngine, ApprovalDelegateEngine,
+                AuthorityMatrixEngine, ApprovalInboxBinder]
+      triggers: [cmApprovalDecision, cmApprovalSweep, cmApprovalDelegate, cmAuthorityCheck]
       spi: "consumer registers DecisionEffects.register(actionType, effect) at Activator start-up"
       carriers: [cmApproval, cmDecision, mmAuthority, mmCoi, mmRoleLevel, cmCase]
     provenance: extracted + genericised from a collection-management building block (Phase 2, item 4)
