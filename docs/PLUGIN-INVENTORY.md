@@ -112,6 +112,19 @@ debt/tax domain code.
 `ChainVerifyService.setDefaultCaseFormId` · `GuardContext.setFormIds` ·
 `AuthorityResolver.registerRoleLevelDefault` · `DecisionEffects.register`.
 
+**Reuse proof (second consumer — GAM).** `examples/gam-status-demo/` wires
+`joget-status-manager` + `joget-event-chain` into a *different* app on a *different*
+instance (GAM Back Office, jdx8) — a non-debt `gamWidget` entity whose lifecycle lives in
+`mmEntityState`/`mmEntityTransition`, driven through `StatusManager.transition` by a small
+consumer bundle. Proven three ways: build-time link (the bundle *imports* the platform
+packages `[1.0,2)`, copies nothing); runtime resolution (deployed to jdx8, the GAM JVM
+resolved and started `com.fiscaladmin.gam.status-demo` against the platform bundles); and
+behaviour (`GamStatusReuseTest` 2/2 — legal transition advances + appends `STATUS_CHANGED`,
+illegal transition rejected, nothing written). This confirms the extractions are genuinely
+horizontal, not DMBB-shaped. *(DX delta observed: on a cold boot Joget installs `app_plugins`
+alphabetically, so a consumer that sorts before its platform dependency fails to resolve; a
+last-sorting name or a hot uninstall→reinstall fixes it.)*
+
 **Further foundation candidates still inside `cmbb-plugins`** (evaluate next, after the core three):
 notification-dispatch, deadline/SLA, document/evidence (Mayan), pending-info/hold, record-link,
 tenant-context, process-start.

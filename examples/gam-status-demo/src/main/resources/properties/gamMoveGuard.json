@@ -1,0 +1,9 @@
+[{
+  "title": "GAM Status Move Guard",
+  "properties": [{
+    "name": "recordId",
+    "label": "gamMove record id (blank = newest unprocessed)",
+    "type": "textfield",
+    "value": ""
+  }]
+}]

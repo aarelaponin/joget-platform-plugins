@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- Inherits the platform parent for Joget API versions, the vendored file
+         Maven repo (wflow-core) and the shared felix/compiler config. This is a
+         REUSE-PROOF consumer for the GAM instance (jdx8), not part of the platform
+         reactor — it lives beside the GAM plugins and is built standalone. -->
+    <parent>
+        <groupId>com.fiscaladmin.joget</groupId>
+        <artifactId>joget-platform-plugins</artifactId>
+        <version>1.0.0</version>
+        <relativePath>../../pom.xml</relativePath>
+    </parent>
+
+    <groupId>com.fiscaladmin.gam</groupId>
+    <artifactId>gam-status-demo</artifactId>
+    <version>1.0.0</version>
+    <packaging>bundle</packaging>
+    <name>gam-status-demo</name>
+    <description>Reuse proof: a second, non-debt consumer of the platform
+        joget-status-manager + joget-event-chain bundles. Binds GAM demo table ids
+        at Activator start and ships a transition-guard form post-processor that
+        drives StatusManager.transition over a gamWidget entity. Zero platform code
+        copied — the bundles are imported, not embedded.</description>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Export-Package></Export-Package>
+                        <Private-Package>{local-packages}</Private-Package>
+                        <Bundle-Activator>com.fiscaladmin.gam.statusdemo.Activator</Bundle-Activator>
+                        <Import-Package>!*,com.fiscaladmin.joget.eventchain,com.fiscaladmin.joget.statusmanager,org.joget.commons.util,org.joget.plugin.base,org.joget.plugin.property.model,org.joget.apps.app.service,org.joget.apps.form.dao,org.joget.apps.form.model,org.joget.workflow.util,org.osgi.framework;version="1.3.0"</Import-Package>
+                        <Embed-Dependency>*;scope=compile;inline=false</Embed-Dependency>
+                        <Embed-Transitive>false</Embed-Transitive>
+                        <DynamicImport-Package>*</DynamicImport-Package>
+                    </instructions>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.fiscaladmin.joget</groupId>
+            <artifactId>joget-event-chain</artifactId>
+            <version>1.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.fiscaladmin.joget</groupId>
+            <artifactId>joget-status-manager</artifactId>
+            <version>1.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.joget</groupId>
+            <artifactId>wflow-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>

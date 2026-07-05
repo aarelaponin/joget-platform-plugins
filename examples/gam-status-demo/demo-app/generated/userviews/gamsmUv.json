@@ -1,0 +1,78 @@
+{
+  "className": "org.joget.apps.userview.model.Userview",
+  "properties": { "id": "gamsmUv", "name": "GAM Status Demo" },
+  "setting": {
+    "properties": {
+      "tempDisablePermissionChecking": "true",
+      "userviewId": "gamsmUv",
+      "theme": {
+        "className": "org.joget.apps.userview.lib.Dx8TrimedaTheme",
+        "properties": {}
+      }
+    }
+  },
+  "categories": [
+    {
+      "className": "org.joget.apps.userview.model.UserviewCategory",
+      "properties": {
+        "hide": "",
+        "permission": { "className": "", "properties": {} },
+        "comment": "",
+        "id": "cat1",
+        "label": "Demo",
+        "iconIncluded": false
+      },
+      "menus": [
+        {
+          "className": "org.joget.apps.userview.lib.FormMenu",
+          "properties": {
+            "id": "gamMoveAdd",
+            "customId": "gamMoveAdd",
+            "label": "New Move",
+            "formId": "gamMove"
+          }
+        },
+        {
+          "className": "org.joget.apps.userview.lib.CrudMenu",
+          "properties": {
+            "id": "gamWidgetList",
+            "customId": "gamWidgetList",
+            "label": "Widgets",
+            "formDefId": "gamWidget",
+            "rowsPerPage": "50"
+          }
+        },
+        {
+          "className": "org.joget.apps.userview.lib.CrudMenu",
+          "properties": {
+            "id": "gamMoveList",
+            "customId": "gamMoveList",
+            "label": "Moves",
+            "formDefId": "gamMove",
+            "rowsPerPage": "50"
+          }
+        },
+        {
+          "className": "org.joget.apps.userview.lib.CrudMenu",
+          "properties": {
+            "id": "mmEntityStateList",
+            "customId": "mmEntityStateList",
+            "label": "States",
+            "formDefId": "mmEntityState",
+            "rowsPerPage": "50"
+          }
+        },
+        {
+          "className": "org.joget.apps.userview.lib.CrudMenu",
+          "properties": {
+            "id": "mmEntityTransitionList",
+            "customId": "mmEntityTransitionList",
+            "label": "Transitions",
+            "formDefId": "mmEntityTransition",
+            "rowsPerPage": "50"
+          }
+        }
+      ]
+    }
+  ]
+}

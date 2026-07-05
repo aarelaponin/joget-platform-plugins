@@ -1,0 +1,248 @@
+{
+  "className": "org.joget.apps.form.model.Form",
+  "properties": {
+    "id": "gamEvent",
+    "name": "GAM Event Chain",
+    "tableName": "gamEvent",
+    "loadBinder": {
+      "className": "org.joget.apps.form.lib.WorkflowFormBinder",
+      "properties": {}
+    },
+    "storeBinder": {
+      "className": "org.joget.apps.form.lib.WorkflowFormBinder",
+      "properties": {}
+    },
+    "permission": {
+      "className": "",
+      "properties": {}
+    },
+    "noPermissionMessage": ""
+  },
+  "elements": [
+    {
+      "className": "org.joget.apps.form.model.Section",
+      "properties": {
+        "id": "s1",
+        "label": "GAM Event Chain"
+      },
+      "elements": [
+        {
+          "className": "org.joget.apps.form.model.Column",
+          "properties": {
+            "width": "100%"
+          },
+          "elements": [
+            {
+              "className": "org.joget.apps.form.lib.TextField",
+              "properties": {
+                "id": "caseId",
+                "label": "caseId",
+                "value": "",
+                "placeholder": "",
+                "maxlength": "",
+                "size": "",
+                "encryption": "",
+                "storeNumeric": "",
+                "readonly": "",
+                "readonlyLabel": "",
+                "style": "",
+                "requiredSanitize": "",
+                "workflowVariable": "",
+                "validator": {
+                  "className": "org.joget.apps.form.lib.DefaultValidator",
+                  "properties": {
+                    "mandatory": "",
+                    "type": "",
+                    "message": ""
+                  }
+                }
+              }
+            },
+            {
+              "className": "org.joget.apps.form.lib.TextField",
+              "properties": {
+                "id": "seq",
+                "label": "seq",
+                "value": "",
+                "placeholder": "",
+                "maxlength": "",
+                "size": "",
+                "encryption": "",
+                "storeNumeric": "",
+                "readonly": "",
+                "readonlyLabel": "",
+                "style": "",
+                "requiredSanitize": "",
+                "workflowVariable": "",
+                "validator": {
+                  "className": "org.joget.apps.form.lib.DefaultValidator",
+                  "properties": {
+                    "mandatory": "",
+                    "type": "",
+                    "message": ""
+                  }
+                }
+              }
+            },
+            {
+              "className": "org.joget.apps.form.lib.TextField",
+              "properties": {
+                "id": "eventType",
+                "label": "eventType",
+                "value": "",
+                "placeholder": "",
+                "maxlength": "",
+                "size": "",
+                "encryption": "",
+                "storeNumeric": "",
+                "readonly": "",
+                "readonlyLabel": "",
+                "style": "",
+                "requiredSanitize": "",
+                "workflowVariable": "",
+                "validator": {
+                  "className": "org.joget.apps.form.lib.DefaultValidator",
+                  "properties": {
+                    "mandatory": "",
+                    "type": "",
+                    "message": ""
+                  }
+                }
+              }
+            },
+            {
+              "className": "org.joget.apps.form.lib.TextField",
+              "properties": {
+                "id": "actor",
+                "label": "actor",
+                "value": "",
+                "placeholder": "",
+                "maxlength": "",
+                "size": "",
+                "encryption": "",
+                "storeNumeric": "",
+                "readonly": "",
+                "readonlyLabel": "",
+                "style": "",
+                "requiredSanitize": "",
+                "workflowVariable": "",
+                "validator": {
+                  "className": "org.joget.apps.form.lib.DefaultValidator",
+                  "properties": {
+                    "mandatory": "",
+                    "type": "",
+                    "message": ""
+                  }
+                }
+              }
+            },
+            {
+              "className": "org.joget.apps.form.lib.TextField",
+              "properties": {
+                "id": "eventTime",
+                "label": "eventTime",
+                "value": "",
+                "placeholder": "",
+                "maxlength": "",
+                "size": "",
+                "encryption": "",
+                "storeNumeric": "",
+                "readonly": "",
+                "readonlyLabel": "",
+                "style": "",
+                "requiredSanitize": "",
+                "workflowVariable": "",
+                "validator": {
+                  "className": "org.joget.apps.form.lib.DefaultValidator",
+                  "properties": {
+                    "mandatory": "",
+                    "type": "",
+                    "message": ""
+                  }
+                }
+              }
+            },
+            {
+              "className": "org.joget.apps.form.lib.TextField",
+              "properties": {
+                "id": "prevHash",
+                "label": "prevHash",
+                "value": "",
+                "placeholder": "",
+                "maxlength": "",
+                "size": "",
+                "encryption": "",
+                "storeNumeric": "",
+                "readonly": "",
+                "readonlyLabel": "",
+                "style": "",
+                "requiredSanitize": "",
+                "workflowVariable": "",
+                "validator": {
+                  "className": "org.joget.apps.form.lib.DefaultValidator",
+                  "properties": {
+                    "mandatory": "",
+                    "type": "",
+                    "message": ""
+                  }
+                }
+              }
+            },
+            {
+              "className": "org.joget.apps.form.lib.TextField",
+              "properties": {
+                "id": "hash",
+                "label": "hash",
+                "value": "",
+                "placeholder": "",
+                "maxlength": "",
+                "size": "",
+                "encryption": "",
+                "storeNumeric": "",
+                "readonly": "",
+                "readonlyLabel": "",
+                "style": "",
+                "requiredSanitize": "",
+                "workflowVariable": "",
+                "validator": {
+                  "className": "org.joget.apps.form.lib.DefaultValidator",
+                  "properties": {
+                    "mandatory": "",
+                    "type": "",
+                    "message": ""
+                  }
+                }
+              }
+            },
+            {
+              "className": "org.joget.apps.form.lib.TextField",
+              "properties": {
+                "id": "payload",
+                "label": "payload",
+                "value": "",
+                "placeholder": "",
+                "maxlength": "",
+                "size": "",
+                "encryption": "",
+                "storeNumeric": "",
+                "readonly": "",
+                "readonlyLabel": "",
+                "style": "",
+                "requiredSanitize": "",
+                "workflowVariable": "",
+                "validator": {
+                  "className": "org.joget.apps.form.lib.DefaultValidator",
+                  "properties": {
+                    "mandatory": "",
+                    "type": "",
+                    "message": ""
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
