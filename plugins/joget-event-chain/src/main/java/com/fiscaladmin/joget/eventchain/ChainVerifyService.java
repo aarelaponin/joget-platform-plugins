@@ -31,6 +31,15 @@ public class ChainVerifyService {
     /** Neutral default case table id. */
     public static final String DEFAULT_CASE_FORM = "case";
 
+    private static volatile String defaultCaseFormId = DEFAULT_CASE_FORM;
+
+    /** Set the process-wide default case table id (call once at consumer start-up). */
+    public static void setDefaultCaseFormId(String formId) {
+        if (formId != null && !formId.trim().isEmpty()) {
+            defaultCaseFormId = formId.trim();
+        }
+    }
+
     private static final int FETCH_ALL = 100000;
 
     private final FormDataDao dao;
@@ -38,7 +47,7 @@ public class ChainVerifyService {
     private final String caseFormId;
 
     public ChainVerifyService(FormDataDao dao) {
-        this(dao, CaseEventWriter.getDefaultEventFormId(), DEFAULT_CASE_FORM);
+        this(dao, CaseEventWriter.getDefaultEventFormId(), defaultCaseFormId);
     }
 
     public ChainVerifyService(FormDataDao dao, String eventFormId, String caseFormId) {
