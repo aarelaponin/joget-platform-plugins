@@ -46,6 +46,14 @@ Horizontal capabilities that belong in this platform, grouped by the work needed
 | `joget-form-prefill` | DMBB shared-plugins | clean | active · 12 tests |
 | `form-creator-api` | Lesotho | clean | active |
 | `joget-status-framework` | Lesotho (own repo) | clean | active · pinned |
+| `joget-event-chain` | cmbb-plugins (extracted) | clean | active · Phase 2 |
+| `joget-status-manager` | cmbb-plugins (extracted) | event-chain | active · Phase 2 |
+| `joget-decision-approval` | cmbb-plugins (extracted) | event-chain, status-manager | active · Phase 2 |
+
+*Also consolidated as-is (Phase 2b/2c): `joget-lookup-field`, `joget-concat-field`,
+`joget-advanced-filters`, `wf-activator`, `form-quality-runtime`, `tree-menu`, and the
+rules engine (`rules-grammar`, `joget-rules-api`, `joget-rule-editor`). The reactor now
+carries 14 modules — see `registry.yaml` and the CI reactor summary.*
 
 ### A.2 Promote as-is (clean coupling, generic — lowest effort)
 
@@ -80,15 +88,31 @@ the DSL is already reused, and the template for how a project binds to it. It st
 | `enrichment-workspace` + `enrichment-api` | GAM | 3 + 9 | "Review-and-enrich workspace" pattern (custom userview + REST inline edit/split/merge). Genericise off the enrichment domain |
 | `app-def-provider` | Lesotho (gam-namespaced) | 34 | App-definition provider; shared across GAM/Lesotho — assess exact surface before promoting |
 
-### A.5 Trapped in the case app — Phase 2 extraction
+### A.5 Extracted from the case app — Phase 2 ✅ DONE
 
-| Target | Source classes (in `cmbb-plugins`) | Effort |
+All three extracted, unit-tested, and consumed live by cmbb/DMBB (the bundle now *imports*
+them at `provided` scope rather than owning the code). Verified on jdx9: cmbb unit suite
+134/134, DAS acceptance run_t30 8/8 + run_t31 3/3, full regression run_t02..t25 24/24 green.
+
+| Module | Source classes (were in `cmbb-plugins`) | Notes |
 |---|---|---|
-| `joget-event-chain` | CaseEventWriter, ChainVerifyService, CaseRefGenerator, EventEmitter | extract (leaf) |
-| `joget-status-manager` | StatusManager, MmConfigService, GuardContext, TransitionGuard, GuardPhase | extract |
-| `joget-decision-approval` | ApprovalService, ApprovalInbox, AuthorityResolver, MatrixValidator, gate/delegate/sweep engines | extract + invert effects SPI |
+| `joget-event-chain` | CaseEventWriter, ChainVerifyService, CaseRefGenerator, EventEmitter | leaf; settable neutral defaults (event/case form ids) |
+| `joget-status-manager` | StatusManager, MmConfigService, GuardContext, TransitionGuard, GuardPhase | dep: event-chain; guards read configurable table ids |
+| `joget-decision-approval` | ApprovalService, ApprovalInbox, AuthorityResolver, MatrixValidator, gate/delegate/sweep engines | dep: event-chain + status-manager; **effects SPI inverted** |
 
-**Further foundation candidates still inside `cmbb-plugins`** (evaluate after the core three):
+**The effects-SPI inversion** is the key design move: decision-approval ships a `DecisionEffect`
+functional interface + a static `DecisionEffects` registry (register/get/snapshot/clear). The
+approval engines read `DecisionEffects.snapshot()` and never name a domain service; the consumer
+(cmbb `ApprovalEffects`) registers its effects — INSTALMENT_PLAN, WRITE_OFF, ENFORCE_ACTION,
+ENFORCE_JUDICIAL — at Activator start. The platform therefore has zero compile-time knowledge of
+debt/tax domain code.
+
+**Consumer binding pattern** (called once at Activator start, neutral defaults until set):
+`CaseEventWriter.setDefaultEventFormId` · `CaseRefGenerator.setDefaultCaseFormId` ·
+`ChainVerifyService.setDefaultCaseFormId` · `GuardContext.setFormIds` ·
+`AuthorityResolver.registerRoleLevelDefault` · `DecisionEffects.register`.
+
+**Further foundation candidates still inside `cmbb-plugins`** (evaluate next, after the core three):
 notification-dispatch, deadline/SLA, document/evidence (Mayan), pending-info/hold, record-link,
 tenant-context, process-start.
 
@@ -192,9 +216,11 @@ Nearest ancestors exist but the connectors are new builds.
 
 ### E.3 MTCA CMBB/DMBB — `cmbb/plugins/cmbb-plugins` (1 bundle, 71 classes)
 
-One monolithic bundle. Foundation capabilities to extract (Phase 2): event-chain, status-manager,
-decision-approval (see §A.5). Everything else is debt/tax domain (see §C). Bundle-level coupling:
-openpdf, clickhouse-jdbc (used by reporting / gold-mart engines, not by the foundation classes).
+Originally one monolithic bundle. The three foundation capabilities — event-chain, status-manager,
+decision-approval — have been **extracted to this platform (Phase 2, done — see §A.5)**; the bundle
+now imports them at `provided` scope. Everything else is debt/tax domain (see §C). Bundle-level
+coupling: openpdf, clickhouse-jdbc (used by reporting / gold-mart engines, not by the foundation
+classes).
 
 ## F. Reuse roadmap
 
