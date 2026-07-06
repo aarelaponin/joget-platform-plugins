@@ -24,5 +24,9 @@ project residue.
   as authored, GroupPermission from an optional per-category `role`, CrudMenu / DataListMenu
   / FormMenu, a clean Dx8TrimedaTheme with PWA/push disabled and no project JS/CSS).
   `test_gen_userview.py` covers determinism, structure, and zero-project-residue.
+- `gen_dashboards.py` — enterprise `SqlChartMenu` charts from a neutral `dashboard:` spec
+  (server-side SQL → Apache ECharts, `keyName`/`value` axes; the native way, not Chart.js in
+  an HtmlPage). `test_gen_dashboards.py` covers the SqlChartMenu shape, server-side-SQL
+  binding, determinism, and zero-project-residue.
 
-Usage: `gen_userview.py <spec.yml> <out_dir>`.
+Usage: `gen_<artefact>.py <spec.yml> <out_dir>`.
