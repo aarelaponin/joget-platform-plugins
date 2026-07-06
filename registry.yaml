@@ -385,18 +385,21 @@ plugins:
     license: proprietary            # FiscalAdmin OÜ
     dx_compat: ["8.1", "9.x"]
     java_release: 11
-    depends_on: [joget-event-chain]
+    depends_on: [joget-event-chain, joget-status-manager]
     summary: >
       Small, project-neutral case side-effect services: LinkService (typed reciprocal
-      record-link with target-type validation) and HoldService (assert/release holds with
-      suppression/financial scopes). Both append audit events to the event chain and take
-      configurable carrier-table ids. Library bundle (exports com.fiscaladmin.joget.caseops).
+      record-link with target-type validation), HoldService (assert/release holds with
+      suppression/financial scopes), and PendingInfoService (park a case in its OnHold
+      envelope + open a PROVIDE_INFO task on request; restore the prior state + close the
+      task on response). All append audit events to the event chain and take configurable
+      carrier-table ids; the OnHold envelope lookup uses the status-manager MmConfigService.
+      Library bundle (exports com.fiscaladmin.joget.caseops).
     registers: []                   # library — exports a package, registers no Joget plugins
     contract:
       exports_package: com.fiscaladmin.joget.caseops
-      classes: [LinkService, HoldService, CaseOpsSupport]
-      config_keys: [linkFormId, linkTypeFormId, caseFormId, holdFormId, releaseFormId]  # setFormIds; event id via event-chain
-      carriers: [caseLink, linkType, hold, holdRelease, case]
+      classes: [LinkService, HoldService, PendingInfoService, CaseOpsSupport]
+      config_keys: [linkFormId, linkTypeFormId, caseFormId, holdFormId, releaseFormId, requestFormId, responseFormId, taskFormId]
+      carriers: [caseLink, linkType, hold, holdRelease, case, infoRequest, infoResponse, task]
     provenance: extracted + genericised from a collection-management building block (Phase 2, item 7);
                 deadline/SLA deferred (DeadlineService is the bundle's 164-use utility hub)
     source_of_truth: this repo

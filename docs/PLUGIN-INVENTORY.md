@@ -125,15 +125,17 @@ horizontal, not DMBB-shaped. *(DX delta observed: on a cold boot Joget installs 
 alphabetically, so a consumer that sorts before its platform dependency fails to resolve; a
 last-sorting name or a hot uninstall→reinstall fixes it.)*
 
-### A.6 Case-ops (Phase 2, batch 7) ✅ record-link + hold DONE
+### A.6 Case-ops (Phase 2, batches 7 + 8) ✅ record-link + hold + pending-info DONE
 
-`joget-case-ops` (depends on event-chain) ships two small, project-neutral case side-effect
-services extracted from `cmbb-plugins`, both with configurable carrier-table ids and audited to
-the event chain: `LinkService` (typed reciprocal record-link with target-type validation) and
-`HoldService` (assert/release holds with suppression/financial scopes). Verified: 8 module unit
-tests green; cmbb re-pointed (imports the package, deletes the local copies, binds cmLink/mmLinkType/
-cmCase + cmHold/cmHoldRelease at Activator start); cmbb 126 unit + full regression run_t02..t25 24/24
-+ run_t30 8/8 + run_t31 3/3 green live on jdx9.
+`joget-case-ops` (depends on event-chain + status-manager) ships three small, project-neutral case
+side-effect services extracted from `cmbb-plugins`, all with configurable carrier-table ids and
+audited to the event chain: `LinkService` (typed reciprocal record-link with target-type validation),
+`HoldService` (assert/release holds with suppression/financial scopes), and `PendingInfoService`
+(park a case in its OnHold envelope + open a PROVIDE_INFO task on request; restore the prior state +
+close the task on response — the OnHold lookup uses the status-manager `MmConfigService`). Verified:
+9 module unit tests green; cmbb re-pointed (imports the package, deletes the local copies, binds the
+cm* carrier ids at Activator start); cmbb 118 unit + full regression run_t02..t25 24/24 + run_t30 8/8
++ run_t31 3/3 green live on jdx9.
 
 ### A.7 SLA clock (Phase 2, batch 7b) ✅ DONE
 
@@ -149,7 +151,7 @@ Verified: 7 module unit tests green; cmbb 119 unit + full regression run_t02..t2
 + run_t31 3/3 green live on jdx9.
 
 **Further foundation candidates still inside `cmbb-plugins`** (evaluate next):
-notification-dispatch, document/evidence (Mayan), pending-info, tenant-context, process-start.
+notification-dispatch, document/evidence (Mayan), tenant-context, process-start.
 
 ## B. Domain packs (BB-aligned)
 

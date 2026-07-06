@@ -39,7 +39,7 @@
                 <configuration>
                     <instructions>
                         <Export-Package>com.fiscaladmin.joget.caseops</Export-Package>
-                        <Import-Package>com.fiscaladmin.joget.eventchain,org.joget.apps.form.dao,org.joget.apps.form.model,*</Import-Package>
+                        <Import-Package>com.fiscaladmin.joget.eventchain,com.fiscaladmin.joget.statusmanager,org.joget.apps.form.dao,org.joget.apps.form.model,*</Import-Package>
                         <DynamicImport-Package>*</DynamicImport-Package>
                     </instructions>
                 </configuration>
@@ -51,6 +51,12 @@
         <dependency>
             <groupId>com.fiscaladmin.joget</groupId>
             <artifactId>joget-event-chain</artifactId>
+            <version>1.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.fiscaladmin.joget</groupId>
+            <artifactId>joget-status-manager</artifactId>
             <version>1.0.0</version>
             <scope>provided</scope>
         </dependency>
