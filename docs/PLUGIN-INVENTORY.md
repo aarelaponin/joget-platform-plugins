@@ -135,14 +135,21 @@ tests green; cmbb re-pointed (imports the package, deletes the local copies, bin
 cmCase + cmHold/cmHoldRelease at Activator start); cmbb 126 unit + full regression run_t02..t25 24/24
 + run_t30 8/8 + run_t31 3/3 green live on jdx9.
 
-**Deadline/SLA deferred** — `DeadlineService` is the cmbb bundle's utility hub (`DeadlineService.prop`
-is called ~164× across ~28 classes) and is coupled to the SLA/calendar config reader, `AllocationService`,
-and domain case semantics. It needs its static helpers moved to a neutral `Props` util and an SLA
-config contract before it can be lifted cleanly — tracked as a dedicated follow-up.
+### A.7 SLA clock (Phase 2, batch 7b) ✅ DONE
+
+`joget-sla` (depends on event-chain) ships the configurable SLA-clock engine `DeadlineService`
+extracted from `cmbb-plugins`. It was the bundle's utility hub (`DeadlineService.prop` ×164 across
+~28 classes) and was coupled to the SLA/calendar config reader, `AllocationService`, and domain case
+semantics — so extraction took two moves: (1) untangle the static helpers into a neutral cmbb `Props`
+util so the bundle stopped importing helpers from the SLA engine; (2) lift the engine behind a small
+`SlaConfig` interface (slaRows/slaRow/calendarRow/allTerminalCodes/envelopeOf) the consumer implements,
+with the carrier-table ids, supervisor role and escalation payload fields made configurable and
+`jsonInt` inlined. `CmbbConfigService` now just declares `implements SlaConfig` (zero new code).
+Verified: 7 module unit tests green; cmbb 119 unit + full regression run_t02..t25 24/24 + run_t30 8/8
++ run_t31 3/3 green live on jdx9.
 
 **Further foundation candidates still inside `cmbb-plugins`** (evaluate next):
-notification-dispatch, deadline/SLA, document/evidence (Mayan), pending-info,
-tenant-context, process-start.
+notification-dispatch, document/evidence (Mayan), pending-info, tenant-context, process-start.
 
 ## B. Domain packs (BB-aligned)
 

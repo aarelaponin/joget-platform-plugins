@@ -46,6 +46,7 @@
         <module>plugins/joget-status-manager</module>
         <module>plugins/joget-decision-approval</module>
         <module>plugins/joget-case-ops</module>
+        <module>plugins/joget-sla</module>
     </modules>
 
     <!--

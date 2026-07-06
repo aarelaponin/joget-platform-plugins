@@ -401,6 +401,36 @@ plugins:
                 deadline/SLA deferred (DeadlineService is the bundle's 164-use utility hub)
     source_of_truth: this repo
 
+  - id: joget-sla
+    module: plugins/joget-sla
+    artifact: com.fiscaladmin.joget:joget-sla
+    version: 1.0.0
+    category: foundation
+    tier: P
+    status: active
+    ships: code
+    license: proprietary            # FiscalAdmin OÜ
+    dx_compat: ["8.1", "9.x"]
+    java_release: 11
+    depends_on: [joget-event-chain]
+    summary: >
+      Configurable SLA-clock engine (DeadlineService): creates per-case deadline clocks from SLA
+      config, sweeps warn/critical/breach, pauses/resumes on hold, and escalates once per level
+      (notify + priority bump + reassign), all audited to the event chain. Reads config through a
+      small SlaConfig interface the consumer implements; carrier-table ids, the supervisor role and
+      the optional escalation payload fields are configurable. Library bundle (exports
+      com.fiscaladmin.joget.sla).
+    registers: []                   # library — exports a package, registers no Joget plugins
+    contract:
+      exports_package: com.fiscaladmin.joget.sla
+      classes: [DeadlineService, SlaConfig]
+      spi: "consumer implements SlaConfig (slaRows/slaRow/calendarRow/allTerminalCodes/envelopeOf)"
+      config_keys: [deadlineFormId, caseFormId, supervisorRole, taxpayerField, amountField]
+      carriers: [caseDeadline, case]   # + the consumer's SLA/calendar config behind SlaConfig
+    provenance: extracted + genericised from a collection-management building block (Phase 2, item 7b);
+                required first untangling DeadlineService's static helpers into a neutral Props util
+    source_of_truth: this repo
+
 # ---------------------------------------------------------------------------
 # Planned — see docs/MIGRATION-BACKLOG.md and docs/CONSOLIDATION-PLAN.md.
 # ---------------------------------------------------------------------------
