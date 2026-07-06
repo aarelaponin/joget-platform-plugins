@@ -374,6 +374,33 @@ plugins:
     provenance: extracted + genericised from a collection-management building block (Phase 2, item 4)
     source_of_truth: this repo
 
+  - id: joget-case-ops
+    module: plugins/joget-case-ops
+    artifact: com.fiscaladmin.joget:joget-case-ops
+    version: 1.0.0
+    category: foundation
+    tier: P
+    status: active
+    ships: code
+    license: proprietary            # FiscalAdmin OÜ
+    dx_compat: ["8.1", "9.x"]
+    java_release: 11
+    depends_on: [joget-event-chain]
+    summary: >
+      Small, project-neutral case side-effect services: LinkService (typed reciprocal
+      record-link with target-type validation) and HoldService (assert/release holds with
+      suppression/financial scopes). Both append audit events to the event chain and take
+      configurable carrier-table ids. Library bundle (exports com.fiscaladmin.joget.caseops).
+    registers: []                   # library — exports a package, registers no Joget plugins
+    contract:
+      exports_package: com.fiscaladmin.joget.caseops
+      classes: [LinkService, HoldService, CaseOpsSupport]
+      config_keys: [linkFormId, linkTypeFormId, caseFormId, holdFormId, releaseFormId]  # setFormIds; event id via event-chain
+      carriers: [caseLink, linkType, hold, holdRelease, case]
+    provenance: extracted + genericised from a collection-management building block (Phase 2, item 7);
+                deadline/SLA deferred (DeadlineService is the bundle's 164-use utility hub)
+    source_of_truth: this repo
+
 # ---------------------------------------------------------------------------
 # Planned — see docs/MIGRATION-BACKLOG.md and docs/CONSOLIDATION-PLAN.md.
 # ---------------------------------------------------------------------------

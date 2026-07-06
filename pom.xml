@@ -45,6 +45,7 @@
         <module>plugins/joget-event-chain</module>
         <module>plugins/joget-status-manager</module>
         <module>plugins/joget-decision-approval</module>
+        <module>plugins/joget-case-ops</module>
     </modules>
 
     <!--

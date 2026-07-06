@@ -125,8 +125,23 @@ horizontal, not DMBB-shaped. *(DX delta observed: on a cold boot Joget installs 
 alphabetically, so a consumer that sorts before its platform dependency fails to resolve; a
 last-sorting name or a hot uninstall→reinstall fixes it.)*
 
-**Further foundation candidates still inside `cmbb-plugins`** (evaluate next, after the core three):
-notification-dispatch, deadline/SLA, document/evidence (Mayan), pending-info/hold, record-link,
+### A.6 Case-ops (Phase 2, batch 7) ✅ record-link + hold DONE
+
+`joget-case-ops` (depends on event-chain) ships two small, project-neutral case side-effect
+services extracted from `cmbb-plugins`, both with configurable carrier-table ids and audited to
+the event chain: `LinkService` (typed reciprocal record-link with target-type validation) and
+`HoldService` (assert/release holds with suppression/financial scopes). Verified: 8 module unit
+tests green; cmbb re-pointed (imports the package, deletes the local copies, binds cmLink/mmLinkType/
+cmCase + cmHold/cmHoldRelease at Activator start); cmbb 126 unit + full regression run_t02..t25 24/24
++ run_t30 8/8 + run_t31 3/3 green live on jdx9.
+
+**Deadline/SLA deferred** — `DeadlineService` is the cmbb bundle's utility hub (`DeadlineService.prop`
+is called ~164× across ~28 classes) and is coupled to the SLA/calendar config reader, `AllocationService`,
+and domain case semantics. It needs its static helpers moved to a neutral `Props` util and an SLA
+config contract before it can be lifted cleanly — tracked as a dedicated follow-up.
+
+**Further foundation candidates still inside `cmbb-plugins`** (evaluate next):
+notification-dispatch, deadline/SLA, document/evidence (Mayan), pending-info,
 tenant-context, process-start.
 
 ## B. Domain packs (BB-aligned)
