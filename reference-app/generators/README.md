@@ -28,5 +28,23 @@ project residue.
   (server-side SQL → Apache ECharts, `keyName`/`value` axes; the native way, not Chart.js in
   an HtmlPage). `test_gen_dashboards.py` covers the SqlChartMenu shape, server-side-SQL
   binding, determinism, and zero-project-residue.
+- `gen_forms.py` — form definition JSON from a form `spec.yml` (Output-C shape): sections,
+  columns, the element library (text/textarea/select/radio/checkbox/date/hidden/fileupload/
+  id_generator/subform/grid), read-only inference, `FormOptionsBinder` lookups, and the
+  optional `FormPrefillLoadBinder` (a catalog component) via a spec `prefill:` block.
+- `gen_datalists.py` — datalist JSON: a companion `list_<formId>` per form spec, or a custom
+  `datalist:` spec (`jdbc` or form-row binder), sortable columns, `text|select` filters,
+  optional row-action/drill links. Per-project list policy (auto-filters, the drill base URL)
+  is spec-driven / env-overridable — no project content baked in.
+- `gen_workflow.py` — XPDL 1.0 `package.xpdl` + the `packageDefinition` fragment (form /
+  plugin / participant maps) from a `WF-*.spec.yml`; custom tools via the MultiTools wrapper.
+- `build_jwa.py` — packages generated forms/datalists/userviews (+ workflow, + a data API
+  builder) into an importable `.jwa` app zip.
 
-Usage: `gen_<artefact>.py <spec.yml> <out_dir>`.
+`gen_forms`/`gen_datalists` take a **spec dir**; `gen_workflow` takes `<wf_spec.yml> <out_dir>
+<app_id>`; `build_jwa` takes `<generated_dir> <app_id> <app_name> <out.jwa>`; the rest take
+`<spec.yml> <out_dir>`.
+
+The four added generators were extracted from a production-proven delivery generator and
+neutralised; neutrality is grep-checked and behaviour is proven by an **equivalence test**
+(neutral output byte-identical to the source generator on a real app's specs).
