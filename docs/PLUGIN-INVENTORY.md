@@ -150,8 +150,17 @@ with the carrier-table ids, supervisor role and escalation payload fields made c
 Verified: 7 module unit tests green; cmbb 119 unit + full regression run_t02..t25 24/24 + run_t30 8/8
 + run_t31 3/3 green live on jdx9.
 
+### A.8 Tenant (Phase 2, batch 9) ✅ DONE
+
+`joget-tenant` (pure leaf, no platform deps) ships `TenantContext` — the invisible multi-tenancy
+resolver (username → tenantCode from an admin-maintained profile mapping, with a configurable safe
+default so a single-tenant deployment needs no per-user config). Verified: 4 module unit tests green;
+cmbb re-pointed (OpenPhase + DebtIdentificationService import the platform class, WorkflowService's
+`DEFAULT_TENANT` literalised, Activator binds `setDefaults(mdUserTenant, MLT)`); cmbb 114 unit + full
+regression run_t02..t25 24/24 + run_t30 8/8 + run_t31 3/3 green live on jdx9.
+
 **Further foundation candidates still inside `cmbb-plugins`** (evaluate next):
-notification-dispatch, document/evidence (Mayan), tenant-context, process-start.
+notification-dispatch, document/evidence (Mayan), process-start.
 
 ## B. Domain packs (BB-aligned)
 

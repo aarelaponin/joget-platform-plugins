@@ -47,6 +47,7 @@
         <module>plugins/joget-decision-approval</module>
         <module>plugins/joget-case-ops</module>
         <module>plugins/joget-sla</module>
+        <module>plugins/joget-tenant</module>
     </modules>
 
     <!--

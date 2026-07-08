@@ -434,6 +434,32 @@ plugins:
                 required first untangling DeadlineService's static helpers into a neutral Props util
     source_of_truth: this repo
 
+  - id: joget-tenant
+    module: plugins/joget-tenant
+    artifact: com.fiscaladmin.joget:joget-tenant
+    version: 1.0.0
+    category: foundation
+    tier: P
+    status: active
+    ships: code
+    license: proprietary            # FiscalAdmin OÜ
+    dx_compat: ["8.1", "9.x"]
+    java_release: 11
+    depends_on: []
+    summary: >
+      Invisible multi-tenancy resolver (TenantContext): resolves the tenant that governs a
+      user from an admin-maintained profile mapping (username -> tenantCode), with a safe
+      configurable default so a single-tenant deployment needs no per-user configuration.
+      Pure read helper. Library bundle (exports com.fiscaladmin.joget.tenant).
+    registers: []                   # library — exports a package, registers no Joget plugins
+    contract:
+      exports_package: com.fiscaladmin.joget.tenant
+      classes: [TenantContext]
+      config_keys: [userTenantForm, defaultTenant]   # TenantContext.setDefaults
+      carriers: [userTenant]
+    provenance: extracted + genericised from a collection-management building block (Phase 2, item 9)
+    source_of_truth: this repo
+
 # ---------------------------------------------------------------------------
 # Planned — see docs/MIGRATION-BACKLOG.md and docs/CONSOLIDATION-PLAN.md.
 # ---------------------------------------------------------------------------
