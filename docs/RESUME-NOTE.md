@@ -164,3 +164,7 @@ Remaining foundation candidates still inside `cmbb-plugins` (see PLUGIN-INVENTOR
 - `cd platform && mvn -o -q -pl plugins/joget-event-chain -am -DskipTests package` builds (sanity).
 - jdx9 reachable: `curl -s -o /dev/null -w "%{http_code}" http://localhost:8089/jw/web/json/workflow/currentUsername` → 400 or 200.
 - Then follow §3 from step 1 for the chosen candidate.
+
+## 8. Strategic note (read alongside this)
+
+- `docs/PROBLEM-semantic-design-gap.md` — the systemic problem (requirements→design realism gap) + analysis. Not a build task; the next *methodological* direction, distinct from the module-extraction work above.
