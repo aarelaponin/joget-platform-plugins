@@ -113,11 +113,30 @@ def report_menu(m, reports_dir):
     return el
 
 
-def category(cat, reports_dir=None):
+def dashboard_menus(m, dashboards_dir):
+    """A dashboard menu inlines the generated dashboard's chart menus (SqlChartMenu elements
+    already emitted by gen_dashboards) into the category — one dashboard expands to N chart
+    menus (parallel to report_menu, 1→N). If the dashboard has exactly one chart, the nav
+    label wins over the chart's own label; with several, each chart keeps its label."""
+    did = m["dashboardId"]
+    if not dashboards_dir:
+        raise ValueError(f"dashboard menu '{did}' needs the dashboards dir (gen_dashboards output)")
+    path = os.path.join(dashboards_dir, did + ".json")
+    if not os.path.exists(path):
+        raise ValueError(f"dashboard menu '{did}': {path} not found — run gen_dashboards first")
+    charts = json.load(open(path)).get("menus", [])
+    if len(charts) == 1 and m.get("label"):
+        charts[0]["properties"]["label"] = m["label"]
+    return charts
+
+
+def category(cat, reports_dir=None, dashboards_dir=None):
     menus = []
     for m in cat["menus"]:
         if m.get("type") == "report":
             menus.append(report_menu(m, reports_dir)); continue
+        if m.get("type") == "dashboard":
+            menus.extend(dashboard_menus(m, dashboards_dir)); continue
         builder = MENU_BUILDERS.get(m.get("type"))
         if builder is None:
             raise ValueError(f"unknown menu type '{m.get('type')}' in category '{cat['id']}'")
@@ -129,11 +148,11 @@ def category(cat, reports_dir=None):
                 "label": cat["label"], "iconIncluded": ""}}
 
 
-def build_userview(spec, reports_dir=None):
+def build_userview(spec, reports_dir=None, dashboards_dir=None):
     uv = spec["userview"]
     uv_id, uv_name = uv["id"], uv["name"]
     return {"className": "org.joget.apps.userview.model.Userview",
-            "categories": [category(c, reports_dir) for c in uv["categories"]],
+            "categories": [category(c, reports_dir, dashboards_dir) for c in uv["categories"]],
             "properties": {"logoutText": "Logout", "welcomeMessage": "",
                            "name": uv_name, "description": "",
                            "footerMessage": uv.get("footer", ""), "id": uv_id},
@@ -150,9 +169,10 @@ def build_userview(spec, reports_dir=None):
 
 def main():
     spec_path, out_dir = sys.argv[1], sys.argv[2]
-    reports_dir = sys.argv[3] if len(sys.argv) > 3 else None   # optional: gen_reports output
+    reports_dir = sys.argv[3] if len(sys.argv) > 3 else None    # optional: gen_reports output
+    dashboards_dir = sys.argv[4] if len(sys.argv) > 4 else None  # optional: gen_dashboards output
     spec = yaml.safe_load(open(spec_path))
-    uv = build_userview(spec, reports_dir)
+    uv = build_userview(spec, reports_dir, dashboards_dir)
     os.makedirs(out_dir, exist_ok=True)
     out = os.path.join(out_dir, uv["properties"]["id"] + ".json")
     with open(out, "w") as f:

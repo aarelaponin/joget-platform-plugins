@@ -37,6 +37,29 @@ def clean_label(label):
     return re.sub(r"\s{2,}", " ", s).strip().rstrip(";,").strip()
 
 
+TONE_HEX = {"grey": "#546e7a", "blue": "#1565c0", "green": "#2e7d32",
+            "amber": "#ef6c00", "red": "#c62828"}
+
+
+def badge_format(fmt):
+    """status_badge → an enterprise BeanShellFormatter that renders the state value as a
+    coloured HTML pill. `value` is bound by the formatter; the value→colour map comes from
+    the model's lifecycle tones, so the badge is deterministic and lifecycle-aware."""
+    puts = "".join('m.put("%s","%s");' % (code, TONE_HEX.get(tone, TONE_HEX["grey"]))
+                   for code, tone in fmt.get("tones", {}).items())
+    script = (
+        "java.util.Map m = new java.util.HashMap();" + puts +
+        'String v = (value==null)?"":value.toString();'
+        'if (v.equals("")) return "";'
+        'String bg = m.containsKey(v)?(String)m.get(v):"#546e7a";'
+        'String t = v.substring(0,1).toUpperCase()+v.substring(1).replace("_"," ");'
+        'return "<span style=\\"display:inline-block;padding:2px 10px;border-radius:11px;'
+        'color:#fff;font-size:12px;line-height:18px;white-space:nowrap;background:"'
+        '+bg+"\\">"+t+"</span>";')
+    return {"className": "org.joget.plugin.enterprise.BeanShellFormatter",
+            "properties": {"script": script}}
+
+
 def fk_format(lookup):
     return {"className": "org.joget.plugin.enterprise.OptionsValueFormatter",
             "properties": {"optionsBinder": {
@@ -119,6 +142,8 @@ def main():
                                        "confirmation": ""}}
                 if fmt and fmt.get("type") == "optionsValue":
                     cols.append(col(i, c["id"], c["label"], fk_format(fmt), action))
+                elif fmt and fmt.get("type") == "status_badge":
+                    cols.append(col(i, c["id"], c["label"], badge_format(fmt), action, render_html=True))
                 elif fmt and fmt.get("type") == "date":
                     cols.append(col(i, c["id"], c["label"],
                         {"className": "org.joget.plugin.enterprise.DateFormatter",
