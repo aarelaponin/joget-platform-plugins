@@ -76,7 +76,18 @@ def form_menu(m):
         "messageShowAfterComplete": "", "iconIncluded": False}}
 
 
-MENU_BUILDERS = {"crud": crud_menu, "datalist": datalist_menu, "form": form_menu}
+def inbox_menu(m):
+    """Workflow task inbox (assigned activities). Empty processId/assignmentToDisplay = all
+    assignments across the running processes; a processId scopes it to one process."""
+    slug = "".join(c if c.isalnum() else "_" for c in m["label"]).strip("_").lower() or "inbox"
+    return {"className": "org.joget.apps.userview.lib.InboxMenu", "properties": {
+        "id": uid("menu:inbox:" + m["label"]), "customId": "inbox_" + slug, "label": m["label"],
+        "assignmentToDisplay": "", "processId": m.get("processId", ""),
+        "rowCount": "", "buttonPosition": "bothLeft", "showPopup": "", "iconIncluded": False}}
+
+
+MENU_BUILDERS = {"crud": crud_menu, "datalist": datalist_menu, "form": form_menu,
+                 "inbox": inbox_menu}
 
 
 def permission(role):
