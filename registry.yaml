@@ -18,7 +18,7 @@
 # tier:   G = generic-Joget (any app) · P = pattern-reusable (genericised then shipped)
 # status: active | planned | deprecated      ships: code | pattern
 
-registry_version: 0.9.0   # 0.9.0: gen_userview dashboard-menu inlining + gen_datalists status_badge/derived-options (ADR-037)
+registry_version: 0.9.1   # 0.9.1: gen_datalists date_range filter (DateRangeDataListFilterType, ADR-038). 0.9.0: dashboard-menu + status_badge/derived-options (ADR-037)
 
 plugins:
 

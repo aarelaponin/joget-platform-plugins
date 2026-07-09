@@ -91,6 +91,12 @@ def filter_entry(idx, f):
         opts += [o if isinstance(o, dict) else {"value": o, "label": o} for o in f.get("options", [])]
         t = {"className": "org.joget.plugin.enterprise.SelectBoxDataListFilterType",
              "properties": {"label": "", "defaultValue": "", "multiple": "", "size": "", "options": opts}}
+    elif ftype == "date_range":
+        # a from/to date picker; formatJava is the STORED format it compares against.
+        t = {"className": "org.joget.plugin.enterprise.DateRangeDataListFilterType",
+             "properties": {"showFieldLabel": "true", "fromLabel": f.get("fromLabel", "From"),
+                            "toLabel": f.get("toLabel", "To"), "format": "dd/mm/yy",
+                            "formatJava": "yyyy-MM-dd", "yearRange": "c-10:c+10", "enableTime": ""}}
     else:
         t = {"className": "org.joget.apps.datalist.lib.TextFieldDataListFilterType", "properties": {}}
     return {"name": fid, "id": f"filter_{idx}", "label": f.get("label", fid),
