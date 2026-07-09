@@ -87,9 +87,26 @@ def permission(role):
             "properties": {"allowedGroupIds": role}}
 
 
-def category(cat):
+def report_menu(m, reports_dir):
+    """A report menu inlines the generated JasperReportsMenu (jrxml already embedded by
+    gen_reports). Exposing a report is just placing that element into the category; the
+    navigation label wins over the report's own name."""
+    rid = m["reportId"]
+    if not reports_dir:
+        raise ValueError(f"report menu '{rid}' needs the reports dir (gen_reports output)")
+    path = os.path.join(reports_dir, rid + ".json")
+    if not os.path.exists(path):
+        raise ValueError(f"report menu '{rid}': {path} not found — run gen_reports first")
+    el = json.load(open(path))
+    el["properties"]["label"] = m["label"]
+    return el
+
+
+def category(cat, reports_dir=None):
     menus = []
     for m in cat["menus"]:
+        if m.get("type") == "report":
+            menus.append(report_menu(m, reports_dir)); continue
         builder = MENU_BUILDERS.get(m.get("type"))
         if builder is None:
             raise ValueError(f"unknown menu type '{m.get('type')}' in category '{cat['id']}'")
@@ -101,11 +118,11 @@ def category(cat):
                 "label": cat["label"], "iconIncluded": ""}}
 
 
-def build_userview(spec):
+def build_userview(spec, reports_dir=None):
     uv = spec["userview"]
     uv_id, uv_name = uv["id"], uv["name"]
     return {"className": "org.joget.apps.userview.model.Userview",
-            "categories": [category(c) for c in uv["categories"]],
+            "categories": [category(c, reports_dir) for c in uv["categories"]],
             "properties": {"logoutText": "Logout", "welcomeMessage": "",
                            "name": uv_name, "description": "",
                            "footerMessage": uv.get("footer", ""), "id": uv_id},
@@ -122,8 +139,9 @@ def build_userview(spec):
 
 def main():
     spec_path, out_dir = sys.argv[1], sys.argv[2]
+    reports_dir = sys.argv[3] if len(sys.argv) > 3 else None   # optional: gen_reports output
     spec = yaml.safe_load(open(spec_path))
-    uv = build_userview(spec)
+    uv = build_userview(spec, reports_dir)
     os.makedirs(out_dir, exist_ok=True)
     out = os.path.join(out_dir, uv["properties"]["id"] + ".json")
     with open(out, "w") as f:
