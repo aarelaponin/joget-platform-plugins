@@ -30,3 +30,4 @@ secrets*.yml
 # Delivery renders (DOCX/PDF) are published as GitHub Release assets, not committed
 docs/*.docx
 docs/*.pdf
+plugins/joget-transition-guard/target/

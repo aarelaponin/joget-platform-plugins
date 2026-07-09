@@ -1,0 +1,10 @@
+[{
+  "title": "Lifecycle Transition Guard",
+  "properties": [
+    { "name": "entity", "label": "Entity id (form def id)", "type": "textfield" },
+    { "name": "tableName", "label": "Table name", "type": "textfield" },
+    { "name": "statusField", "label": "Status field", "type": "textfield", "value": "status" },
+    { "name": "actionField", "label": "Action field", "type": "textfield", "value": "_action" },
+    { "name": "transitions", "label": "Transitions (action>to>nowFields | ...)", "type": "textarea" }
+  ]
+}]
