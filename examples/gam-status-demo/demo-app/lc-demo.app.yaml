@@ -1,0 +1,39 @@
+# G3 live-proof fixture (Layer-1 model). One entity with a lifecycle, so `kit gen lifecycle`
+# produces the StatusManager seed the gam-status-demo guard drives on jdx8. The entity id is
+# snake_case per schema (gam_widget); the live proof re-keys it to the guard's fixed 'gamWidget'.
+model:
+  schema_version: "0.1.6"
+  spec_version: "0.1.6"
+  status: draft
+  authors: ["FiscalAdmin OU"]
+
+app:
+  id: lifecycleDemo
+  name: Lifecycle Demo
+  description: Minimal one-entity model proving the lifecycle projector drives the live StatusManager.
+  platform:
+    dx: "9.0"
+    edition: enterprise
+    db: postgres
+
+catalog:
+  - { component: status-framework, version: "8.1" }
+
+entities:
+  - id: gam_widget
+    name: Widget
+    kind: main
+    table: gam_widget
+    attributes:
+      - { id: name,   type: string }
+      - { id: status, type: string }
+    lifecycle:
+      status_attr: status
+      engine: status_framework
+      states:
+        - { id: draft,  name: Draft, initial: true }
+        - { id: active, name: Active }
+        - { id: closed, name: Closed, terminal: true }
+      transitions:
+        - { id: activate, from: draft,  to: active, trigger: user, effects: [ { type: audit } ] }
+        - { id: close,    from: active, to: closed, trigger: user, effects: [ { type: audit } ] }
