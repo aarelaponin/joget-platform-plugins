@@ -1,6 +1,7 @@
 package com.fiscaladmin.joget.transitionguard;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.Map;
 
@@ -29,6 +30,7 @@ import com.fiscaladmin.joget.statusmanager.StatusManager;
 public class TransitionGuard extends DefaultApplicationPlugin {
 
     private static final String CN = TransitionGuard.class.getName();
+    private static final DateTimeFormatter TS = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     public String getName() { return "Lifecycle Transition Guard"; }
     public String getVersion() { return "1.0.0"; }
@@ -67,7 +69,7 @@ public class TransitionGuard extends DefaultApplicationPlugin {
             new StatusManager(dao).apply(entity, row, statusField, recordId, target,
                     Collections.<String>emptyList(), actor, action);
             if (!setNowCsv.isEmpty()) {
-                String now = LocalDateTime.now().toString();
+                String now = LocalDateTime.now().format(TS);
                 for (String f : setNowCsv.split(",")) {
                     String fn = f.trim();
                     if (!fn.isEmpty()) row.setProperty(fn, now);

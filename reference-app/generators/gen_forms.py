@@ -45,7 +45,7 @@ def validator(field):
 
 
 def static_options(opts):
-    return [{"value": o["value"], "label": o["label"], "grouping": ""} for o in opts]
+    return [{"value": o["value"], "label": o["label"], "grouping": o.get("grouping", "")} for o in opts]
 
 
 def element(f):
@@ -70,7 +70,7 @@ def element(f):
             "requiredSanitize": "", "workflowVariable": "", "validator": validator(f)}}
     if t == "select":
         props = {"id": fid, "label": label, "value": str(f.get("value", "")), "multiple": "", "size": "",
-                 "controlField": "", "controlValue": "", "readonly": ro(f), "readonlyLabel": "",
+                 "controlField": f.get("controlField", ""), "controlValue": "", "readonly": ro(f), "readonlyLabel": "",
                  "workflowVariable": "", "validator": validator(f)}
         if "lookup" in f:
             lk = f["lookup"]
