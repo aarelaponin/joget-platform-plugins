@@ -2,7 +2,8 @@
 
 _Method asset. Pattern proven by `joget-spec-kit/docs/1.0-structural-decisions.md` (ADR-045…054)._
 
-- **Status:** Proposed — for the programme owner to rule on, decision by decision.
+- **Status:** Ratified — all three sub-decisions ruled **Accepted** by the owner 2026-07-10;
+  registered as ADR-061. (Frozen; rationale archive behind its ADR.)
 - **Owner of the decision:** Aare (programme owner), with the data-governance office as standing owner
   of the residual questions.
 - **Purpose:** Give **dimension 9 (ecosystem & shared meaning)** its allowlist. The register
@@ -51,7 +52,7 @@ needs; SoR assignments are "candidate → binding" for the CENTRALISE rows, real
 the external-authority sources (ISO, legislation, BNS, Treasury). The kernel is not a precondition
 (S2C-01 §5; PLAN v3 B4).
 
-**Decision:** _______________________________________________
+**Decision:** Accepted (owner, 2026-07-10) → ADR-061.
 
 ---
 
@@ -87,7 +88,7 @@ them would repeat the §2.4 silent-default failure at the register level. They a
 **Recommendation.** **Convert the six to owned TO-CONFIRMs; ratify the rest.** This is the register-level
 form of the method's spine — an unmade decision becomes a visible owner item, not a silent merge.
 
-**Decision:** _______________________________________________
+**Decision:** Accepted (owner, 2026-07-10) → ADR-061.
 
 ---
 
@@ -102,7 +103,7 @@ above the `tax/` sector folder. It is domain/organisation content (invariant #1:
 M1 register test resolves against it cross-repo, exactly like the realism anchor. The owner may relocate
 it later without affecting the tools (they take a path).
 
-**Decision:** _______________________________________________
+**Decision:** Accepted (owner, 2026-07-10) → ADR-061.
 
 ---
 

@@ -3,7 +3,8 @@
 _Method asset. Pattern proven by `joget-spec-kit/docs/1.0-structural-decisions.md` (ADR-045…054).
 Put to the owner as one rulable document; each ruling becomes a one-line ADR._
 
-- **Status:** Proposed — for the programme owner to rule on, decision by decision.
+- **Status:** Ratified — all three sub-decisions ruled **Accepted** by the owner 2026-07-10;
+  registered as ADR-062. (Frozen; rationale archive behind its ADR.)
 - **Owner of the decision:** Aare (programme owner).
 - **Purpose:** Give **dimension 8 (policy & change)** its authority. PLAN v3 A5 / S2C-01 §5 (dim 8)
   make the two-zone model a platform rule, but the source — the *DMBB Configurability Approach Spec*
@@ -48,7 +49,7 @@ template in M3 has no authority to cite.
 configurability and it generalises cleanly (nothing in CP-1…10 is debt-specific). Mark it *stable* per
 the ADR-050 ladder once the pilot (M2) exercises dimension 8 on a second module.
 
-**Decision:** _______________________________________________
+**Decision:** Accepted (owner, 2026-07-10) → ADR-062.
 
 ---
 
@@ -74,7 +75,7 @@ blocked the manual build). These are the dimension-8 half of the M1 checks.
 load-bearing ones (dangling name reference; matrix cell selecting an unavailable instrument) and map
 directly onto the decision-record `change_profile`/`ecosystem` blocks already shipped in M0.
 
-**Decision:** _______________________________________________
+**Decision:** Accepted (owner, 2026-07-10) → ADR-062.
 
 ---
 
@@ -89,7 +90,7 @@ the DMBB matrix/instruments are just this module's *instances* of "operating pol
 The tax-registration slice already has standing-zone definitions (VAT threshold, party-type taxonomy)
 that fit the model. Adopt platform-wide; let modules add domain instances, not new cuts.
 
-**Decision:** _______________________________________________
+**Decision:** Accepted (owner, 2026-07-10) → ADR-062.
 
 ---
 
