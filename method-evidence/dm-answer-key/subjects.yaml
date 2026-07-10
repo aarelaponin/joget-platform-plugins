@@ -1,0 +1,40 @@
+# DM answer-key — the SUBJECTS the Debt Management spec declares, reconstructed from
+# EVIDENCE-DM-forced-slot-extraction.md (§2 six dimensions, §3 Class-B, §6 question bank).
+# This is the coverage target the method's own regression oracle checks the naive inventory against.
+# Domain content -> lives in the platform repo, not the kit (invariant #1); run against the kit tools.
+entities:
+  - { id: debt_case, aliases: [envelope, case], long_lived: true }
+  - { id: enforcement_action, aliases: [action], long_lived: true }
+  - { id: instalment_arrangement, aliases: [instalment], long_lived: true }
+  - { id: write_off, long_lived: true }
+  - { id: line_item, aliases: [lineitem, dmDebt], long_lived: false }
+
+metrics:                       # every number needs a computation decision (a formula over named fields)
+  - amount_at_stake            # F03 — Σ enforceable per line
+  - full_amount_objection      # F05 — Σ disputed >= Σ enforceable
+  - actual_recovered           # F12 — 3-source aggregation
+  - days_since_last_action     # RPT2
+  - kpi_24
+  - kpi_25
+  - kpi_26
+  - kpi_27
+  - kpi_28
+  - kpi_29
+  - kpi_30
+  - kpi_31
+  - kpi_32
+  - kpi_33
+  - kpi_34
+  - kpi_35
+
+dependencies:                  # every external system needs a failure-behaviour decision (§4)
+  - gold_ledger                # ORS/Gold outage -> create no cases, never fabricate (F03)
+  - bank_ws                    # bank web-service timeout
+  - risk_score_service         # absent risk score -> N/A render (DASH2)
+
+rule_tables:                   # every rule table needs an interpretation decision (which reading)
+  - enforcement_matrix_table4  # cumulative vs exact; the C6 (>EUR200k) band (F01)
+
+lifecycles:                    # declared states that must be modelled and scenario-asserted
+  - { entity: debt_case, states: [new, open, in_progress, on_hold, pending_closure, closed] }   # WF-FR-001 (six states)
+  - { entity: instalment_arrangement, states: [active, missed, paid, defaulted] }                # ADR-003 missed<->paid edge

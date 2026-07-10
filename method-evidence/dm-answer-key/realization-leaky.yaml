@@ -1,0 +1,14 @@
+# DM answer-key — the Class-B leak: the nine values the DM spec HAD ALREADY DECIDED (with BR/FR ids),
+# set at build time with NO citation. citation_check must flag every one. (EVIDENCE-DM §3.)
+# Each `value` is what the build used; the comment names the spec id it should have cited.
+realization: { slice: debt-management/as-built }
+items:
+  - { ref: escalation.offsets,        kind: parameter, value: "7d / 14d / 21d" }        # BR-DM-005 / BR-DM-011
+  - { ref: instalment.auto_approve,   kind: parameter, value: "<EUR5,000, <=12 months, first-time" }  # BR-DM-021
+  - { ref: instalment.grace,          kind: parameter, value: "3 business days" }        # BR-DM-025
+  - { ref: instalment.consec_misses,  kind: parameter, value: "2 consecutive" }          # BR-DM-027
+  - { ref: contact.applicability,     kind: rule,      value: "phone C3-C5; visits C4-C5" }  # DM-FR-019 / DM-FR-020 (FIS was wrong about its own spec)
+  - { ref: highvalue.fasttrack_sla,   kind: parameter, value: "phone SLA 2 business days" }  # DM-FR-018 / BR-DM-012
+  - { ref: aging.bands,               kind: rule,      value: "0-30/31-60/61-90/91-180/181-365/>365" }  # RPT-FR-001 / RPT-FR-008
+  - { ref: delegation.instalment,     kind: parameter, value: "DMO <EUR20k / SDO <EUR100k / Director" }  # BR-DM-022
+  - { ref: envelope.states,           kind: state_set, value: "NEW/OPEN/CLOSED" }         # WF-FR-001 (spec had 6; built 3) — silent divergence

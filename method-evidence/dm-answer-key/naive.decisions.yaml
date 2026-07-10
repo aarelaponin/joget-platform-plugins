@@ -1,0 +1,28 @@
+# DM answer-key — the NAIVE inventory a single unreviewed pass produced: schema-valid but shallow.
+# It reproduces the build's pre-forced-slot state (EVIDENCE-DM): the envelope built as 3 states not 6
+# (F02 divergence), one-open-case-per-TIN grain (the BR-DM-002 tension), and NOTHING along the other
+# five dimensions. spec_lint must flag the silence; lint-decisions cannot (this file is valid).
+inventory:
+  slice: debt-management/naive
+  schema_version: "0.1.0"
+
+decisions:
+  - id: DR-DM-001
+    dimension: behavioural_state
+    question: What are the debt case states?
+    answer: "new -> open -> closed"                 # 3 of the 6 WF-FR-001 states; no scenario asserts it
+    status: VERIFIED
+    source: { kind: doc, ref: "DM build F02 (as built)" }
+    lands_in: entities.debt_case.lifecycle
+    enforced_by: lifecycle-projector
+
+  - id: DR-DM-002
+    dimension: grain_keys
+    question: What makes two debt cases duplicates?
+    answer: One open case per TIN.                  # tension with BR-DM-002 (per TIN/TXT/TXP) — never reconciled
+    status: VERIFIED
+    source: { kind: doc, ref: "DM build F02/F03 (as built)" }
+    lands_in: entities.debt_case
+    enforced_by: table structure
+# Everything else the spec needed — 16 metric formulas, 3 dependency failure behaviours, the Table-4
+# interpretation, the enforcement_action / instalment / write_off lifecycles and grains — is ABSENT.
