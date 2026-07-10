@@ -1,0 +1,15 @@
+# DMBB Approval-gate (run 2, runbook-driven, harvest mode) subjects — from the F-cmApproval*.spec.yml.
+# A deliberately different shape from F13 (approval/authority/routing), to test the method generalises.
+entities:
+  - { id: cmApproval, long_lived: true, aliases: [approval, request] }   # the approval request, with a lifecycle
+metrics:
+  - materiality                              # the amount/severity that drives the required authority
+rule_tables:
+  - authority_matrix                         # materiality band -> required authority level (delegation bands)
+dependencies:
+  - approval_engine                          # ApprovalService / ApprovalGateEngine
+vocabularies:
+  - required_authority                       # the rank/authority levels (org roles)
+  - route_kind                               # SINGLE / CHAIN / QUORUM
+lifecycles:
+  - { entity: cmApproval, states: [pending, approved, rejected, returned] }

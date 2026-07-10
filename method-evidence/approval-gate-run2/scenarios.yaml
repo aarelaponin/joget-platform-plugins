@@ -1,0 +1,10 @@
+slice: DMBB-APPROVAL-gate
+scenarios:
+  - { id: SC-AP-approve, procedure: decide, given: "a pending approval request within the approver's authority", when: "the approver approves", then: "status becomes approved and the DecisionEffect runs exactly once" }
+  - { id: SC-AP-sod, procedure: decide, given: "a request whose approver equals the requester", when: "they attempt to decide", then: "separation-of-duties blocks it (approver != requester)" }
+  - { id: SC-AP-return, procedure: decide, given: "a pending request needing changes", when: "the approver returns it", then: "it becomes returned and re-enters pending on edit-and-resubmit" }
+  - { id: SC-AP-delegate, procedure: delegate, given: "a pending request", when: "it is delegated to another approver with a reason", then: "the work is routed but authority is unchanged; the delegate decides under the rank gate + SoD" }
+  - { id: SC-AP-engine-fail, procedure: decide, given: "the ApprovalGateEngine fails mid-decision", when: "a decision is submitted", then: "no partial effect is applied and the request stays pending" }
+  - { id: SC-AP-inbox, procedure: workspace, given: "an approver on the Approvals inbox", when: "they open a row", then: "the inbox shows action/materiality/requiredAuthority/status; Decide opens the decision prefilled" }
+  - { id: SC-AP-chain, procedure: route, given: "a CHAIN route of levels", when: "each level approves in turn", then: "currentStep advances until the required level is met" }
+  - { id: SC-AP-band, procedure: route, given: "a request whose materiality exceeds a band threshold", when: "the route is resolved", then: "the required authority is set from the standing-zone band (Zone B), which operators cannot redefine" }

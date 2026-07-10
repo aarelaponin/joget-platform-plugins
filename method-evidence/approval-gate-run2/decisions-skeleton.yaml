@@ -1,0 +1,142 @@
+# Skeleton decision inventory — instantiated from the nine dimension templates.
+# Every record is an OPEN TO_CONFIRM slot; fill it in during elicitation (a source answer
+# moves it to VERIFIED, or sign a waiver). Do not generate from a skeleton (§7.3 stop rule).
+inventory:
+  slice: DMBB-APPROVAL
+  schema_version: 0.1.0
+decisions:
+- id: DR-DMBBAP-001
+  dimension: behavioural_state
+  question: What is the complete life story of cmApproval — its statuses, the allowed moves, and the edge moves everyone forgets?
+  answer: OPEN — to be answered in elicitation.
+  status: TO_CONFIRM
+  owner: TBD
+  source:
+    kind: assumption
+    ref: unanswered behavioural_state template slot (cmApproval)
+  x-probes:
+  - Which states exist, and which transitions between them are allowed?
+  - What is the edge move that gets forgotten (e.g. a missed payment later settled)?
+  - Which state is terminal, and which transitions are refused (nothing written)?
+  lands_in: entities.cmApproval.lifecycle
+  enforced_by: lifecycle-projector -> status-framework
+  scenario_refs: []
+- id: DR-DMBBAP-002
+  dimension: computation
+  question: What is the exact recipe of materiality — what is included, excluded, and as of when?
+  answer: OPEN — to be answered in elicitation.
+  status: TO_CONFIRM
+  owner: TBD
+  source:
+    kind: assumption
+    ref: unanswered computation template slot (materiality)
+  x-probes:
+  - Write the formula over named fields (numerator, denominator, population).
+  - In-period or cumulative? Which as-of date governs?
+  - Which line components count (disputed, suspended, per-category)?
+  lands_in: rules.materiality
+  enforced_by: generated rules and queries
+- id: DR-DMBBAP-003
+  dimension: interpretation
+  question: What is the one agreed reading of authority_matrix — cumulative or exact, and what covers the top band?
+  answer: OPEN — to be answered in elicitation.
+  status: TO_CONFIRM
+  owner: TBD
+  source:
+    kind: assumption
+    ref: unanswered interpretation template slot (authority_matrix)
+  x-probes:
+  - If a case is category N, are lower-category actions also available (cumulative) or only N's (exact)?
+  - What covers the band above the last enumerated row (is there an implied top band)?
+  - Normalise the table to data + the interpretation, with full range coverage.
+  lands_in: rules.authority_matrix
+  enforced_by: generated rules / seed data
+- id: DR-DMBBAP-004
+  dimension: failure_behaviour
+  question: What happens when approval_engine is down, stale, or empty?
+  answer: OPEN — to be answered in elicitation.
+  status: TO_CONFIRM
+  owner: TBD
+  source:
+    kind: assumption
+    ref: unanswered failure_behaviour template slot (approval_engine)
+  x-probes:
+  - Skip, retry, or create a provisional record? Never fabricate?
+  - What is blocked downstream until the dependency recovers?
+  - Absent value -> N/A render, default, or hard stop?
+  lands_in: interfaces.approval_engine.on_failure
+  enforced_by: adapter configuration, guards
+- id: DR-DMBBAP-005
+  dimension: grain_keys
+  question: What is the grain of cmApproval, and what makes two records duplicates?
+  answer: OPEN — to be answered in elicitation.
+  status: TO_CONFIRM
+  owner: TBD
+  source:
+    kind: assumption
+    ref: unanswered grain_keys template slot (cmApproval)
+  x-probes:
+  - One record per what (per taxpayer, per tax type, per stream)? Reconcile against the business-rule register.
+  - What is the dedup key; what does a duplicate block?
+  lands_in: entities.cmApproval
+  enforced_by: table structure
+- id: DR-DMBBAP-006
+  dimension: work_workspace
+  question: What does 'the DMBB-APPROVAL slice' mean as a workspace — the personas, daily volumes, and the columns and filters officers actually use?
+  answer: OPEN — to be answered in elicitation.
+  status: TO_CONFIRM
+  owner: TBD
+  source:
+    kind: assumption
+    ref: unanswered work_workspace template slot (DMBB-APPROVAL)
+  x-probes:
+  - Which persona owns this list; what is their daily volume?
+  - What does 'my work' mean here (assigned-to-me, my-team, my-queue)?
+  - Which columns, default filter and sort do they actually use?
+  enforced_by: list/userview generators + UX patterns
+  scenario_refs: []
+- id: DR-DMBBAP-007
+  dimension: policy_change
+  question: Who may change the DMBB-APPROVAL slice later, and how — an operated lever or a standing definition?
+  answer: OPEN — to be answered in elicitation.
+  status: TO_CONFIRM
+  owner: TBD
+  source:
+    kind: assumption
+    ref: unanswered policy_change template slot (DMBB-APPROVAL)
+  x-probes:
+  - 'Operate-vs-define (CP-2): a lever someone pulls to manage the work (Zone A), or a definition then selected (Zone B)?'
+  - 'Configurability class (CP-9): Y (UI) / P (parameters only) / N (fixed — a change request)?'
+  - 'Change owner + cadence (CP-1/7): who changes it, how often, on what trigger?'
+  - 'Governance (§8): approval path; approval-gated; impact preview of live cases re-categorised?'
+  - 'Config effective-dating: is the configuration itself versioned with validity windows and rollback?'
+  enforced_by: per-zone admin consoles; config invariants INV-1..5 as validation rules
+- id: DR-DMBBAP-008
+  dimension: ecosystem_shared_meaning
+  question: Does required_authority belong to this module or is it shared — and how is its meaning bound and consumed?
+  answer: OPEN — to be answered in elicitation.
+  status: TO_CONFIRM
+  owner: TBD
+  source:
+    kind: assumption
+    ref: unanswered ecosystem_shared_meaning template slot (required_authority)
+  x-probes: &id001
+  - 'Bucket (Register §1): R shared reference / M master entity / C module config / P platform? FLAGged entries stop at TO-CONFIRM.'
+  - 'Fact ownership: which module writes this fact (one fact, one writer); everyone else reads?'
+  - 'Binding: bound to the kernel by reference, or federated local?'
+  - 'Consumption: synchronous validate / cached projection / frozen snapshot?'
+  - 'Temporal contract: store the code + as-of date, never the label?'
+  lands_in: vocabularies with kernel binding; canonical mappings; interfaces with event schema versions and spine keys
+  enforced_by: kernel contracts (resolve/validate/subscribe/map + resolve_party); the spec-time register test; the generated conformance declaration
+- id: DR-DMBBAP-009
+  dimension: ecosystem_shared_meaning
+  question: Does route_kind belong to this module or is it shared — and how is its meaning bound and consumed?
+  answer: OPEN — to be answered in elicitation.
+  status: TO_CONFIRM
+  owner: TBD
+  source:
+    kind: assumption
+    ref: unanswered ecosystem_shared_meaning template slot (route_kind)
+  x-probes: *id001
+  lands_in: vocabularies with kernel binding; canonical mappings; interfaces with event schema versions and spine keys
+  enforced_by: kernel contracts (resolve/validate/subscribe/map + resolve_party); the spec-time register test; the generated conformance declaration

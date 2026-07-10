@@ -1,0 +1,132 @@
+# DMBB Approval-gate — run 2, runbook-driven, HARVEST mode (source = F-cmApproval*.spec.yml).
+# Second criterion-6 run: a different feature shape (approval/authority/routing) taken through the
+# runbook with ZERO method edits. VERIFIED = the spec authoritatively answers; TO_CONFIRM = a genuine
+# policy value the spec leaves to the owner (the decisions that otherwise leak into the build).
+inventory:
+  slice: DMBB-APPROVAL-gate
+  schema_version: "0.1.0"
+  app_ref: features/DMBB-APPROVAL-gate/forms/F-cmApproval.spec.yml
+
+decisions:
+  - id: DR-DMBBAPPROVAL-001
+    dimension: behavioural_state
+    question: What is the life story of an approval request?
+    answer: >-
+      pending -> {approved | rejected | returned}. A returned request re-enters pending on
+      edit-and-resubmit; every transition is guarded, audited, separation-of-duties enforced
+      (approver != requester); on approve the gate's DecisionEffect runs exactly once.
+    status: VERIFIED
+    source: { kind: doc, ref: "F-cmApproval / F-cmApprovalDecision spec (ApprovalService)" }
+    lands_in: entities.cmApproval.lifecycle
+    enforced_by: ApprovalGateEngine -> status-framework
+    scenario_refs: [SC-AP-approve, SC-AP-sod, SC-AP-return]
+
+  - id: DR-DMBBAPPROVAL-002
+    dimension: behavioural_state
+    question: What does delegation do to authority?
+    answer: >-
+      Delegation ROUTES the work to another approver (delegatedTo/By + APPROVAL_DELEGATED); the
+      delegate still decides under the normal rank gate and separation-of-duties — it does not confer
+      authority. A mandatory reason is recorded.
+    status: VERIFIED
+    source: { kind: doc, ref: "F-cmApprovalDelegate spec (ApprovalDelegateEngine)" }
+    lands_in: entities.cmApproval (delegation)
+    enforced_by: ApprovalDelegateEngine
+    scenario_refs: [SC-AP-delegate]
+
+  - id: DR-DMBBAPPROVAL-003
+    dimension: grain_keys
+    question: What makes two approval requests duplicates?
+    answer: One open (pending) request per (entity, recordId, actionType); the engine creates and owns the row.
+    status: VERIFIED
+    source: { kind: doc, ref: "F-cmApproval spec (entity/recordId/actionType fields)" }
+    lands_in: entities.cmApproval
+    enforced_by: table structure + engine
+    scenario_refs: [SC-AP-approve]
+
+  - id: DR-DMBBAPPROVAL-004
+    dimension: failure_behaviour
+    question: What happens when the ApprovalGateEngine fails mid-decision?
+    answer: >-
+      The Pending->Approved/Rejected/Returned transition and its DecisionEffect are exactly-once and
+      guarded; on engine failure no partial effect is applied and the request stays pending (retry).
+    status: VERIFIED
+    source: { kind: doc, ref: "F-cmApprovalDecision spec (guarded, exactly-once DecisionEffect)" }
+    lands_in: interfaces.approval_engine.on_failure
+    enforced_by: ApprovalGateEngine guard
+    scenario_refs: [SC-AP-engine-fail]
+
+  - id: DR-DMBBAPPROVAL-005
+    dimension: work_workspace
+    question: What is the approver's inbox?
+    answer: >-
+      Columns actionType, materiality, requiredAuthority, status, requestedBy, decidedBy; the 'Decide'
+      row action opens cmApprovalDecision prefilled with the request id.
+    status: VERIFIED
+    source: { kind: doc, ref: "F-cmApproval spec (listColumns + Decide row action)" }
+    lands_in: userview.approvals_inbox
+    enforced_by: list/userview generators + UX patterns (detail-to-record-drill)
+    scenario_refs: [SC-AP-inbox]
+
+  - id: DR-DMBBAPPROVAL-006
+    dimension: ecosystem_shared_meaning
+    question: Is route_kind (SINGLE/CHAIN/QUORUM) shared or module-local?
+    answer: Module-local approval configuration (how a route is resolved); not shared reference data.
+    status: VERIFIED
+    source: { kind: doc, ref: "F-cmApproval Routing section (routeKind)" }
+    lands_in: vocabularies.route_kind
+    enforced_by: seed data
+    scenario_refs: [SC-AP-chain]
+    ecosystem: { bucket: C, register_ref: "MTCA-MDR-001 (not-listed: module-local)", binding: local, consumption: projection }
+
+  - id: DR-DMBBAPPROVAL-007
+    dimension: computation
+    question: What is materiality — the amount that drives the required authority?
+    answer: >-
+      materiality is the monetary amount at stake for the action being approved (e.g. the write-off
+      amount, the instalment total); engine-written on the request.
+    status: VERIFIED
+    source: { kind: doc, ref: "F-cmApproval spec (materiality, storeNumeric, managed)" }
+    lands_in: rules.approval_materiality
+    enforced_by: ApprovalService
+    scenario_refs: [SC-AP-approve]
+    change_profile: { zone: A, class: N, owner: "DM operations", cadence: rare, governance: "fixed per action type" }
+
+  - id: DR-DMBBAPPROVAL-008
+    dimension: policy_change
+    question: Who may change the authority bands and route configuration later?
+    answer: >-
+      The authority bands (materiality -> required authority) and route config are STANDING-ZONE
+      definitions (Zone B): delegation/legal policy proposes, legal/DM management signs off;
+      effective-dated, never retroactive. Operators select routes; they cannot redefine the bands.
+    status: VERIFIED
+    source: { kind: doc, ref: "harvest: two-zone model (ADR-062) applied to the approval config" }
+    lands_in: config.approval_authority
+    enforced_by: generated per-zone admin console + config invariants
+    scenario_refs: [SC-AP-band]
+    change_profile: { zone: B, class: Y, owner: "Delegation/legal policy", cadence: "on statutory/policy trigger", governance: "legal + DM management sign-off; effective-dated" }
+
+  # ---- genuine owner decisions the spec does NOT settle (surfaced, not defaulted) ----
+  - id: DR-DMBBAPPROVAL-009
+    dimension: interpretation
+    question: What are the authority bands (materiality -> required authority), is the reading exact or cumulative, and what covers the top band?
+    answer: >-
+      OPEN — the spec references requiredAuthority but not the band values. The DM precedent
+      (BR-DM-022: DMO < EUR20k / SDO < EUR100k / Director) is a candidate, but the exact values, the
+      exact-vs-cumulative reading, and the top band above the highest threshold are an owner ruling.
+    status: TO_CONFIRM
+    owner: "DM delegation policy (legal + DM management)"
+    source: { kind: assumption, ref: "DM F09/BR-DM-022 precedent proposed; band values + reading need an owner ruling" }
+    change_profile: { zone: B, class: Y, owner: "Delegation/legal policy", cadence: "on policy trigger", governance: "legal sign-off; effective-dated" }
+
+  - id: DR-DMBBAPPROVAL-010
+    dimension: ecosystem_shared_meaning
+    question: Is required_authority (the rank/role levels) module-local or shared organisation reference/IAM?
+    answer: >-
+      OPEN — authority levels are organisational roles used by every module that approves; likely
+      platform/IAM (bucket P), not an approval-local list. Needs the data-governance ruling on the
+      role vocabulary (a FLAG-class question like the register's reason-code/role families).
+    status: TO_CONFIRM
+    owner: "Data governance office (role/authority vocabulary)"
+    source: { kind: assumption, ref: "recommended bucket P (IAM/platform); needs data-governance ruling" }
+    ecosystem: { bucket: P, register_ref: "MTCA-MDR-001 (FLAG: role/authority vocabulary)", binding: local, consumption: projection }
