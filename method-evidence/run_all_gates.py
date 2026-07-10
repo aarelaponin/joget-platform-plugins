@@ -66,8 +66,8 @@ def main() -> int:
     ok &= check("dm-answer-key oracle PASS", rc == 0)
     # 2. F13 — green
     ok &= gate_run("f13-pilot", expect_green=True, expect_open=0)
-    # 3. approval-gate — stable in-progress (2 open)
-    ok &= gate_run("approval-gate-run2", expect_green=False, expect_open=2)
+    # 3. approval-gate — green after the post-1.0 rulings (0 open)
+    ok &= gate_run("approval-gate-run2", expect_green=True, expect_open=0)
     print("METHOD-GATE:", "PASS" if ok else "FAIL")
     return 0 if ok else 1
 

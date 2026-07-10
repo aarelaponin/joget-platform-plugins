@@ -4,7 +4,8 @@ _Method asset (A4/A5 pattern). These are the open TO-CONFIRMs the gated slices r
 default — `kit toconfirm` across registration-foundation, F13-payments, and approval-gate. Ruling them
 takes those slices to fully green. Each ruling becomes a one-line ADR._
 
-- **Status:** Proposed — for the programme owner (with data governance) to rule.
+- **Status:** Ratified — all three ruled **Accepted** by the owner 2026-07-10; registered as ADR-064.
+  The three TO_CONFIRMs are now VERIFIED; every gated slice is green.
 - **Purpose:** clear the 3 open decisions blocking the gated designs; unblock the naïve→gated rebuild.
 
 ## Summary

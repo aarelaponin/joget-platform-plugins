@@ -109,24 +109,28 @@ decisions:
   # ---- genuine owner decisions the spec does NOT settle (surfaced, not defaulted) ----
   - id: DR-DMBBAPPROVAL-009
     dimension: interpretation
+    subject: authority_matrix
     question: What are the authority bands (materiality -> required authority), is the reading exact or cumulative, and what covers the top band?
     answer: >-
-      OPEN — the spec references requiredAuthority but not the band values. The DM precedent
-      (BR-DM-022: DMO < EUR20k / SDO < EUR100k / Director) is a candidate, but the exact values, the
-      exact-vs-cumulative reading, and the top band above the highest threshold are an owner ruling.
-    status: TO_CONFIRM
-    owner: "DM delegation policy (legal + DM management)"
-    source: { kind: assumption, ref: "DM F09/BR-DM-022 precedent proposed; band values + reading need an owner ruling" }
+      Adopt the DM F09 / BR-DM-022 bands as the standing default: DMO < EUR20k / SDO < EUR100k /
+      Director >= EUR100k; EXACT-category reading (a band gets its own authority, not the lower ones);
+      Director-and-above is the explicit top band. Effective-dated, under legal sign-off.
+    status: VERIFIED
+    source: { kind: designer, ref: "AL (owner) ruling — post-1.0 brief D-01", at: "2026-07-10" }
+    lands_in: config.approval_authority_bands
+    enforced_by: seed data + config invariant INV-4
+    scenario_refs: [SC-AP-band]
     change_profile: { zone: B, class: Y, owner: "Delegation/legal policy", cadence: "on policy trigger", governance: "legal sign-off; effective-dated" }
 
   - id: DR-DMBBAPPROVAL-010
     dimension: ecosystem_shared_meaning
     question: Is required_authority (the rank/role levels) module-local or shared organisation reference/IAM?
     answer: >-
-      OPEN — authority levels are organisational roles used by every module that approves; likely
-      platform/IAM (bucket P), not an approval-local list. Needs the data-governance ruling on the
-      role vocabulary (a FLAG-class question like the register's reason-code/role families).
-    status: TO_CONFIRM
-    owner: "Data governance office (role/authority vocabulary)"
-    source: { kind: assumption, ref: "recommended bucket P (IAM/platform); needs data-governance ruling" }
-    ecosystem: { bucket: P, register_ref: "MTCA-MDR-001 (FLAG: role/authority vocabulary)", binding: local, consumption: projection }
+      Platform / IAM (bucket P): authority levels are organisational roles owned by IAM / platform
+      administration and consumed by every module that approves — not an approval-local list. The
+      approval module consumes roles from IAM; it holds no local role list.
+    status: VERIFIED
+    source: { kind: designer, ref: "AL (owner) ruling — post-1.0 brief D-03", at: "2026-07-10" }
+    lands_in: interfaces.iam.roles
+    enforced_by: IAM role vocabulary (consumed)
+    ecosystem: { bucket: P, register_ref: "MTCA-MDR-001 (P: IAM role vocabulary)", binding: local, consumption: projection }
