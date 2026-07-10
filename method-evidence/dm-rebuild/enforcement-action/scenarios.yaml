@@ -1,0 +1,3 @@
+slice: debt-management/enforcement-action
+scenarios:
+  - { id: SC-ENF-execute, procedure: enforcement-action, given: "a debt case eligible for enforcement", when: "an available instrument is selected and executed", then: "an enforcement_action goes initiated -> executed -> confirmed; only legally-available instruments are selectable" }

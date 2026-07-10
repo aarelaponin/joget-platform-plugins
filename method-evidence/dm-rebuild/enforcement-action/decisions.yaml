@@ -1,0 +1,51 @@
+inventory:
+  slice: debt-management/enforcement-action
+  schema_version: "0.1.0"
+  app_ref: features/DMBB-F07-enforcement-actions
+decisions:
+  - id: DR-ENF-001
+    dimension: behavioural_state
+    subject: enforcement_action
+    question: What is the life story of an enforcement action?
+    answer: "initiated -> executed -> {confirmed | failed | blocked}; a blocked/failed action may be referred for a different instrument."
+    status: VERIFIED
+    source: { kind: doc, ref: "F07; DM-FR-018; TADAT/P5-20" }
+    lands_in: entities.enforcement_action.lifecycle
+    enforced_by: status-framework
+    scenario_refs: [SC-ENF-execute]
+  - id: DR-ENF-002
+    dimension: interpretation
+    subject: instrument_set
+    question: What enforcement instruments are available?
+    answer: >-
+      The legally available instruments: bank garnishment, lien, third-party debt, property seizure,
+      bankruptcy petition, judicial letter, agent warrant, name publication, refund interception
+      (F07). Standing zone; only legally-available instruments may be selected (INV-4).
+    status: VERIFIED
+    source: { kind: doc, ref: "F07 instrument enum; DM-FR-018" }
+    lands_in: config.enforcement_instruments
+    enforced_by: seed data + config invariant INV-4
+    scenario_refs: [SC-ENF-execute]
+    change_profile: { zone: B, class: Y, owner: "Legal policy", cadence: "on statutory trigger", governance: "legal sign-off; effective-dated" }
+  - id: DR-ENF-003
+    dimension: grain_keys
+    subject: enforcement_action
+    question: What makes two enforcement actions duplicates?
+    answer: One active action per (debt case, instrument); a new instrument opens a new action.
+    status: VERIFIED
+    source: { kind: doc, ref: "F07; BR-DM-004" }
+    lands_in: entities.enforcement_action
+    enforced_by: table structure + dedup guard
+    scenario_refs: [SC-ENF-execute]
+  # ---- the emblematic DM interpretation leak, surfaced ----
+  - id: DR-ENF-004
+    dimension: interpretation
+    subject: enforcement_matrix
+    question: Is the enforcement matrix cumulative or exact-category, and what covers the top band?
+    answer: >-
+      OPEN - the naive build read Table-4 as CUMULATIVE (a C4 case gets C3's actions too) and invented a
+      C6 band for >EUR200k that DM-FR-004 only implies. The reading (cumulative vs exact) and whether
+      C6 exists (and its actions) are a policy/legal ruling - the DM interpretation leak, surfaced.
+    status: TO_CONFIRM
+    owner: "DM policy / legal"
+    source: { kind: assumption, ref: "Table-4 cumulative-vs-exact + C6 band unresolved in the naive build (EVIDENCE-DM F01)" }

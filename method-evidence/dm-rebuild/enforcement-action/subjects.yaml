@@ -1,0 +1,5 @@
+entities:
+  - { id: enforcement_action, long_lived: true, aliases: [action] }
+rule_tables: [enforcement_matrix, instrument_set]
+lifecycles:
+  - { entity: enforcement_action, states: [initiated, executed, confirmed, failed, blocked, referred] }

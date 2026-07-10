@@ -1,39 +1,56 @@
+# escalation decisions (owner-ruled 2026-07-10)
 inventory:
   slice: debt-management/escalation
-  schema_version: "0.1.0"
+  schema_version: 0.1.0
   app_ref: features/DMBB-F04-escalation
 decisions:
-  - id: DR-ESC-001
-    dimension: behavioural_state
-    subject: debt_case
-    question: What is the escalation ladder for an unpaid debt?
-    answer: >-
-      reminder_sent -> response_pending -> final_demand -> referred_enforcement; each step is guarded by
-      its time offset and a check that the debt is still open (a payment in the window halts escalation).
-    status: VERIFIED
-    source: { kind: doc, ref: "BR-DM-005; BR-DM-011; F04; TADAT/P5-20" }
-    lands_in: entities.debt_case.escalation_stage
-    enforced_by: status-framework + scheduler
-    scenario_refs: [SC-ESC-ladder, SC-ESC-halt]
-  # ---- country parameters surfaced (the escalation config the spec only partly fixes) ----
-  - id: DR-ESC-002
-    dimension: interpretation
-    subject: escalation_offsets
-    question: What is the full escalation offset schedule?
-    answer: >-
-      OPEN - BR-DM-005/011 fix the first three (7d reminder / 14d response / 21d final demand), but the
-      later steps (referral, re-notice) were never specified (the F01 build assumed 14/30). The complete
-      schedule is a policy ruling.
-    status: TO_CONFIRM
-    owner: "DM policy"
-    source: { kind: assumption, ref: "BR-DM-005/011 give 7/14/21; later offsets unspecified - owner ruling" }
-  - id: DR-ESC-003
-    dimension: interpretation
-    subject: escalation_actions
-    question: What action fires at each escalation step (channel and content)?
-    answer: >-
-      OPEN - which channel per step (SMS / email / letter / call) and what each communicates; a policy
-      and operations ruling.
-    status: TO_CONFIRM
-    owner: "DM operations / policy"
-    source: { kind: assumption, ref: "escalation actions per step unspecified - owner ruling" }
+- id: DR-ESC-001
+  dimension: behavioural_state
+  subject: debt_case
+  question: What is the escalation ladder for an unpaid debt?
+  answer: reminder_sent -> response_pending -> final_demand -> referred_enforcement; each step is guarded by its time offset and a check that the debt is still open (a payment in the window halts escalation).
+  status: VERIFIED
+  source:
+    kind: doc
+    ref: BR-DM-005; BR-DM-011; F04; TADAT/P5-20
+  lands_in: entities.debt_case.escalation_stage
+  enforced_by: status-framework + scheduler
+  scenario_refs:
+  - SC-ESC-ladder
+  - SC-ESC-halt
+- id: DR-ESC-002
+  dimension: interpretation
+  subject: escalation_offsets
+  question: What is the full escalation offset schedule?
+  answer: 'Schedule: 7d reminder, 14d response, 21d final demand (BR-DM-005/011), then 35d referral to enforcement and a 30d re-notice cadence thereafter. Effective-dated standing config.'
+  status: VERIFIED
+  source:
+    kind: designer
+    ref: AL (owner) ruling - escalation
+    at: '2026-07-10'
+  lands_in: config.escalation_offsets
+  enforced_by: scheduler
+  change_profile:
+    zone: B
+    class: Y
+    owner: DM policy
+    cadence: on policy trigger
+    governance: sign-off; effective-dated
+- id: DR-ESC-003
+  dimension: interpretation
+  subject: escalation_actions
+  question: What action fires at each escalation step (channel and content)?
+  answer: SMS + email at reminder; letter at final demand; a phone call for high-value cases before referral (per DM-FR-019 contact applicability).
+  status: VERIFIED
+  source:
+    kind: designer
+    ref: AL (owner) ruling - escalation
+    at: '2026-07-10'
+  lands_in: config.escalation_actions
+  enforced_by: notification service
+  change_profile:
+    zone: A
+    class: Y
+    owner: DM operations / policy
+    cadence: on policy trigger
+    governance: sign-off; effective-dated
