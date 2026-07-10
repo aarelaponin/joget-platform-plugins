@@ -1,0 +1,12 @@
+pack_schema_version: 0.1.0
+id: debt-management
+version: 0.1.0
+sector: tax
+pattern: debt-management
+description: >-
+  Debt Management domain reference pack v0.1 — the country-invariant enforcement/collection
+  procedure skeleton. GROUNDED (verify-before-build) in the real, present MTCA DM requirements spec
+  (08-Debt_Management-Requirements_v1.1.md: DM-FR / BR-DM / WF-FR / RPT-FR) and the DMBB feature set
+  (F01-F14). NOTE: this is a SPEC-grounded anchor; upgrading to a fully EXTERNAL denominator (TADAT
+  debt-collection POA / IMF-DBM debt-management functional model) requires verified external sourcing
+  — see SOURCING.md (ADR-044 discipline: no fabricated external references).

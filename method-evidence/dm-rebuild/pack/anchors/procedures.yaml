@@ -1,0 +1,29 @@
+# L-levels + the reconstruction reference set. Reference blocks = the DMBB feature set (F01-F14 +
+# reporting), each of which must map to a skeleton procedure (reconstruction closes both ways).
+procedures:
+  - { id: debt-case-creation, level: L3 }
+  - { id: debt-categorisation, level: L4 }
+  - { id: escalation, level: L3 }
+  - { id: enforcement-action, level: L2 }
+  - { id: instalment-arrangement, level: L3 }
+  - { id: write-off, level: L3 }
+  - { id: default-assessment, level: L4 }
+  - { id: objection-handling, level: L3 }
+  - { id: payment-application, level: L3 }
+  - { id: contact-visit, level: L2 }
+  - { id: collection-mi, level: L1 }
+dm_features:
+  - { f: "F01", name: "dpm-core-md", procedure: debt-categorisation }
+  - { f: "F02", name: "debt-case-type", procedure: debt-case-creation }
+  - { f: "F03", name: "identification", procedure: debt-case-creation }
+  - { f: "F04", name: "escalation", procedure: escalation }
+  - { f: "F05", name: "escalation-admin", procedure: objection-handling }
+  - { f: "F06", name: "instalments", procedure: instalment-arrangement }
+  - { f: "F07", name: "enforcement-actions", procedure: enforcement-action }
+  - { f: "F08", name: "enforcement-config", procedure: enforcement-action }
+  - { f: "F09", name: "writeoff", procedure: write-off }
+  - { f: "F10", name: "default-assessment", procedure: default-assessment }
+  - { f: "F11", name: "debtors-list", procedure: collection-mi }
+  - { f: "F12", name: "collection-mi", procedure: collection-mi }
+  - { f: "F13", name: "payments", procedure: payment-application }
+  - { f: "F14", name: "contact-visit", procedure: contact-visit }
