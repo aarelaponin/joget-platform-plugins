@@ -1,0 +1,8 @@
+id: sortable-columns
+name: Every list column is sortable
+applies_to: datalist
+rule: "Every generated datalist column emits sortable:true (not only lookup/date columns)."
+realised_by: "gen_datalists.py col() always sets sortable:true (form-companion and custom JDBC lists)."
+maturity: stable      # proven 9/9 and 18/18 on deployed DMBB lists; T-23.1
+source: "DMBB-UX-QA FIS §1.1 (was 0-of-9 sortable before)"
+deferred: []

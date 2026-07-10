@@ -1,0 +1,10 @@
+id: no-orphan-child-list
+name: A child list is never a standalone menu
+applies_to: userview
+rule: >-
+  A 1:many child entity (a foreign key, no owning-party column) is never exposed as a standalone
+  DataListMenu — it is meaningless on its own; it renders nested in its parent console/subform-grid.
+realised_by: "gen_userview.py omits orphan child lists from the menu; the parent console hosts the nested grid."
+maturity: stable      # T-23.5 (orphan 'Debt lines' menu removed)
+source: "DMBB-UX-QA FIS §0/§1.4"
+deferred: []

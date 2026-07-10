@@ -1,0 +1,8 @@
+id: detail-to-record-drill
+name: Detail row opens its record
+applies_to: datalist
+rule: "Every detail list row has a row action that opens the underlying record (no dead-end lists)."
+realised_by: "gen_datalists.py rowActions -> record console (e.g. Open case -> dmCaseConsole?id=<case>); gen_userview gives menus a clean customId."
+maturity: stable      # T-23.3
+source: "DMBB-UX-QA FIS §1.3"
+deferred: []

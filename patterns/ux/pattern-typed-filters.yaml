@@ -1,0 +1,13 @@
+id: typed-filters
+name: Typed filters on operational columns
+applies_to: datalist
+rule: >-
+  Lists carry typed filters, never free-text-match-exactly: select (controlled vocabulary, inline
+  options) and text (contains). Form-companion lists auto-get a contains filter on the common
+  operational columns (TIN, status, category, instrument, type, agent).
+realised_by: >-
+  filter entry type select (SelectBoxDataListFilterType) / text (TextFieldDataListFilterType); JDBC
+  lists read the value via #requestParam.<param># guarded optionally in the SQL.
+maturity: stable      # T-23.2
+source: "DMBB-UX-QA FIS §1.2"
+deferred: ["date-range filters (plugin not installed on jdx9)", "numeric-range filters"]
