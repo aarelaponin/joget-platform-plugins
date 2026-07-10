@@ -1,0 +1,173 @@
+# F13-payments elicit pilot — decision inventory. Round 1 (record & allocate a payment)
+# interviewed + confirmed by the owner 2026-07-10. All eight VERIFIED (source: designer AL).
+# validated by: kit lint-decisions.
+inventory:
+  slice: DMBB-F13-payments
+  schema_version: "0.1.0"
+  app_ref: features/DMBB-F13-payments/forms/F-dmPayment.spec.yml
+
+decisions:
+  - id: DR-DMBBF13-001
+    dimension: computation
+    question: How is a payment allocated to a debt (the applied amount)?
+    answer: >-
+      applied_amount reduces outstanding = dmDebt.consolidatedAmount + dmLine enforceable amounts,
+      OLDEST-FIRST, until the payment is exhausted or the debt is cleared.
+    status: VERIFIED
+    source: { kind: designer, ref: "AL (owner) confirming F-dmPayment PaymentEngine", at: "2026-07-10" }
+    lands_in: rules.payment_allocation
+    enforced_by: PaymentEngine (POST)
+    scenario_refs: [SC-F13-allocate]
+    change_profile: { zone: A, class: P, owner: "DM operations", cadence: rare, governance: "DM management approval" }
+
+  - id: DR-DMBBF13-002
+    dimension: behavioural_state
+    question: What does full settlement of a debt trigger?
+    answer: On full settlement the debt is marked Settled, the case is CLOSED, and enforcement-suppress holds are released.
+    status: VERIFIED
+    source: { kind: designer, ref: "AL (owner) confirming F-dmPayment description", at: "2026-07-10" }
+    lands_in: entities.dmDebt.lifecycle (settled) + entities.cmCase.lifecycle (closed)
+    enforced_by: PaymentEngine (POST) -> status-framework
+    scenario_refs: [SC-F13-full-settlement]
+
+  - id: DR-DMBBF13-003
+    dimension: ownership_recompute
+    question: Is balance_after a stored snapshot on the payment, or recomputed live from the debt?
+    answer: >-
+      applied_amount + balance_after are an informational SNAPSHOT on the payment row (audit trail);
+      the debt/ledger outstanding remains the single source of truth and is never recomputed from
+      payment snapshots (the DM 'never recompute; ledger authoritative' principle).
+    status: VERIFIED
+    source: { kind: designer, ref: "AL (owner)", at: "2026-07-10" }
+    lands_in: entities.dmPayment.source_bindings
+    enforced_by: PaymentEngine + binder
+    scenario_refs: [SC-F13-allocate]
+
+  - id: DR-DMBBF13-004
+    dimension: computation
+    question: How is an OVERPAYMENT (amount greater than outstanding) handled?
+    answer: Apply up to the outstanding, then hold the excess as a CREDIT on the taxpayer account; refund is a separate governed process (not auto-refunded, not rejected).
+    status: VERIFIED
+    source: { kind: designer, ref: "AL (owner)", at: "2026-07-10" }
+    lands_in: rules.payment_overpayment
+    enforced_by: PaymentEngine
+    scenario_refs: [SC-F13-overpayment]
+    change_profile: { zone: B, class: P, owner: "Accounting policy", cadence: rare, governance: "legal/accounting sign-off" }
+
+  - id: DR-DMBBF13-005
+    dimension: behavioural_state
+    question: Can a payment be reversed, and does reversing it restore the debt?
+    answer: >-
+      dmPayment lifecycle recorded -> applied -> reversed. A reversal (e.g. a bounced CB transfer)
+      RESTORES the settled/reduced amount to the debt; if the debt had been Settled and its case
+      CLOSED, the case REOPENS.
+    status: VERIFIED
+    source: { kind: designer, ref: "AL (owner)", at: "2026-07-10" }
+    lands_in: entities.dmPayment.lifecycle
+    enforced_by: PaymentEngine (reversal) -> status-framework
+    scenario_refs: [SC-F13-reversal]
+
+  - id: DR-DMBBF13-006
+    dimension: behavioural_state
+    question: Does a PARTIAL payment move the debt to a distinct state?
+    answer: A partial payment moves dmDebt to part_settled (outstanding remains); a full payment clears it to settled.
+    status: VERIFIED
+    source: { kind: designer, ref: "AL (owner)", at: "2026-07-10" }
+    lands_in: entities.dmDebt.lifecycle
+    enforced_by: PaymentEngine -> status-framework
+    scenario_refs: [SC-F13-partial]
+
+  - id: DR-DMBBF13-007
+    dimension: failure_behaviour
+    question: What if the TIN resolves to no open DM case, or to more than one?
+    answer: >-
+      No open DM case: REJECT the payment with guidance (never fabricate a case). Multiple open
+      cases: apply to the HIGHEST-PRIORITY case, then oldest as the tie-break (owner ruling
+      2026-07-10, option a).
+    status: VERIFIED
+    source: { kind: designer, ref: "AL (owner) ruling on multi-case routing", at: "2026-07-10" }
+    lands_in: rules.payment_case_resolution
+    enforced_by: PaymentEngine
+    scenario_refs: [SC-F13-no-case, SC-F13-multi-case]
+
+  - id: DR-DMBBF13-008
+    dimension: failure_behaviour
+    question: When is the debt reduced for a CB/bank payment whose funds are not yet confirmed?
+    answer: >-
+      CASH applies immediately; CB/BANK is recorded as PENDING and the debt is reduced only on funds
+      confirmation (a pending state between recorded and applied).
+    status: VERIFIED
+    source: { kind: designer, ref: "AL (owner)", at: "2026-07-10" }
+    lands_in: interfaces.settlement_channel.on_pending
+    enforced_by: PaymentEngine + channel adapter
+    scenario_refs: [SC-F13-pending]
+
+  # ---- Round 2 (grain, balance formula, engine failure, workspace, ecosystem) — confirmed 2026-07-10 ----
+  # Dimension-8 zoning (Q F) is single-sourced on the change_profile of DR-001 (allocation=Zone A) and
+  # DR-004 (overpayment=Zone B) and DR-014 (method=Zone B reference) — not restated here (CP-3/DRY).
+  - id: DR-DMBBF13-009
+    dimension: grain_keys
+    question: What makes two payments duplicates?
+    answer: >-
+      Every receipt is its own dmPayment row; but a payment carrying a bank/CB reference must be
+      unique — a second payment with the same reference is rejected (idempotency, no double-posting).
+    status: VERIFIED
+    source: { kind: designer, ref: "AL (owner)", at: "2026-07-10" }
+    lands_in: entities.dmPayment
+    enforced_by: table structure + reference idempotency guard
+    scenario_refs: [SC-F13-dup-reference]
+
+  - id: DR-DMBBF13-010
+    dimension: grain_keys
+    question: What is the grain of dmDebt (as consumed by F13)?
+    answer: Out of scope for F13 — dmDebt grain is owned by the debt-case feature; F13 only consumes it.
+    status: WAIVED
+    source: { kind: designer, ref: "AL (owner)", at: "2026-07-10" }
+    waiver: { signer: "AL 2026-07-10", reason: "dmDebt grain owned upstream by the debt-case feature" }
+
+  - id: DR-DMBBF13-011
+    dimension: computation
+    question: What is the exact recipe of balance_after?
+    answer: "balance_after = outstanding_before - applied_amount (the outstanding immediately after this payment applies)."
+    status: VERIFIED
+    source: { kind: designer, ref: "AL (owner)", at: "2026-07-10" }
+    lands_in: rules.balance_after
+    enforced_by: PaymentEngine
+    scenario_refs: [SC-F13-allocate]
+    change_profile: { zone: A, class: N, owner: "Accounting", cadence: rare, governance: "fixed formula" }
+
+  - id: DR-DMBBF13-012
+    dimension: failure_behaviour
+    question: What if the PaymentEngine itself is down or errors at create?
+    answer: The payment is saved but left UNAPPLIED (pending/unapplied state), flagged for retry — never silently lost, never double-applied.
+    status: VERIFIED
+    source: { kind: designer, ref: "AL (owner)", at: "2026-07-10" }
+    lands_in: interfaces.payment_engine.on_failure
+    enforced_by: PaymentEngine guard + retry
+    scenario_refs: [SC-F13-engine-down]
+
+  - id: DR-DMBBF13-013
+    dimension: work_workspace
+    question: What does the officer's payments workspace show?
+    answer: >-
+      Columns tin, amount, appliedAmount, balanceAfter, status, paymentDate; default filter =
+      this office + recent; sort by paymentDate desc. Launched via the worklist 'Record payment'
+      action (?tin=), prefilled from the debtor's open DM case.
+    status: VERIFIED
+    source: { kind: designer, ref: "AL (owner)", at: "2026-07-10" }
+    lands_in: userview.payments
+    enforced_by: list/userview generators + UX patterns (typed-filters, detail-to-record-drill)
+    scenario_refs: [SC-F13-worklist]
+
+  - id: DR-DMBBF13-014
+    dimension: ecosystem_shared_meaning
+    question: Is payment_method (CB/BANK/CASH) F13's own list or shared reference data?
+    answer: >-
+      Shared reference data — it is R-05 'Payment method' in the MDM register. Bind to the kernel by
+      reference (compiles to a local projection until the kernel exists); do NOT keep a local copy.
+    status: VERIFIED
+    source: { kind: designer, ref: "AL (owner)", at: "2026-07-10" }
+    lands_in: vocabularies.payment_method
+    enforced_by: kernel contract + seed projection; spec-time register test
+    scenario_refs: [SC-F13-method]
+    ecosystem: { bucket: R, register_ref: "R-05", binding: kernel, consumption: projection }

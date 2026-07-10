@@ -1,0 +1,15 @@
+# F13-payments acceptance scenarios — written during elicitation (each asserts a decision).
+slice: DMBB-F13-payments
+scenarios:
+  - { id: SC-F13-allocate, procedure: record-payment, given: "an open DM case with two debt lines, oldest first", when: "a payment less than the outstanding is recorded", then: "it reduces the oldest line first; applied_amount and balance_after are snapshotted; the ledger stays authoritative" }
+  - { id: SC-F13-full-settlement, procedure: record-payment, given: "a payment equal to the outstanding", when: "it is applied", then: "the debt is Settled, the case CLOSED, and enforcement-suppress holds released" }
+  - { id: SC-F13-overpayment, procedure: record-payment, given: "a payment greater than the outstanding", when: "it is applied", then: "outstanding is cleared and the excess is held as an account credit (not rejected, not auto-refunded)" }
+  - { id: SC-F13-reversal, procedure: reverse-payment, given: "a payment that settled a debt and closed the case", when: "the payment is reversed (bounced transfer)", then: "the debt amount is restored and the case reopens" }
+  - { id: SC-F13-partial, procedure: record-payment, given: "a payment less than the outstanding", when: "it is applied", then: "the debt moves to part_settled and remains outstanding" }
+  - { id: SC-F13-no-case, procedure: record-payment, given: "a TIN with no open DM case", when: "a payment is recorded", then: "it is rejected with guidance and no case is fabricated" }
+  - { id: SC-F13-multi-case, procedure: record-payment, given: "a TIN with two open DM cases", when: "a payment is recorded", then: "it applies to the highest-priority case, oldest as the tie-break" }
+  - { id: SC-F13-pending, procedure: record-payment, given: "a CB/bank payment whose funds are not yet confirmed", when: "it is recorded", then: "it is pending and the debt is reduced only on confirmation; cash applies immediately" }
+  - { id: SC-F13-dup-reference, procedure: record-payment, given: "a payment already posted with a given bank reference", when: "a second payment with the same reference is recorded", then: "it is rejected (idempotency; no double-posting)" }
+  - { id: SC-F13-engine-down, procedure: record-payment, given: "the PaymentEngine is unavailable at create", when: "a payment is recorded", then: "it is saved unapplied and flagged for retry; never double-applied, never lost" }
+  - { id: SC-F13-worklist, procedure: workspace, given: "a debt officer on the payments list", when: "they open 'Record payment' from the worklist", then: "the form is prefilled by TIN from the debtor's open DM case; the list shows tin/amount/applied/balance/status/date" }
+  - { id: SC-F13-method, procedure: record-payment, given: "the payment method field", when: "it is populated", then: "it draws from the shared R-05 Payment-method reference, not a local copy" }
