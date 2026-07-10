@@ -1,0 +1,61 @@
+name: method-gate
+
+# Standing regression for the upstream method: runs method-evidence/run_all_gates.py against a
+# checkout of the (private) kit — the DM answer-key oracle + the F13 and approval-gate runs. Any
+# change that breaks the method (in the kit tools or a pilot) fails here.
+#
+# The kit is a separate private repo; the secrets context is not allowed in `if:`, so a first step
+# probes KIT_REPO_TOKEN and the kit-dependent steps gate on its OUTPUT. No token -> skip (green, with
+# a warning); token present -> the gate runs for real.
+#
+# SETUP (owner, one-time): add a repository secret KIT_REPO_TOKEN — a read-scoped fine-grained PAT
+# for aarelaponin/joget-spec-kit.
+
+on:
+  workflow_dispatch:
+  push:
+    paths: ["method-evidence/**", ".github/workflows/method-gate.yml"]
+  pull_request:
+    paths: ["method-evidence/**", ".github/workflows/method-gate.yml"]
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout platform
+        uses: actions/checkout@v4
+
+      - name: Probe for kit token
+        id: cfg
+        env:
+          TOK: ${{ secrets.KIT_REPO_TOKEN }}
+        run: |
+          if [ -n "$TOK" ]; then echo "have=1" >> "$GITHUB_OUTPUT"; else echo "have=0" >> "$GITHUB_OUTPUT"; fi
+
+      - name: Skip notice (no kit token configured)
+        if: steps.cfg.outputs.have == '0'
+        run: echo "::warning title=method-gate skipped::KIT_REPO_TOKEN is not set - add a read-scoped PAT for aarelaponin/joget-spec-kit to enable the method gate. Skipping (not failing)."
+
+      - name: Checkout the kit (private)
+        if: steps.cfg.outputs.have == '1'
+        uses: actions/checkout@v4
+        with:
+          repository: aarelaponin/joget-spec-kit
+          path: _kit
+          token: ${{ secrets.KIT_REPO_TOKEN }}
+
+      - name: Set up Python
+        if: steps.cfg.outputs.have == '1'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install deps
+        if: steps.cfg.outputs.have == '1'
+        run: python -m pip install --upgrade pyyaml jsonschema
+
+      - name: Method gate (DM oracle + F13 + approval-gate)
+        if: steps.cfg.outputs.have == '1'
+        env:
+          KIT: ${{ github.workspace }}/_kit
+        run: python3 method-evidence/run_all_gates.py
