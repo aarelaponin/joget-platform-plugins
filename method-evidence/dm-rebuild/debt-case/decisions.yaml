@@ -43,9 +43,11 @@ decisions:
     subject: debt_case
     question: What is the debt-case grain - one case per TIN, or per enforcement stream? Define "stream".
     answer: >-
-      OPEN - the naive build used one-open-case-per-TIN, but BR-DM-002 (no duplicate per TIN/tax-type/
-      period) and BR-DM-004 (consolidate per enforcement stream) were never reconciled - the second
-      measured divergence. The grain and the definition of "stream" are an owner ruling.
-    status: TO_CONFIRM
-    owner: "DM policy"
-    source: { kind: assumption, ref: "BR-DM-002 vs BR-DM-004 unreconciled in the naive build; grain is an owner ruling" }
+      One OPEN case per ENFORCEMENT STREAM, where a stream = (TIN, tax-type group / enforcement
+      category). The stream is the dedup key: this reconciles BR-DM-002 (no duplicates per
+      TIN/tax-type/period) with BR-DM-004 (consolidate per stream) — the reconciliation the naive
+      per-TIN build never made.
+    status: VERIFIED
+    source: { kind: designer, ref: "AL (owner) ruling — debt-case grain (BR-DM-002 x BR-DM-004)", at: "2026-07-10" }
+    lands_in: entities.debt_case (grain = enforcement stream)
+    enforced_by: table structure + dedup guard on the stream key
