@@ -1,0 +1,3 @@
+slice: debt-management/objection-handling
+scenarios:
+  - { id: SC-OBJ-lodge, procedure: objection-handling, given: "a debt where the disputed amount >= enforceable", when: "an objection is lodged", then: "enforcement is suspended and it goes lodged -> under_review" }

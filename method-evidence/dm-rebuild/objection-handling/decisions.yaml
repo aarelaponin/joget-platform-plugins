@@ -1,0 +1,31 @@
+inventory: { slice: debt-management/objection-handling, schema_version: "0.1.0", app_ref: features/DMBB-F05-escalation-admin }
+decisions:
+  - id: DR-OBJ-001
+    dimension: behavioural_state
+    subject: objection
+    question: What is the life story of an objection?
+    answer: "lodged -> under_review -> {upheld | rejected | partially_upheld} -> closed; enforcement on the disputed amount is suspended while under_review."
+    status: VERIFIED
+    source: { kind: doc, ref: "F05; TADAT/P7-23; TADAT/P7-25" }
+    lands_in: entities.objection.lifecycle
+    enforced_by: status-framework + enforcement suspend
+    scenario_refs: [SC-OBJ-lodge]
+  - id: DR-OBJ-002
+    dimension: interpretation
+    subject: objection_block_rule
+    question: What exactly blocks enforcement - any objection, or disputed >= enforceable?
+    answer: "Enforcement is blocked when the disputed amount >= the enforceable amount (the full-amount-objection reading, F05); a partial objection blocks only the disputed portion."
+    status: VERIFIED
+    source: { kind: doc, ref: "F05 (full-amount objection)" }
+    lands_in: rules.objection_block
+    enforced_by: generated rule
+    scenario_refs: [SC-OBJ-lodge]
+    change_profile: { zone: B, class: P, owner: "Legal policy", cadence: rare, governance: "legal sign-off" }
+  - id: DR-OBJ-003
+    dimension: interpretation
+    subject: dispute_sla
+    question: What is the administrative dispute-resolution SLA (TADAT P7-24)?
+    answer: "OPEN - the time target to resolve an objection is unspecified; a policy ruling (TADAT P7-24 measures it)."
+    status: TO_CONFIRM
+    owner: "DM / legal policy"
+    source: { kind: assumption, ref: "dispute resolution SLA unspecified; TADAT P7-24" }

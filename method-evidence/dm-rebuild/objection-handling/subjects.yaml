@@ -1,0 +1,3 @@
+rule_tables: [objection_block_rule, dispute_sla]
+lifecycles:
+  - { entity: objection, states: [lodged, under_review, upheld, rejected, partially_upheld, closed] }

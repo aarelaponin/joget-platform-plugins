@@ -1,0 +1,23 @@
+inventory: { slice: debt-management/contact-visit, schema_version: "0.1.0", app_ref: features/DMBB-F14-contact-visit }
+decisions:
+  - id: DR-CV-001
+    dimension: interpretation
+    subject: contact_applicability
+    question: Which categories get phone contact and field visits?
+    answer: "Phone contact applies to C3-C5 (DM-FR-019); field visits to C4-C5 (DM-FR-020). High-value fast-track: phone SLA 2 business days (DM-FR-018)."
+    status: VERIFIED
+    source: { kind: doc, ref: "DM-FR-019; DM-FR-020; DM-FR-018" }
+    lands_in: config.contact_applicability
+    enforced_by: generated rule
+    scenario_refs: [SC-CV-phone]
+    change_profile: { zone: A, class: Y, owner: "DM operations", cadence: operational, governance: "ops approval" }
+  - id: DR-CV-002
+    dimension: behavioural_state
+    subject: contact_activity
+    question: What is the life story of a contact/visit activity?
+    answer: "scheduled -> attempted -> {completed | failed}; a failed attempt reschedules per policy."
+    status: VERIFIED
+    source: { kind: doc, ref: "F14" }
+    lands_in: entities.contact_activity.lifecycle
+    enforced_by: status-framework
+    scenario_refs: [SC-CV-phone]

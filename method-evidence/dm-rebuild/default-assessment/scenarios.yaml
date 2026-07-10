@@ -1,0 +1,3 @@
+slice: debt-management/default-assessment
+scenarios:
+  - { id: SC-DA-raise, procedure: default-assessment, given: "a non-filing taxpayer with a prior-year liability", when: "a default assessment is raised", then: "it goes raised -> confirmed and feeds the debt" }

@@ -1,0 +1,3 @@
+slice: debt-management/contact-visit
+scenarios:
+  - { id: SC-CV-phone, procedure: contact-visit, given: "a C3 debt", when: "contact is scheduled", then: "a phone contact applies (C3-C5); it goes scheduled -> attempted -> completed" }

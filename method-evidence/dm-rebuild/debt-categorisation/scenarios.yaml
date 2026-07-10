@@ -1,0 +1,3 @@
+slice: debt-management/debt-categorisation
+scenarios:
+  - { id: SC-CAT-assign, procedure: debt-categorisation, given: "a debt of EUR250k", when: "it is categorised", then: "it is C6 (>EUR200k, exact); the band is informational and the ledger stays authoritative" }

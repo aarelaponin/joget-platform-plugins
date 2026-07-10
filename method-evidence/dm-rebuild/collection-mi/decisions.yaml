@@ -1,0 +1,29 @@
+inventory: { slice: debt-management/collection-mi, schema_version: "0.1.0", app_ref: features/DMBB-F12-collection-mi }
+decisions:
+  - id: DR-MI-001
+    dimension: interpretation
+    subject: aging_bands
+    question: What are the arrears aging bands?
+    answer: "0-30 / 31-60 / 61-90 / 91-180 / 181-365 / >365 days (RPT-FR-001 / RPT-FR-008); feeds TADAT P5-19 (>12-months arrears)."
+    status: VERIFIED
+    source: { kind: doc, ref: "RPT-FR-001; RPT-FR-008; TADAT/P5-19" }
+    lands_in: config.aging_bands
+    enforced_by: generated query
+    scenario_refs: [SC-MI-aging]
+    change_profile: { zone: A, class: Y, owner: "MI/reporting", cadence: rare, governance: "MI sign-off" }
+  - id: DR-MI-002
+    dimension: interpretation
+    subject: kpi_set
+    question: What KPI set and formulas does the collection MI report?
+    answer: "OPEN - EVIDENCE-DM recorded the 12 KPI formulas (#24-35) as invented at build; the numerator/denominator/population/period of each is an MI ruling."
+    status: TO_CONFIRM
+    owner: "MI / analytics"
+    source: { kind: assumption, ref: "12 KPI formulas unspecified (EVIDENCE-DM DASH2)" }
+  - id: DR-MI-003
+    dimension: interpretation
+    subject: rag_bands
+    question: What RAG thresholds apply to the KPIs?
+    answer: "OPEN - the green/amber/red thresholds per KPI were invented at build; an MI ruling."
+    status: TO_CONFIRM
+    owner: "MI / analytics"
+    source: { kind: assumption, ref: "RAG bands unspecified (EVIDENCE-DM DASH2)" }

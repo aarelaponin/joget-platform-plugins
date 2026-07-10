@@ -1,0 +1,20 @@
+inventory: { slice: debt-management/default-assessment, schema_version: "0.1.0", app_ref: features/DMBB-F10-default-assessment }
+decisions:
+  - id: DR-DA-001
+    dimension: behavioural_state
+    subject: default_assessment
+    question: What is the life story of a default assessment?
+    answer: "raised -> {confirmed | appealed | withdrawn}; a confirmed default assessment feeds the debt as an enforceable liability."
+    status: VERIFIED
+    source: { kind: doc, ref: "F10" }
+    lands_in: entities.default_assessment.lifecycle
+    enforced_by: status-framework
+    scenario_refs: [SC-DA-raise]
+  - id: DR-DA-002
+    dimension: interpretation
+    subject: assessment_basis
+    question: What is the basis and cap for a default (estimated) assessment?
+    answer: "OPEN - EVIDENCE-DM recorded the basis (priority of prior-year / industry-average / formula) and the cap (e.g. prior-year x150%) as unspecified. A policy/legal ruling."
+    status: TO_CONFIRM
+    owner: "DM / legal policy"
+    source: { kind: assumption, ref: "assessment basis + cap unspecified (EVIDENCE-DM Q13)" }

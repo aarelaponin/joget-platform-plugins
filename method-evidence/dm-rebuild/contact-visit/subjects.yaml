@@ -1,0 +1,3 @@
+rule_tables: [contact_applicability]
+lifecycles:
+  - { entity: contact_activity, states: [scheduled, attempted, completed, failed] }

@@ -1,0 +1,3 @@
+rule_tables: [assessment_basis]
+lifecycles:
+  - { entity: default_assessment, states: [raised, confirmed, appealed, withdrawn] }

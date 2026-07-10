@@ -1,0 +1,3 @@
+slice: debt-management/collection-mi
+scenarios:
+  - { id: SC-MI-aging, procedure: collection-mi, given: "the arrears book", when: "the aging report runs", then: "arrears bucket into 0-30/.../>365 and the >365 share maps to TADAT P5-19" }

@@ -1,0 +1,24 @@
+inventory: { slice: debt-management/debt-categorisation, schema_version: "0.1.0", app_ref: features/DMBB-F01-dpm-core-md }
+decisions:
+  - id: DR-CAT-001
+    dimension: interpretation
+    subject: category_bands
+    question: What are the debt category bands?
+    answer: "C1-C6 per the ratified enforcement matrix (exact-category; C6 = >EUR200k). Single-sourced from DR-ENF-004."
+    status: VERIFIED
+    source: { kind: doc, ref: "DR-ENF-004 (ratified matrix); DM-FR-004" }
+    lands_in: config.category_bands
+    enforced_by: generated rule
+    scenario_refs: [SC-CAT-assign]
+    change_profile: { zone: B, class: Y, owner: "DM policy / legal", cadence: "on policy trigger", governance: "legal sign-off; effective-dated" }
+  - id: DR-CAT-002
+    dimension: interpretation
+    subject: category_recompute
+    question: Is the category recomputed live or snapshotted?
+    answer: "Snapshotted at case creation and recomputed on a balance change; it is informational - the ledger stays authoritative (the F03 never-recompute principle)."
+    status: VERIFIED
+    source: { kind: doc, ref: "DM build F03 (never-recompute; ledger authoritative)" }
+    lands_in: rules.category_recompute
+    enforced_by: generated rule
+    scenario_refs: [SC-CAT-assign]
+    change_profile: { zone: A, class: N, owner: "DM operations", cadence: rare, governance: "ops approval" }
