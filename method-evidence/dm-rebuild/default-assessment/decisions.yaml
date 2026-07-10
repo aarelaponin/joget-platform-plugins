@@ -14,7 +14,12 @@ decisions:
     dimension: interpretation
     subject: assessment_basis
     question: What is the basis and cap for a default (estimated) assessment?
-    answer: "OPEN - EVIDENCE-DM recorded the basis (priority of prior-year / industry-average / formula) and the cap (e.g. prior-year x150%) as unspecified. A policy/legal ruling."
-    status: TO_CONFIRM
-    owner: "DM / legal policy"
-    source: { kind: assumption, ref: "assessment basis + cap unspecified (EVIDENCE-DM Q13)" }
+    answer: >-
+      Priority order prior-year -> industry-average -> formula; cap at prior-year x150% unless a
+      documented justification. Owner-ruled 2026-07-10.
+    status: VERIFIED
+    source: { kind: designer, ref: "AL (owner) ruling - default-assessment basis + cap", at: "2026-07-10" }
+    lands_in: config.assessment_basis
+    enforced_by: generated rule
+    scenario_refs: [SC-DA-raise]
+    change_profile: { zone: B, class: P, owner: "DM / legal policy", cadence: "on policy trigger", governance: "legal sign-off; effective-dated" }

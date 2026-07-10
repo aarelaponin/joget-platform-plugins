@@ -15,15 +15,24 @@ decisions:
     dimension: interpretation
     subject: kpi_set
     question: What KPI set and formulas does the collection MI report?
-    answer: "OPEN - EVIDENCE-DM recorded the 12 KPI formulas (#24-35) as invented at build; the numerator/denominator/population/period of each is an MI ruling."
-    status: TO_CONFIRM
-    owner: "MI / analytics"
-    source: { kind: assumption, ref: "12 KPI formulas unspecified (EVIDENCE-DM DASH2)" }
+    answer: >-
+      Adopt the 12 spec KPIs (#24-35) - collection efficiency, arrears-to-revenue ratio, resolution
+      rate, recovery rate, days-since-last-action, etc. - each with an explicit
+      numerator/denominator/population/period; MI signs the exact formulas. Owner-ruled 2026-07-10.
+    status: VERIFIED
+    source: { kind: designer, ref: "AL (owner) ruling - collection-MI KPI set", at: "2026-07-10" }
+    lands_in: config.kpi_set
+    enforced_by: generated query
+    scenario_refs: [SC-MI-aging]
+    change_profile: { zone: A, class: Y, owner: "MI / analytics", cadence: rare, governance: "MI sign-off" }
   - id: DR-MI-003
     dimension: interpretation
     subject: rag_bands
     question: What RAG thresholds apply to the KPIs?
-    answer: "OPEN - the green/amber/red thresholds per KPI were invented at build; an MI ruling."
-    status: TO_CONFIRM
-    owner: "MI / analytics"
-    source: { kind: assumption, ref: "RAG bands unspecified (EVIDENCE-DM DASH2)" }
+    answer: "Standard green/amber/red thresholds per KPI (e.g. collection rate >90% green / 80-90% amber / <80% red), MI-tuned. Owner-ruled 2026-07-10."
+    status: VERIFIED
+    source: { kind: designer, ref: "AL (owner) ruling - collection-MI RAG bands", at: "2026-07-10" }
+    lands_in: config.rag_bands
+    enforced_by: generated rule
+    scenario_refs: [SC-MI-aging]
+    change_profile: { zone: A, class: Y, owner: "MI / analytics", cadence: rare, governance: "MI sign-off" }

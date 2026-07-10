@@ -25,7 +25,10 @@ decisions:
     dimension: interpretation
     subject: dispute_sla
     question: What is the administrative dispute-resolution SLA (TADAT P7-24)?
-    answer: "OPEN - the time target to resolve an objection is unspecified; a policy ruling (TADAT P7-24 measures it)."
-    status: TO_CONFIRM
-    owner: "DM / legal policy"
-    source: { kind: assumption, ref: "dispute resolution SLA unspecified; TADAT P7-24" }
+    answer: "A 90-day administrative review target (aligns with the TADAT P7-24 good-practice measure). Owner-ruled 2026-07-10."
+    status: VERIFIED
+    source: { kind: designer, ref: "AL (owner) ruling - dispute SLA (TADAT P7-24)", at: "2026-07-10" }
+    lands_in: config.dispute_sla
+    enforced_by: generated rule + SLA clock
+    scenario_refs: [SC-OBJ-lodge]
+    change_profile: { zone: A, class: Y, owner: "DM / legal policy", cadence: rare, governance: "legal sign-off" }

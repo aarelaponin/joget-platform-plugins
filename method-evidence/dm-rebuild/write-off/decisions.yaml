@@ -40,9 +40,12 @@ decisions:
     subject: reversal_policy
     question: A taxpayer pays after a write-off is posted - reversal, new credit, or reactivation?
     answer: >-
-      OPEN - EVIDENCE-DM recorded this as still unresolved (F09). Options: reverse the write-off and
-      reinstate the debt as paid; treat the payment as a new credit on account; or reactivate the case.
-      A policy/accounting ruling.
-    status: TO_CONFIRM
-    owner: "DM / accounting policy"
-    source: { kind: assumption, ref: "reversal-on-payment after write-off - open per EVIDENCE-DM F09" }
+      Reverse the write-off and reinstate the debt as settled - the cleanest audit trail; the debt was
+      never truly extinguished, so a late payment un-writes it off rather than leaving a floating credit.
+      Owner-ruled 2026-07-10. (Closes the item EVIDENCE-DM recorded as still open today.)
+    status: VERIFIED
+    source: { kind: designer, ref: "AL (owner) ruling - reversal-on-payment after write-off (F09)", at: "2026-07-10" }
+    lands_in: rules.writeoff_reversal
+    enforced_by: generated rule + ledger reversal entry
+    scenario_refs: [SC-WOFF-approve]
+    change_profile: { zone: B, class: P, owner: "DM / accounting policy", cadence: rare, governance: "accounting-policy sign-off" }
