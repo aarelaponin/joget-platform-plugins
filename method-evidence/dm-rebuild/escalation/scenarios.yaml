@@ -1,0 +1,4 @@
+slice: debt-management/escalation
+scenarios:
+  - { id: SC-ESC-ladder, procedure: escalation, given: "an unpaid debt at day 0", when: "the offsets elapse without payment", then: "reminder_sent -> response_pending -> final_demand -> referred_enforcement" }
+  - { id: SC-ESC-halt, procedure: escalation, given: "a debt in response_pending", when: "the taxpayer pays within the window", then: "escalation halts and the debt closes" }

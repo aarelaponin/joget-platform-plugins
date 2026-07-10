@@ -1,0 +1,3 @@
+rule_tables: [escalation_offsets, escalation_actions]
+lifecycles:
+  - { entity: debt_case, aliases: [escalation], states: [reminder_sent, response_pending, final_demand, referred_enforcement] }
