@@ -123,12 +123,12 @@ conformance pack has a consumer (donor review, GovStack submission), not before.
 
 ## 4. Bucket M — the frontier: mature S0→S2 from scaffolds to practice
 
-> **Status (2026-07-10):** M0 ✅ (ADR-058) · M1 ✅ (ADR-058, DM oracle PASS) · M3 ✅ (ADR-059) ·
-> M4 ✅ (ADR-060) — the whole owner-independent upstream toolchain is built and tested (kit
-> instantiate → lint-decisions/spec-lint/citation-check → walkthrough/toconfirm → diff-reference;
-> nine dimension templates + UX shelf). **M2 (elicit pilot) is IN PROGRESS** in elicit mode on
-> F13-payments (owner is the domain expert of record). M5 + V follow the pilot. A4/A5 briefs drafted,
-> awaiting owner rulings (unblock the dimension-8/9 lint).
+> **Status (2026-07-10): bucket M CLOSED.** M0 ✅ (ADR-058) · M1 ✅ (ADR-058, DM oracle PASS) ·
+> M3 ✅ (ADR-059) · M4 ✅ (ADR-060) · **M2 ✅** (elicit pilot on F13-payments — gate green, downstream
+> decisions = 0; `method-evidence/f13-pilot/RESULT.md`) · **M5 ✅** (ADR-063 — runbook, skills v1,
+> two green runs on unchanged tooling). A4/A5 ratified (ADR-061/062); the dimension-8/9 lint is live.
+> Remaining: **A3** tag 1.0 (owner release act, two-run evidence) and **V** schema v0.2
+> (demand-driven by loss reports).
 
 **[v3.2]** This bucket builds **Layer 0** — the knowledge layer S2C-01 §4 now carries as a
 first-class layer of the platform. Its artefact set (evidence pack + decision inventory +
