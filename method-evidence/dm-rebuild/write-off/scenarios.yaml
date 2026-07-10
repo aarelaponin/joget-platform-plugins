@@ -1,0 +1,3 @@
+slice: debt-management/write-off
+scenarios:
+  - { id: SC-WOFF-approve, procedure: write-off, given: "an uncollectible debt of EUR15k", when: "a write-off is proposed", then: "it routes to a DMO (< EUR20k band), and on approval posts; the ledger stays authoritative" }

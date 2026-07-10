@@ -1,0 +1,48 @@
+inventory:
+  slice: debt-management/write-off
+  schema_version: "0.1.0"
+  app_ref: features/DMBB-F09-writeoff
+decisions:
+  - id: DR-WOFF-001
+    dimension: behavioural_state
+    subject: write_off
+    question: What is the life story of a write-off?
+    answer: "proposed -> approved -> posted (the debt becomes informationally written off; the ledger stays authoritative); a posted write-off may be reversed."
+    status: VERIFIED
+    source: { kind: doc, ref: "F09; DM-FR-043" }
+    lands_in: entities.write_off.lifecycle
+    enforced_by: status-framework
+    scenario_refs: [SC-WOFF-approve]
+  - id: DR-WOFF-002
+    dimension: interpretation
+    subject: writeoff_delegation
+    question: Who may approve a write-off?
+    answer: "Per the ratified delegation bands (DR-DMBBAPPROVAL-009): DMO < EUR20k / SDO < EUR100k / Director >= EUR100k, exact-category. Single-sourced from the approval authority ladder."
+    status: VERIFIED
+    source: { kind: doc, ref: "DR-DMBBAPPROVAL-009 (ratified authority bands); DM-FR-043" }
+    lands_in: config.approval_authority_bands
+    enforced_by: approval service + INV-4
+    scenario_refs: [SC-WOFF-approve]
+    change_profile: { zone: B, class: Y, owner: "Delegation/legal policy", cadence: "on policy trigger", governance: "legal sign-off; effective-dated" }
+  - id: DR-WOFF-003
+    dimension: grain_keys
+    subject: write_off
+    question: What makes two write-offs duplicates?
+    answer: One posted write-off per debt (an amount already written off cannot be re-written).
+    status: VERIFIED
+    source: { kind: doc, ref: "F09" }
+    lands_in: entities.write_off
+    enforced_by: table structure + dedup guard
+    scenario_refs: [SC-WOFF-approve]
+  # ---- the one EVIDENCE-DM flagged as still open ----
+  - id: DR-WOFF-004
+    dimension: interpretation
+    subject: reversal_policy
+    question: A taxpayer pays after a write-off is posted - reversal, new credit, or reactivation?
+    answer: >-
+      OPEN - EVIDENCE-DM recorded this as still unresolved (F09). Options: reverse the write-off and
+      reinstate the debt as paid; treat the payment as a new credit on account; or reactivate the case.
+      A policy/accounting ruling.
+    status: TO_CONFIRM
+    owner: "DM / accounting policy"
+    source: { kind: assumption, ref: "reversal-on-payment after write-off - open per EVIDENCE-DM F09" }

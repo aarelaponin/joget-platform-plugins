@@ -1,0 +1,5 @@
+entities:
+  - { id: write_off, long_lived: true }
+rule_tables: [writeoff_delegation, reversal_policy]
+lifecycles:
+  - { entity: write_off, states: [proposed, approved, posted, reversed] }
