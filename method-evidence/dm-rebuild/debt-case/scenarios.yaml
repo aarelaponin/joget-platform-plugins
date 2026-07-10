@@ -1,0 +1,5 @@
+slice: debt-management/debt-case
+scenarios:
+  - { id: SC-DC-lifecycle, procedure: debt-case, given: "a new debt case", when: "it is worked through to closure", then: "it passes new -> open -> in_progress -> pending_closure -> closed (six states, not three)" }
+  - { id: SC-DC-hold, procedure: debt-case, given: "a case in in_progress awaiting input", when: "it is put on hold and resumed", then: "on_hold <-> in_progress is reversible" }
+  - { id: SC-DC-gold-down, procedure: debt-case, given: "Gold/ORS is unreachable at scan time", when: "a case scan runs", then: "no cases are created and no balances are fabricated" }

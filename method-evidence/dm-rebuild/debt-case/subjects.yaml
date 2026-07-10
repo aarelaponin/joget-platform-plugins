@@ -1,0 +1,10 @@
+# DM rebuild — the debt case (envelope) feature (F02). The naive build made 3 states of 6 and never
+# reconciled the case-grain rules — the two measured divergences. This rebuilds it correctly.
+entities:
+  - { id: debt_case, long_lived: true, aliases: [envelope, case] }
+dependencies:
+  - gold_ledger
+vocabularies:
+  - tax_type
+lifecycles:
+  - { entity: debt_case, states: [new, open, in_progress, on_hold, pending_closure, closed] }

@@ -1,0 +1,51 @@
+inventory:
+  slice: debt-management/debt-case
+  schema_version: "0.1.0"
+  app_ref: features/DMBB-F02-debt-case-type
+decisions:
+  - id: DR-DMCASE-001
+    dimension: behavioural_state
+    subject: debt_case
+    question: What is the full life story of a debt case (the envelope)?
+    answer: >-
+      The SIX WF-FR-001 states: new -> open -> in_progress -> on_hold -> pending_closure -> closed;
+      on_hold <-> in_progress is reversible, and pending_closure may reopen to in_progress. (The naive
+      build collapsed this to new/open/closed - the first measured divergence, now corrected.)
+    status: VERIFIED
+    source: { kind: doc, ref: "WF-FR-001 (six case states)" }
+    lands_in: entities.debt_case.lifecycle
+    enforced_by: status-framework + TransitionGuard
+    scenario_refs: [SC-DC-lifecycle, SC-DC-hold]
+  - id: DR-DMCASE-002
+    dimension: failure_behaviour
+    subject: gold_ledger
+    question: What happens when Gold/ORS is unreachable at case-scan time?
+    answer: Create no cases and never fabricate balances; retry on the next scan (the F03 principle).
+    status: VERIFIED
+    source: { kind: doc, ref: "DM build F03 (Gold outage -> create no cases)" }
+    lands_in: interfaces.gold_ledger.on_failure
+    enforced_by: adapter + guard
+    scenario_refs: [SC-DC-gold-down]
+  - id: DR-DMCASE-003
+    dimension: ecosystem_shared_meaning
+    subject: tax_type
+    question: Is tax_type the case's own list or shared reference data?
+    answer: Shared reference data - tax_type is R-01 in the MDM register; bind to the kernel by reference, not a local copy.
+    status: VERIFIED
+    source: { kind: doc, ref: "MDM register R-01 (tax type)" }
+    lands_in: vocabularies.tax_type
+    enforced_by: kernel binding + spec-time register test
+    scenario_refs: [SC-DC-lifecycle]
+    ecosystem: { bucket: R, register_ref: "R-01", binding: kernel, consumption: projection }
+  # ---- the SECOND measured divergence, surfaced as an owner decision ----
+  - id: DR-DMCASE-004
+    dimension: grain_keys
+    subject: debt_case
+    question: What is the debt-case grain - one case per TIN, or per enforcement stream? Define "stream".
+    answer: >-
+      OPEN - the naive build used one-open-case-per-TIN, but BR-DM-002 (no duplicate per TIN/tax-type/
+      period) and BR-DM-004 (consolidate per enforcement stream) were never reconciled - the second
+      measured divergence. The grain and the definition of "stream" are an owner ruling.
+    status: TO_CONFIRM
+    owner: "DM policy"
+    source: { kind: assumption, ref: "BR-DM-002 vs BR-DM-004 unreconciled in the naive build; grain is an owner ruling" }
