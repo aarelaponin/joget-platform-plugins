@@ -75,7 +75,7 @@ def main():
             f"        </WorkflowProcess>")
 
     xpdl = f"""<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<Package xmlns="http://www.wfmc.org/2002/XPDL1.0" xmlns:xpdl="http://www.wfmc.org/2002/XPDL1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Id="{pkg['id']}" Name="{esc(pkg['name'])}" xsi:schemaLocation="http://www.wfmc.org/2002/XPDL1.0 http://wfmc.org/standards/docs/TC-1025_schema_10_xpdl.xsd">
+<Package xmlns="http://www.wfmc.org/2002/XPDL1.0" xmlns:xpdl="http://www.wfmc.org/2002/XPDL1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Id="{app_id}" Name="{esc(pkg['name'])}" xsi:schemaLocation="http://www.wfmc.org/2002/XPDL1.0 http://wfmc.org/standards/docs/TC-1025_schema_10_xpdl.xsd">
     <PackageHeader>
         <XPDLVersion>1.0</XPDLVersion>
         <Vendor/>
@@ -150,7 +150,7 @@ def main():
 
     fragment = f"""      <packageDefinition>
          <appId>{app_id}</appId>
-         <id>{pkg['id']}</id>
+         <id>{app_id}</id>
          <name>{esc(pkg['name'])}</name>
          <packageActivityFormMap>
 {chr(10).join(form_entries)}
