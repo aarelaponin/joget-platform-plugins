@@ -1,0 +1,16 @@
+# F13-payments (DMBB) pilot subjects — derived from F-dmPayment.spec.yml (no FIS exists; the design
+# decisions were never recorded). The elicit pilot fills them from the owner.
+entities:
+  - { id: dmPayment, long_lived: true }          # a payment record with a status
+  - { id: dmDebt, long_lived: true, aliases: [debt, outstanding] }   # the debt being reduced (consumed)
+metrics:
+  - applied_amount                               # how much of the payment reduces the debt
+  - balance_after                                # outstanding after application
+dependencies:
+  - payment_engine                               # PaymentEngine POST — resolves case from TIN, allocates
+  - settlement_channel                           # CB / bank confirmation of funds
+vocabularies:
+  - payment_method                               # CB / BANK / CASH  (NB: R-05 in the register)
+lifecycles:
+  - { entity: dmPayment, states: [recorded, applied, reversed] }
+  - { entity: dmDebt, aliases: [debt], states: [outstanding, part_settled, settled] }

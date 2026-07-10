@@ -1,0 +1,164 @@
+# Skeleton decision inventory — instantiated from the nine dimension templates.
+# Every record is an OPEN TO_CONFIRM slot; fill it in during elicitation (a source answer
+# moves it to VERIFIED, or sign a waiver). Do not generate from a skeleton (§7.3 stop rule).
+inventory:
+  slice: DMBB-F13
+  schema_version: 0.1.0
+decisions:
+- id: DR-DMBBF1-001
+  dimension: behavioural_state
+  question: What is the complete life story of dmPayment — its statuses, the allowed moves, and the edge moves everyone forgets?
+  answer: OPEN — to be answered in elicitation.
+  status: TO_CONFIRM
+  owner: TBD
+  source:
+    kind: assumption
+    ref: unanswered behavioural_state template slot (dmPayment)
+  x-probes: &id001
+  - Which states exist, and which transitions between them are allowed?
+  - What is the edge move that gets forgotten (e.g. a missed payment later settled)?
+  - Which state is terminal, and which transitions are refused (nothing written)?
+  lands_in: entities.dmPayment.lifecycle
+  enforced_by: lifecycle-projector -> status-framework
+  scenario_refs: []
+- id: DR-DMBBF1-002
+  dimension: behavioural_state
+  question: What is the complete life story of dmDebt — its statuses, the allowed moves, and the edge moves everyone forgets?
+  answer: OPEN — to be answered in elicitation.
+  status: TO_CONFIRM
+  owner: TBD
+  source:
+    kind: assumption
+    ref: unanswered behavioural_state template slot (dmDebt)
+  x-probes: *id001
+  lands_in: entities.dmDebt.lifecycle
+  enforced_by: lifecycle-projector -> status-framework
+  scenario_refs: []
+- id: DR-DMBBF1-003
+  dimension: computation
+  question: What is the exact recipe of applied_amount — what is included, excluded, and as of when?
+  answer: OPEN — to be answered in elicitation.
+  status: TO_CONFIRM
+  owner: TBD
+  source:
+    kind: assumption
+    ref: unanswered computation template slot (applied_amount)
+  x-probes: &id002
+  - Write the formula over named fields (numerator, denominator, population).
+  - In-period or cumulative? Which as-of date governs?
+  - Which line components count (disputed, suspended, per-category)?
+  lands_in: rules.applied_amount
+  enforced_by: generated rules and queries
+- id: DR-DMBBF1-004
+  dimension: computation
+  question: What is the exact recipe of balance_after — what is included, excluded, and as of when?
+  answer: OPEN — to be answered in elicitation.
+  status: TO_CONFIRM
+  owner: TBD
+  source:
+    kind: assumption
+    ref: unanswered computation template slot (balance_after)
+  x-probes: *id002
+  lands_in: rules.balance_after
+  enforced_by: generated rules and queries
+- id: DR-DMBBF1-005
+  dimension: failure_behaviour
+  question: What happens when payment_engine is down, stale, or empty?
+  answer: OPEN — to be answered in elicitation.
+  status: TO_CONFIRM
+  owner: TBD
+  source:
+    kind: assumption
+    ref: unanswered failure_behaviour template slot (payment_engine)
+  x-probes: &id003
+  - Skip, retry, or create a provisional record? Never fabricate?
+  - What is blocked downstream until the dependency recovers?
+  - Absent value -> N/A render, default, or hard stop?
+  lands_in: interfaces.payment_engine.on_failure
+  enforced_by: adapter configuration, guards
+- id: DR-DMBBF1-006
+  dimension: failure_behaviour
+  question: What happens when settlement_channel is down, stale, or empty?
+  answer: OPEN — to be answered in elicitation.
+  status: TO_CONFIRM
+  owner: TBD
+  source:
+    kind: assumption
+    ref: unanswered failure_behaviour template slot (settlement_channel)
+  x-probes: *id003
+  lands_in: interfaces.settlement_channel.on_failure
+  enforced_by: adapter configuration, guards
+- id: DR-DMBBF1-007
+  dimension: grain_keys
+  question: What is the grain of dmPayment, and what makes two records duplicates?
+  answer: OPEN — to be answered in elicitation.
+  status: TO_CONFIRM
+  owner: TBD
+  source:
+    kind: assumption
+    ref: unanswered grain_keys template slot (dmPayment)
+  x-probes: &id004
+  - One record per what (per taxpayer, per tax type, per stream)? Reconcile against the business-rule register.
+  - What is the dedup key; what does a duplicate block?
+  lands_in: entities.dmPayment
+  enforced_by: table structure
+- id: DR-DMBBF1-008
+  dimension: grain_keys
+  question: What is the grain of dmDebt, and what makes two records duplicates?
+  answer: OPEN — to be answered in elicitation.
+  status: TO_CONFIRM
+  owner: TBD
+  source:
+    kind: assumption
+    ref: unanswered grain_keys template slot (dmDebt)
+  x-probes: *id004
+  lands_in: entities.dmDebt
+  enforced_by: table structure
+- id: DR-DMBBF1-009
+  dimension: work_workspace
+  question: What does 'the DMBB-F13 slice' mean as a workspace — the personas, daily volumes, and the columns and filters officers actually use?
+  answer: OPEN — to be answered in elicitation.
+  status: TO_CONFIRM
+  owner: TBD
+  source:
+    kind: assumption
+    ref: unanswered work_workspace template slot (DMBB-F13)
+  x-probes:
+  - Which persona owns this list; what is their daily volume?
+  - What does 'my work' mean here (assigned-to-me, my-team, my-queue)?
+  - Which columns, default filter and sort do they actually use?
+  enforced_by: list/userview generators + UX patterns
+  scenario_refs: []
+- id: DR-DMBBF1-010
+  dimension: policy_change
+  question: Who may change the DMBB-F13 slice later, and how — an operated lever or a standing definition?
+  answer: OPEN — to be answered in elicitation.
+  status: TO_CONFIRM
+  owner: TBD
+  source:
+    kind: assumption
+    ref: unanswered policy_change template slot (DMBB-F13)
+  x-probes:
+  - 'Operate-vs-define (CP-2): a lever someone pulls to manage the work (Zone A), or a definition then selected (Zone B)?'
+  - 'Configurability class (CP-9): Y (UI) / P (parameters only) / N (fixed — a change request)?'
+  - 'Change owner + cadence (CP-1/7): who changes it, how often, on what trigger?'
+  - 'Governance (§8): approval path; approval-gated; impact preview of live cases re-categorised?'
+  - 'Config effective-dating: is the configuration itself versioned with validity windows and rollback?'
+  enforced_by: per-zone admin consoles; config invariants INV-1..5 as validation rules
+- id: DR-DMBBF1-011
+  dimension: ecosystem_shared_meaning
+  question: Does payment_method belong to this module or is it shared — and how is its meaning bound and consumed?
+  answer: OPEN — to be answered in elicitation.
+  status: TO_CONFIRM
+  owner: TBD
+  source:
+    kind: assumption
+    ref: unanswered ecosystem_shared_meaning template slot (payment_method)
+  x-probes:
+  - 'Bucket (Register §1): R shared reference / M master entity / C module config / P platform? FLAGged entries stop at TO-CONFIRM.'
+  - 'Fact ownership: which module writes this fact (one fact, one writer); everyone else reads?'
+  - 'Binding: bound to the kernel by reference, or federated local?'
+  - 'Consumption: synchronous validate / cached projection / frozen snapshot?'
+  - 'Temporal contract: store the code + as-of date, never the label?'
+  lands_in: vocabularies with kernel binding; canonical mappings; interfaces with event schema versions and spine keys
+  enforced_by: kernel contracts (resolve/validate/subscribe/map + resolve_party); the spec-time register test; the generated conformance declaration
