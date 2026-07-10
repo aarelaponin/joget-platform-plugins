@@ -1,4 +1,11 @@
-# DM anchor — sourcing status and the one honest decision (ADR-044)
+# DM anchor — sourcing status (ADR-044)
+
+> **RESOLVED 2026-07-10 — Option 2 executed.** The anchor is now EXTERNAL: it cites the published
+> TADAT Field Guide 2019 (tadat.org) — POA5 payment/arrears indicators P5-15, P5-17, P5-19, P5-20 and
+> POA7 dispute-resolution indicators P7-23, P7-24, P7-25 — each verified against the source. The
+> reconstruction check now closes on the TADAT indicators as the external denominator. No reference
+> was fabricated. (The text below records the decision as it was put to the owner.)
+
 
 This DM anchor pack (v0.1) is **spec-grounded**: its procedure skeleton is cited to the real,
 present MTCA DM requirements spec (`08-Debt_Management-Requirements_v1.1.md` — 58 DM-FR, 65 BR-DM,

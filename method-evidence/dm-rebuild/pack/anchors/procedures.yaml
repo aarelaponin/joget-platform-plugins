@@ -27,3 +27,13 @@ dm_features:
   - { f: "F12", name: "collection-mi", procedure: collection-mi }
   - { f: "F13", name: "payments", procedure: payment-application }
   - { f: "F14", name: "contact-visit", procedure: contact-visit }
+
+# External anchor (TADAT Field Guide 2019, tadat.org) - each indicator maps to a procedure.
+tadat_indicators:
+  - { id: "P5-15", name: "Use of electronic payment methods", procedure: payment-application }
+  - { id: "P5-17", name: "Timeliness of payments", procedure: payment-application }
+  - { id: "P5-19", name: "Value of tax arrears", procedure: collection-mi }
+  - { id: "P5-20", name: "Management and scope of arrears enforcement action", procedure: enforcement-action }
+  - { id: "P7-23", name: "Independent workable dispute resolution mechanism", procedure: objection-handling }
+  - { id: "P7-24", name: "Time taken to resolve disputes", procedure: objection-handling }
+  - { id: "P7-25", name: "Degree to which dispute outcomes are acted upon", procedure: objection-handling }

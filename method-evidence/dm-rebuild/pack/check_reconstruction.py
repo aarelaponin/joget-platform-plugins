@@ -36,11 +36,19 @@ for pid in proc_ids:
     if pid not in lvl_ids:
         errs.append(f"procedure {pid}: no L-level in anchors/procedures.yaml")
 
+
+tadat = an.get("tadat_indicators", [])
+if len(tadat) < 7:
+    errs.append(f"expected the 7 verified TADAT indicators (P5-15/17/19/20, P7-23/24/25), found {len(tadat)}")
+for ti in tadat:
+    if ti["procedure"] not in proc_ids:
+        errs.append(f"TADAT {ti['id']} -> unknown procedure {ti['procedure']!r}")
+
 if errs:
     print("DM RECONSTRUCTION: FAIL")
     for e in errs:
         print("  -", e)
     sys.exit(1)
 print(f"DM RECONSTRUCTION: PASS — {len(feats)} features map to {len(proc_ids)} procedures; "
-      f"every procedure sourced and reached. (spec-grounded v0.1; external upgrade per SOURCING.md)")
+      f"every procedure sourced and reached; {len(tadat)} TADAT indicators anchored (external, tadat.org).")
 sys.exit(0)
