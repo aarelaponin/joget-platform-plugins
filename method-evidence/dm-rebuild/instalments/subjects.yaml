@@ -1,0 +1,5 @@
+entities:
+  - { id: instalment_arrangement, long_lived: true, aliases: [instalment] }
+rule_tables: [auto_approval, grace_misses, term_limit]
+lifecycles:
+  - { entity: instalment_arrangement, states: [active, missed, paid, completed, defaulted] }

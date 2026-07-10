@@ -1,0 +1,4 @@
+slice: debt-management/instalments
+scenarios:
+  - { id: SC-INST-miss, procedure: instalments, given: "an active instalment arrangement", when: "an instalment is missed then paid within the grace window", then: "it goes active -> missed -> active (the missed<->paid edge)" }
+  - { id: SC-INST-default, procedure: instalments, given: "an active arrangement", when: "two consecutive instalments are missed", then: "it defaults (terminal)" }

@@ -1,0 +1,62 @@
+inventory:
+  slice: debt-management/instalments
+  schema_version: "0.1.0"
+  app_ref: features/DMBB-F06-instalments
+decisions:
+  - id: DR-INST-001
+    dimension: behavioural_state
+    subject: instalment_arrangement
+    question: What is the life story of an instalment arrangement, including the forgotten edges?
+    answer: >-
+      active <-> missed (a payment within the grace window restores missed -> active); active ->
+      completed on final payment; two consecutive misses -> defaulted (terminal). The missed<->paid
+      edge is the one the paper flow forgets.
+    status: VERIFIED
+    source: { kind: doc, ref: "ADR-003 (state machine); BR-DM-025; BR-DM-027; F06" }
+    lands_in: entities.instalment_arrangement.lifecycle
+    enforced_by: status-framework + scheduler
+    scenario_refs: [SC-INST-miss, SC-INST-default]
+  - id: DR-INST-002
+    dimension: interpretation
+    subject: auto_approval
+    question: When does an instalment request auto-approve?
+    answer: "Auto-approve when amount < EUR5,000 AND term <= 12 months AND first-time (BR-DM-021)."
+    status: VERIFIED
+    source: { kind: doc, ref: "BR-DM-021 (auto-approval)" }
+    lands_in: config.instalment_auto_approval
+    enforced_by: generated rule
+    scenario_refs: [SC-INST-miss]
+    change_profile: { zone: B, class: Y, owner: "DM policy", cadence: "on policy trigger", governance: "sign-off; effective-dated" }
+  - id: DR-INST-003
+    dimension: interpretation
+    subject: grace_misses
+    question: What are the grace and consecutive-miss rules?
+    answer: "Grace = 3 business days (BR-DM-025); 2 consecutive misses -> default (BR-DM-027)."
+    status: VERIFIED
+    source: { kind: doc, ref: "BR-DM-025; BR-DM-027" }
+    lands_in: config.instalment_grace_misses
+    enforced_by: generated rule + scheduler
+    scenario_refs: [SC-INST-miss, SC-INST-default]
+    change_profile: { zone: B, class: Y, owner: "DM policy", cadence: "on policy trigger", governance: "sign-off; effective-dated" }
+  - id: DR-INST-004
+    dimension: grain_keys
+    subject: instalment_arrangement
+    question: What makes two instalment arrangements duplicates?
+    answer: One active arrangement per debt case; a new one requires the prior to be completed or defaulted.
+    status: VERIFIED
+    source: { kind: doc, ref: "F06; BR-DM-021" }
+    lands_in: entities.instalment_arrangement
+    enforced_by: table structure + dedup guard
+    scenario_refs: [SC-INST-miss]
+  # ---- the open policy the spec did not fix ----
+  - id: DR-INST-005
+    dimension: interpretation
+    subject: term_limit
+    question: What is the maximum instalment term and down-payment above the auto-approval band?
+    answer: >-
+      OPEN - BR-DM-021 fixes the auto band (<EUR5k / <=12mo), and approval above it follows the ratified
+      delegation bands (DR-DMBBAPPROVAL-009), but the absolute maximum term and any down-payment
+      requirement above the auto band were never fixed. A policy ruling.
+    status: TO_CONFIRM
+    owner: "DM policy"
+    source: { kind: assumption, ref: "max term + down-payment above auto band unspecified - owner ruling" }
