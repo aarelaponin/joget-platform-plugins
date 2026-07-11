@@ -271,3 +271,25 @@ B1/B2/B3/B4 parked on triggers
 6. Register and two-zone model ratified (A4, A5); the kernel itself remains trigger-parked
    (B4) without blocking any of the above.
 7. 1.0 tagged on two-run evidence (A3).
+
+---
+
+## 8. [2026-07-11] Standing pointer — the DM honest re-run (Job C)
+
+The 8077 postmortem (`evidence/tax/debt-management/postmortem/`) found the generated DM app was
+an ungated counterfeit (≈9% requirement coverage wearing "gated" vocabulary — EVIDENCE-DM failure
+**Class C**). Consequences for this plan:
+
+- **The active execution plan for the DM track is `PLAN-dm-honest-rerun.md`** (this folder):
+  whole-domain DM anchor pack → baseline FAIL of the 8077 control → gated case-spine slice →
+  instalments as run 2 (the G11 test). Pre-registered metrics; kill criteria; pack frozen before
+  model authoring (ADR-065).
+- **M1 gains, delivered:** the anchor test (`kit diff-reference` refuses unresolvable/unhashed
+  packs — ADR-065) and the claims-lint (`kit claims-lint`, run inside `kit validate`: authored
+  gate-verdict vocabulary fails validation). Both landed 2026-07-11, suite green (244 passed).
+- **M2 annotation (per `postmortem/AUDIT-f13-pilot.md`):** the F13 pilot's internal decision-gate
+  result is real and reproducible (14 decisions re-verified), but it carried **no realism/anchor
+  leg** — read "M2 ✅" as *decision-gated, realism leg n/a*. It does **not** second 1.0 criterion
+  #6; **A3's 1.0 tag waits for the Job C runs**, not F13.
+- The dm-rebuild ledger + pack under `method-evidence/` are reclassified as inputs to the honest
+  pack (depth seed), not an anchor; the 8077 model is the `_dm-answer-key-control` exhibit.
