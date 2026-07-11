@@ -293,3 +293,15 @@ an ungated counterfeit (≈9% requirement coverage wearing "gated" vocabulary �
   #6; **A3's 1.0 tag waits for the Job C runs**, not F13.
 - The dm-rebuild ledger + pack under `method-evidence/` are reclassified as inputs to the honest
   pack (depth seed), not an anchor; the 8077 model is the `_dm-answer-key-control` exhibit.
+- **[2026-07-11] Product gap registered — owner-facing review surfaces (M4 extension).** The
+  pack sign-off review exposed it: Layer-0 governance artefacts (pack skeleton, gate checklists,
+  TO-CONFIRM rulings, signatures) are YAML/markdown, but §7.3's signer "never writes code" — real
+  owners have no editor and no YAML literacy. Disposition: (a) NOW — the kit renders one-screen
+  HTML review digests from the artefacts (prototype: `evidence/tax/_packs/REVIEW-tax-debt-v0.1.0.html`,
+  generated never retyped); these serve the Job C playback/sign-off loop; (b) ROADMAP — an
+  **in-Joget governance surface**: the design ledger and gate reviews projected as a generated Joget
+  app (review case per gate, TO-CONFIRM worklist, signature as a governed workflow step under Joget
+  identity — which also mechanises Job B's separation-of-duties signer). Candidate route: the
+  ledger-as-data through the kit's own projectors (dogfood), leaning on the existing
+  decision-approval/status-framework plugins. Scope-fenced OUT of the Job C runs (kill-criterion K6:
+  cut scope, never gates); to be brief’d via the H4 decision-brief template after Run 1.
