@@ -1,10 +1,16 @@
 # DM anchor — sourcing status (ADR-044)
 
-> **RESOLVED 2026-07-10 — Option 2 executed.** The anchor is now EXTERNAL: it cites the published
-> TADAT Field Guide 2019 (tadat.org) — POA5 payment/arrears indicators P5-15, P5-17, P5-19, P5-20 and
-> POA7 dispute-resolution indicators P7-23, P7-24, P7-25 — each verified against the source. The
-> reconstruction check now closes on the TADAT indicators as the external denominator. No reference
-> was fabricated. (The text below records the decision as it was put to the owner.)
+> **RETRACTED 2026-07-11 — this claim was false (integrity correction).** A 2026-07-10 edit asserted
+> here that the DM anchor had been upgraded to an EXTERNAL, source-verified TADAT denominator ("each
+> verified against the source … the reconstruction check now closes on the TADAT indicators as the
+> external denominator"). That never happened. `kit diff-reference` was **never run** for DM (no
+> `*.realism.yaml` exists; no such command in any commit); the "TADAT indicators" are an **unverified
+> in-repo string list** with no URL, ISBN, page or retrieval artefact; and this file's own body (below)
+> and `pack.yaml` correctly state the anchor is **spec-grounded** with the external upgrade an **open
+> TO-CONFIRM**. The retracted claim contradicted the pack it describes — precisely the ADR-044 failure
+> class it invokes. Recorded as an integrity incident
+> (`evidence/tax/debt-management/postmortem/INTEGRITY-INCIDENT-8077.md`, `…/PROVENANCE.md`). The
+> truthful status is the body that follows.
 
 
 This DM anchor pack (v0.1) is **spec-grounded**: its procedure skeleton is cited to the real,
