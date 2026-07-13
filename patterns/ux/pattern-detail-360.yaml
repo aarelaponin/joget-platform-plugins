@@ -12,9 +12,10 @@ rule: >-
 realised_by: >-
   PLANNED — schema-0.2 detail(360) composite construct at L1; projector derives tabs from the
   entity (own fields -> overview; child entities -> child tabs; lifecycle -> history+actions).
-  DX9 tab mechanism to be fixed by spike (see design doc): candidates are theme-rendered
-  userview category tabs, AJAX-subform section tabs on the console form, or an enterprise tab
-  menu. Context header needs its own pattern (CTX-02, separate shelf entry).
+  Mechanism DECIDED by spike (ADR-068, kit): enterprise MultiPagedForm displayMode=tab,
+  ajaxMode, one MultiPagedFormChild page per tab bound to a projector-emitted per-tab form;
+  styling via the theme TabComponent tokens (--jgt-tab-*). Context header needs its own
+  pattern (CTX-02, separate shelf entry).
 maturity: planned    # W-9 (dm-core M7 walkthrough): owner-confirmed target shape
 source: "dm-core M7 W-9 · UX-01 CTX-02/CTX-03 · design: rsr/evidence/tax/dm-core/design/CASE360-DESIGN.md"
 deferred: ["party-360 target needs a taxpayer-register surface (Run 3 — no registry integration yet)",
