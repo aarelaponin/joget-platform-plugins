@@ -150,6 +150,20 @@ def element(f):
             "storeBinder": {"className": "org.joget.plugin.enterprise.MultirowFormBinder",
                             "properties": {"formDefId": child, "foreignKey": fk}},
             "validator": dict(V_NONE)}}
+    if t == "popupselect":
+        # IDR-05/AP-04 (UX-01 §3): reference to an UNBOUNDED operational set — the
+        # selection happens in a datalist popup (that list's own server-side search,
+        # filters and paging), never a dropdown over the full set. displayField shows
+        # the business key/label; the selected row's key is stored. Shape verified
+        # against the JogetDxShowcase app on the live instance.
+        return {"className": "org.joget.plugin.enterprise.PopupSelectBox", "properties": {
+            "id": fid, "label": label, "buttonLabel": "Select",
+            "listId": f["listId"], "displayField": f["displayField"],
+            "idField": f.get("idField", ""), "multiple": "",
+            "value": "", "readonly": ro(f), "readonlyLabel": "",
+            "width": "80%", "height": "80%",
+            "requestParams": [], "workflowVariable": "",
+            "validator": validator(f)}}
     if t == "multipaged":
         # DX9 tabbed record console (ADR-068): enterprise MultiPagedForm, displayMode
         # tab — free click navigation, each page binding a generated per-tab form over

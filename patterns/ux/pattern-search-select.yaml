@@ -1,0 +1,21 @@
+id: search-select
+name: Unbounded references select via search, never a dropdown
+applies_to: form
+rule: >-
+  An EDITABLE reference to an operational entity (taxpayers, cases, documents — unbounded,
+  grows with operations) renders as a datalist-popup search-select: the popup list's own
+  server-side search, typed filters and paging; explicit selection; the key is stored
+  (IDR-01/05, AP-04). Dropdowns are only for bounded sets (code lists, configured
+  registries). Read-only refs render as display lookups.
+realised_by: >-
+  project_forms: a ref whose target entity is operational (proxy: has a lifecycle;
+  overridable via entity `scale: bounded|operational`) and whose field is editable projects
+  as L2 `popupselect` — popup list derived from the target's single bound datalist or the
+  field's explicit `config.search_list`; ambiguity refuses with the remedy. gen_forms:
+  enterprise PopupSelectBox (listId/displayField/idField; shape verified against the
+  JogetDxShowcase app). Enforced at projection — the dropdown-over-everything path is no
+  longer reachable for operational targets.
+maturity: piloted    # kit-tested (6 cases) + dmCore regen-identical (its refs are correctly readonly/hidden); first live editable use arrives with the taxpayer registry ref (W-2, Run 3)
+source: "UX-01 IDR-01/02/05 · UX-02 §3 · AP-04 · dm-core M7 W-2/W-3"
+deferred: ["identifier-first type-ahead variant (min-chars, result cap + refine) — PopupSelectBox is dialog-only",
+           "identity card after selection (IDR-04) — pairs with the context-header pattern"]
