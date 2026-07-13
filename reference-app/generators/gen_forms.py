@@ -54,8 +54,11 @@ def element(f):
     if t == "html":
         # CustomHTML — a presentation-only panel (workspace explainers, section intros).
         # Carries no data binding, so it never participates in store (zero data-loss risk).
+        # label MUST be present (even empty): customHTML.ftl reads element.properties.label
+        # without a ?? guard — a missing key throws in FreeMarker and the element renders
+        # as NOTHING (found live: the CTX-02 header style block silently vanished).
         return {"className": "org.joget.apps.form.lib.CustomHTML", "properties": {
-            "id": fid, "value": f.get("html", f.get("value", "")),
+            "id": fid, "label": f.get("label", ""), "value": f.get("html", f.get("value", "")),
             "autoColumn": "", "useAjax": ""}}
     if t == "textfield":
         return {"className": "org.joget.apps.form.lib.TextField", "properties": {

@@ -1,0 +1,22 @@
+id: context-header
+name: Persistent record context header (CTX-02)
+applies_to: form
+rule: >-
+  Every record screen carries a persistent context header above its working surface: party
+  identity (name · identifier) · record number · status + since · key figures · assigned
+  officer. Values are the record's own loaded fields — the header creates no new data path.
+  Status-since is engine truth: every lifecycle transition stamps a set-now attribute the
+  header displays; it is never typed or computed client-side.
+realised_by: >-
+  detail_360 consoles: header:true sections stay pinned above the tabs; the projector
+  prepends a CSS-only CustomHTML chrome block (#section1 card band, inline-block cells,
+  small-caps labels, emphasized readonly values — no scripts, HtmlPage-sanitizer-safe).
+  Status-since = a set_attr/now effect on every transition of the entity (stamped by
+  TransitionGuard on apply), placed in the header as a readonly field labelled "Status
+  since". DX9 delta captured in gen_forms: CustomHTML properties MUST carry a label key
+  (customHTML.ftl reads it unguarded; a missing key makes the element vanish silently).
+maturity: piloted    # live on the dmCore case console (jdx7): band renders, stamp verified through the engine
+source: "UX-01 CTX-02/CTX-04 · dm-core M7 W-9 · CASE360-DESIGN.md §2"
+deferred: ["identity-card visual (IDR-04: party card with registry link) — needs the taxpayer registry surface (Run 3)",
+           "state-coloured status pill (needs a safe per-state CSS hook)",
+           "as-of stamps on ledger figures (FIN-04) — separate pattern"]
