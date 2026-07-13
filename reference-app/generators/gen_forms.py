@@ -103,7 +103,7 @@ def element(f):
             "optionsBinder": dict(V_NONE), "validator": validator(f)}}
     if t == "date":
         return {"className": "org.joget.apps.form.lib.DatePicker", "properties": {
-            "id": fid, "label": label, "value": "", "dataFormat": "yyyy-MM-dd",
+            "id": fid, "label": label, "value": f.get("value", ""), "dataFormat": "yyyy-MM-dd",
             "datePickerType": "", "currentDateAs": "", "yearRange": f.get("yearRange", "c-5:c+10"),
             "disableWeekends": "", "allowManual": "", "startDateFieldId": "",
             "endDateFieldId": "", "readonly": ro(f), "readonlyLabel": "",
