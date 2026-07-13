@@ -10,13 +10,13 @@ rule: >-
   the header (CTX-03). Every case-bearing module inherits the pattern; it is never hacked in
   as a one-off screen.
 realised_by: >-
-  PLANNED — schema-0.2 detail(360) composite construct at L1; projector derives tabs from the
-  entity (own fields -> overview; child entities -> child tabs; lifecycle -> history+actions).
-  Mechanism DECIDED by spike (ADR-068, kit): enterprise MultiPagedForm displayMode=tab,
-  ajaxMode, one MultiPagedFormChild page per tab bound to a projector-emitted per-tab form;
-  styling via the theme TabComponent tokens (--jgt-tab-*). Context header needs its own
-  pattern (CTX-02, separate shelf entry).
-maturity: planned    # W-9 (dm-core M7 walkthrough): owner-confirmed target shape
+  L1 `layout: detail_360` + section `header: true` -> project_forms.split_detail_360 (console
+  with pinned header sections + per-tab forms over the same table; the Lifecycle-action block
+  becomes the Actions tab with TransitionGuard attached) -> gen_forms `multipaged` element
+  (enterprise MultiPagedForm displayMode=tab, ajaxMode; encoding verified against the
+  JogetDxShowcase app — ADR-068, kit). Styling via the theme TabComponent tokens (--jgt-tab-*).
+  Context-header CHROME (identity card, status-since) still needs its own pattern (CTX-02).
+maturity: piloted    # deployed + API-verified on dm-core (jdx7); stable after the owner's walkthrough
 source: "dm-core M7 W-9 · UX-01 CTX-02/CTX-03 · design: rsr/evidence/tax/dm-core/design/CASE360-DESIGN.md"
 deferred: ["party-360 target needs a taxpayer-register surface (Run 3 — no registry integration yet)",
            "instalments/objections/documents tabs (waived procedures, Run 2+)"]
