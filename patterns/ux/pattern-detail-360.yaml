@@ -1,0 +1,21 @@
+id: detail-360
+name: Case-360 detail surface (multi-tab record console)
+applies_to: userview+form
+rule: >-
+  A case-bearing record's detail screen is a 360° console, never a plain form: a persistent
+  context header (party identity card · record type+number · status+since · key figures ·
+  assigned officer, CTX-02) above tabs — overview (the record's own fields) · one tab per
+  child aggregate (e.g. debt lines, notices) · history (the engine's audit trail) · actions
+  (the role+state-legal transitions with guards and consequences). Party 360° one click from
+  the header (CTX-03). Every case-bearing module inherits the pattern; it is never hacked in
+  as a one-off screen.
+realised_by: >-
+  PLANNED — schema-0.2 detail(360) composite construct at L1; projector derives tabs from the
+  entity (own fields -> overview; child entities -> child tabs; lifecycle -> history+actions).
+  DX9 tab mechanism to be fixed by spike (see design doc): candidates are theme-rendered
+  userview category tabs, AJAX-subform section tabs on the console form, or an enterprise tab
+  menu. Context header needs its own pattern (CTX-02, separate shelf entry).
+maturity: planned    # W-9 (dm-core M7 walkthrough): owner-confirmed target shape
+source: "dm-core M7 W-9 · UX-01 CTX-02/CTX-03 · design: rsr/evidence/tax/dm-core/design/CASE360-DESIGN.md"
+deferred: ["party-360 target needs a taxpayer-register surface (Run 3 — no registry integration yet)",
+           "instalments/objections/documents tabs (waived procedures, Run 2+)"]
