@@ -63,9 +63,13 @@ public class TransitionGuard extends DefaultApplicationPlugin {
         if (hit == null) { LogUtil.warn(CN, "no transition for action '" + action + "'"); return null; }
         String target = hit[0];
         String setNowCsv = hit[1];
+        String guardExpr = hit[2];
 
         String result;
+        String guardFail = guardExpr.isEmpty() ? null : evalGuard(guardExpr, row);
         try {
+            if (guardFail != null)
+                throw new InvalidTransitionException(nz(row.getProperty(statusField)), target, guardFail);
             new StatusManager(dao).apply(entity, row, statusField, recordId, target,
                     Collections.<String>emptyList(), actor, action);
             if (!setNowCsv.isEmpty()) {
@@ -91,16 +95,61 @@ public class TransitionGuard extends DefaultApplicationPlugin {
         return null;
     }
 
-    /** returns [toState, setNowCsv] for the matching action, or null. */
+    /** returns [toState, setNowCsv, guardExpr] for the matching action, or null. */
     private String[] findTransition(String cfg, String action) {
         if (cfg == null) return null;
         for (String seg : cfg.split("\\|")) {
             String[] p = seg.split(">", -1);
             if (p.length >= 2 && action.equals(p[0].trim())) {
-                return new String[]{p[1].trim(), p.length > 2 ? p[2].trim() : ""};
+                return new String[]{p[1].trim(),
+                        p.length > 2 ? p[2].trim() : "",
+                        p.length > 3 ? p[3].trim() : ""};
             }
         }
         return null;
+    }
+
+    /**
+     * Evaluates a guard predicate of the form {@code <attr> <op> <literal>} against the loaded
+     * row, where op is one of {@code eq ne gt lt ge le} (word operators — '>' and '|' are
+     * config separators). Numeric comparison when both sides parse as numbers (empty attr
+     * value counts as 0); string comparison otherwise (eq/ne only). Returns null when the
+     * guard passes, or a human-readable failure message when it blocks the transition.
+     * A malformed expression blocks (fail-closed) — a guard that cannot be evaluated must
+     * never silently allow the move.
+     */
+    private String evalGuard(String expr, FormRow row) {
+        String[] p = expr.trim().split("\\s+", 3);
+        if (p.length != 3) return "guard unparseable: '" + expr + "'";
+        String attr = p[0], op = p[1], lit = p[2];
+        String raw = nz(row.getProperty(attr)).trim();
+        Double a = num(raw.isEmpty() ? "0" : raw), b = num(lit);
+        boolean pass;
+        if (a != null && b != null) {
+            int c = Double.compare(a, b);
+            switch (op) {
+                case "eq": pass = c == 0; break;
+                case "ne": pass = c != 0; break;
+                case "gt": pass = c > 0;  break;
+                case "lt": pass = c < 0;  break;
+                case "ge": pass = c >= 0; break;
+                case "le": pass = c <= 0; break;
+                default: return "guard unknown operator: '" + op + "'";
+            }
+        } else {
+            switch (op) {
+                case "eq": pass = raw.equals(lit);  break;
+                case "ne": pass = !raw.equals(lit); break;
+                default: return "guard operator '" + op + "' needs numeric operands ('"
+                        + raw + "' " + op + " '" + lit + "')";
+            }
+        }
+        return pass ? null : "guard failed: " + expr + " (actual " + attr + "="
+                + (raw.isEmpty() ? "<empty>" : raw) + ")";
+    }
+
+    private static Double num(String s) {
+        try { return Double.valueOf(s); } catch (NumberFormatException e) { return null; }
     }
 
     private static String str(Map p, String k) { Object v = p.get(k); return v == null ? "" : v.toString(); }
