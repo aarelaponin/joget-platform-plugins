@@ -150,6 +150,34 @@ def element(f):
             "storeBinder": {"className": "org.joget.plugin.enterprise.MultirowFormBinder",
                             "properties": {"formDefId": child, "foreignKey": fk}},
             "validator": dict(V_NONE)}}
+    if t == "multipaged":
+        # DX9 tabbed record console (ADR-068): enterprise MultiPagedForm, displayMode
+        # tab — free click navigation, each page binding a generated per-tab form over
+        # the same table (empty parent/subform keys = pages share the console's primary
+        # key, i.e. the SAME row). Page set is serialised into the numberOfPage
+        # elementselect object — the encoding verified against the JogetDxShowcase app
+        # on the live instance: className = page count, properties = page%d_* knobs.
+        # page%d_validate stays empty: tabs browse freely, the server enforces every
+        # rule on save anyway (VAL-03).
+        pages = f["pages"]
+        if not 2 <= len(pages) <= 15:
+            raise ValueError(f"multipaged '{fid}': {len(pages)} pages — the element supports 2-15")
+        pp = {}
+        for n, p in enumerate(pages, 1):
+            pp[f"page{n}_label"] = p.get("label", f"Page {n}")
+            pp[f"page{n}_formDefId"] = p["formDefId"]
+            pp[f"page{n}_readonly"] = "true" if p.get("readonly") else ""
+            pp[f"page{n}_readonlyLabel"] = ""
+            pp[f"page{n}_validate"] = ""
+            pp[f"page{n}_parentSubFormId"] = ""
+            pp[f"page{n}_subFormParentId"] = ""
+        return {"className": "org.joget.plugin.enterprise.MultiPagedForm", "properties": {
+            "id": fid, "displayMode": f.get("displayMode", "tab"),
+            "ajaxMode": "true" if f.get("ajaxMode", True) else "",
+            "partiallyStore": "", "storeMainFormOnPartiallyStore": "",
+            "onlyAllowSubmitOnLastPage": "",
+            "prevButtonlabel": "Prev", "nextButtonlabel": "Next", "css": "",
+            "numberOfPage": {"className": str(len(pages)), "properties": pp}}}
     raise ValueError(f"unknown field type: {t}")
 
 
