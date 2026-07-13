@@ -50,12 +50,17 @@ def uid(name):
 
 def crud_menu(m):
     fid = m["formId"]
+    dl = m.get("datalistId", f"list_{fid}")
+    # customId keyed by the DATALIST: two crud menus may expose the same form over
+    # different lists (worklist vs all-cases) — form-keyed ids would collide.
+    # add=False -> no addFormId -> CrudMenu renders no New button (engine/audited-path
+    # creation only); delete=False -> delete button off (e.g. case history retention).
     return {"className": "org.joget.plugin.enterprise.CrudMenu", "properties": {
-        "id": uid("menu:" + fid), "label": m["label"],
-        "addFormId": fid, "editFormId": fid,
-        "datalistId": m.get("datalistId", f"list_{fid}"), "customId": f"{fid}_crud",
+        "id": uid("menu:" + dl + ":" + fid), "label": m["label"],
+        "addFormId": fid if m.get("add", True) else "", "editFormId": fid,
+        "datalistId": dl, "customId": f"{dl}_crud",
         "add-afterSaved": "list", "edit-afterSaved": "list",
-        "list-showDeleteButton": "yes", "rowCount": "true",
+        "list-showDeleteButton": "yes" if m.get("delete", True) else "", "rowCount": "true",
         "buttonPosition": "bothLeft", "checkboxPosition": "left",
         "selectionType": "multiple", "iconIncluded": False}}
 
