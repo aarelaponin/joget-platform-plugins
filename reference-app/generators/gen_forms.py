@@ -75,6 +75,19 @@ def element(f):
         props = {"id": fid, "label": label, "value": str(f.get("value", "")), "multiple": "", "size": "",
                  "controlField": f.get("controlField", ""), "controlValue": "", "readonly": ro(f), "readonlyLabel": "",
                  "workflowVariable": "", "validator": validator(f)}
+        if "users" in f:
+            # W-11 / UX-02 §3: configured-registry selection over the DIRECTORY — the
+            # enterprise UserOptionsBinder lists users filtered by group/org/dept and
+            # the field stores the username. Officers are picked, never typed.
+            u = f["users"] or {}
+            props["options"] = []
+            props["optionsBinder"] = {"className": "org.joget.plugin.enterprise.UserOptionsBinder",
+                "properties": {"orgId": u.get("org", ""), "deptId": u.get("dept", ""),
+                               "groupId": u.get("group", ""),
+                               "addEmptyOption": "true", "emptyLabel": "",
+                               "optionLabel": u.get("optionLabel", ""),   # '' = fullname (username)
+                               "grouping": ""}}
+            return {"className": "org.joget.apps.form.lib.SelectBox", "properties": props}
         if "lookup" in f:
             lk = f["lookup"]
             props["options"] = []
