@@ -208,6 +208,53 @@ def element(f):
             "onlyAllowSubmitOnLastPage": "",
             "prevButtonlabel": "Prev", "nextButtonlabel": "Next", "css": "",
             "numberOfPage": {"className": str(len(pages)), "properties": pp}}}
+    if t == "period_picker":
+        # KP-01 typed.period (the W-12 fix): a tax period is SELECTED from a governed
+        # set of valid periods, never typed. Native realization = SelectBox with options
+        # generated deterministically from the dd set's periodicities x its year window
+        # (both governed facts — no runtime year baked in, so goldens stay stable).
+        # Per-tax-type periodicity narrowing (dependsOn) is the period-picker PLUGIN's
+        # job (backlog); here the union is offered, labelled by cadence.
+        peri = f.get("periodicities", ["monthly", "quarterly", "annual"])
+        w = f.get("window", {}) or {}
+        y0, y1 = int(w.get("from", 2024)), int(w.get("to", 2027))
+        opts = []
+        for y in range(y0, y1 + 1):
+            if "annual" in peri:
+                opts.append({"value": f"{y}", "label": f"{y} (annual)", "grouping": "annual"})
+            if "quarterly" in peri:
+                for q in (1, 2, 3, 4):
+                    opts.append({"value": f"{y}-Q{q}", "label": f"{y}-Q{q} (quarterly)", "grouping": "quarterly"})
+            if "monthly" in peri:
+                for mth in range(1, 13):
+                    opts.append({"value": f"{y}-{mth:02d}", "label": f"{y}-{mth:02d} (monthly)", "grouping": "monthly"})
+        return {"className": "org.joget.apps.form.lib.SelectBox", "properties": {
+            "id": fid, "label": label, "value": "", "multiple": "", "size": "",
+            "controlField": f.get("dependsOn", ""), "controlValue": "",
+            "readonly": ro(f), "readonlyLabel": "", "workflowVariable": "",
+            "options": static_options(opts), "optionsBinder": dict(V_NONE),
+            "validator": validator(f)}}
+    if t == "smart_search":
+        # KP-01 md.registry (owner-corrected 14.07): PARTIAL-KNOWLEDGE search — the officer
+        # searches with whatever facts they know, gets ranked candidates with confidence,
+        # picks one explicitly. Realized by the proven joget-smart-search element (Lesotho).
+        # The searchable backend (taxpayer search API) is wired via apiEndpoint at deploy;
+        # displayColumns/id-pattern come from the field config (dd facts, harvested).
+        c = f.get("config", {}) if isinstance(f.get("config"), dict) else {}
+        return {"className": "global.govstack.smartsearch.element.SmartSearchElement",
+                "properties": {
+                    "id": fid, "label": label,
+                    "storeValue": f.get("idField", c.get("storeValue", "")),
+                    "required": "true" if f.get("required") else "",
+                    "displayMode": c.get("displayMode", "criteria"),
+                    "displayColumns": c.get("displayColumns", ""),
+                    "apiEndpoint": c.get("apiEndpoint", ""),
+                    "apiId": c.get("apiId", ""), "apiKey": c.get("apiKey", ""),
+                    "nationalIdPattern": c.get("nationalIdPattern", ""),
+                    "nationalIdMinLength": str(c.get("nationalIdMinLength", "")),
+                    "autoSelectSingleResult": "true" if c.get("autoSelectSingleResult", True) else "",
+                    "showRecentFarmers": "true" if c.get("showRecents", True) else "",
+                    "maxRecentFarmers": str(c.get("maxRecents", 5))}}
     raise ValueError(f"unknown field type: {t}")
 
 
