@@ -18,7 +18,7 @@
 # tier:   G = generic-Joget (any app) · P = pattern-reusable (genericised then shipped)
 # status: active | planned | deprecated      ships: code | pattern
 
-registry_version: 0.9.1   # 0.9.1: gen_datalists date_range filter (DateRangeDataListFilterType, ADR-038). 0.9.0: dashboard-menu + status_badge/derived-options (ADR-037)
+registry_version: 0.9.2   # 0.9.2: joget-smart-search registered (config-driven registry search element + API; ADR-004). 0.9.1: gen_datalists date_range filter (DateRangeDataListFilterType, ADR-038). 0.9.0: dashboard-menu + status_badge/derived-options (ADR-037)
 
 plugins:
 
@@ -459,6 +459,46 @@ plugins:
       carriers: [userTenant]
     provenance: extracted + genericised from a collection-management building block (Phase 2, item 9)
     source_of_truth: this repo
+
+  - id: joget-smart-search
+    module: plugins/joget-smart-search          # source in itu/lst-frm-prj until promoted (see source_of_truth)
+    artifact: global.govstack:joget-smart-search
+    version: 8.1-SNAPSHOT
+    category: foundation
+    govstack_bb: [Digital Registries]
+    tier: P
+    status: active
+    ships: code
+    license: govstack
+    dx_compat: ["8.1", "9.x"]
+    java_release: 17
+    summary: >
+      Partial-knowledge search element over ANY Joget registry table, config-driven (no
+      per-registry Java). Renders a "Find <entity>" widget with a confidence engine; the
+      subject (farmer / taxpayer / ...) and the search criteria are parameters. Backed by a
+      config-driven REST search (RegistrySearchService) mapping any table columns to the
+      element result contract. Farmer path unchanged under default config.
+    registers:
+      - global.govstack.smartsearch.element.SmartSearchElement
+      - global.govstack.smartsearch.api.SmartSearchApiPlugin
+    contract:
+      element_class: global.govstack.smartsearch.element.SmartSearchElement
+      # form-element knobs the generators target (gen_forms smart_search emit):
+      config_keys: [entityLabel, simpleSearch, displayColumns, storeValue, idField,
+                    apiEndpoint, apiId, apiKey, nationalIdPattern, nationalIdMinLength]
+      # generic-registry backend knobs (SmartSearchApiPlugin "Generic Registry" section):
+      api_config_keys: [registryTable, idColumn, identifierColumn, primaryColumn,
+                        secondaryColumn, extraColumn1, extraColumn2, searchColumns]
+    binding:
+      # How a spec REFERS to this plugin — it does not hand-wire the widget:
+      rule: >
+        A form field that is a ref to a data-dictionary set with kind=md.registry (operational
+        scale, editable) auto-projects to a smart_search element in
+        joget-spec-kit/tools/project_forms.py. The spec sets the knobs above under the field
+        config; entityLabel sets the subject, simpleSearch=true drops location criteria so
+        name/id alone can search.
+    provenance: genericised from the Lesotho farmer registry search (lst-frm-prj); proven live returning taxpayers on jdx7
+    source_of_truth: itu/lst-frm-prj/plugins/joget-smart-search   # PROMOTE into this repo to build here (follow-up)
 
 # ---------------------------------------------------------------------------
 # Planned — see docs/MIGRATION-BACKLOG.md and docs/CONSOLIDATION-PLAN.md.
