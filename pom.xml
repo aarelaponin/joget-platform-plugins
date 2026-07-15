@@ -48,6 +48,7 @@
         <module>plugins/joget-case-ops</module>
         <module>plugins/joget-sla</module>
         <module>plugins/joget-tenant</module>
+        <module>plugins/joget-smart-search</module>
     </modules>
 
     <!--

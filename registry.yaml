@@ -18,7 +18,7 @@
 # tier:   G = generic-Joget (any app) · P = pattern-reusable (genericised then shipped)
 # status: active | planned | deprecated      ships: code | pattern
 
-registry_version: 0.9.2   # 0.9.2: joget-smart-search registered (config-driven registry search element + API; ADR-004). 0.9.1: gen_datalists date_range filter (DateRangeDataListFilterType, ADR-038). 0.9.0: dashboard-menu + status_badge/derived-options (ADR-037)
+registry_version: 0.9.3   # 0.9.3: joget-smart-search source promoted into this repo (module + build; source_of_truth=this repo). 0.9.2: joget-smart-search registered (ADR-004).
 
 plugins:
 
@@ -461,7 +461,7 @@ plugins:
     source_of_truth: this repo
 
   - id: joget-smart-search
-    module: plugins/joget-smart-search          # source in itu/lst-frm-prj until promoted (see source_of_truth)
+    module: plugins/joget-smart-search
     artifact: global.govstack:joget-smart-search
     version: 8.1-SNAPSHOT
     category: foundation
@@ -497,8 +497,10 @@ plugins:
         joget-spec-kit/tools/project_forms.py. The spec sets the knobs above under the field
         config; entityLabel sets the subject, simpleSearch=true drops location criteria so
         name/id alone can search.
-    provenance: genericised from the Lesotho farmer registry search (lst-frm-prj); proven live returning taxpayers on jdx7
-    source_of_truth: itu/lst-frm-prj/plugins/joget-smart-search   # PROMOTE into this repo to build here (follow-up)
+    provenance: >
+      promoted from lst-frm-prj/plugins (project-neutral: pom renamed, dev cruft pruned; Lesotho
+      district defaults remain behind simpleSearch=false, tracked as Issue #20). Proven live returning taxpayers on jdx7.
+    source_of_truth: this repo
 
 # ---------------------------------------------------------------------------
 # Planned — see docs/MIGRATION-BACKLOG.md and docs/CONSOLIDATION-PLAN.md.
