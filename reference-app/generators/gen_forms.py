@@ -246,6 +246,8 @@ def element(f):
                     "id": fid, "label": label,
                     "storeValue": f.get("idField", c.get("storeValue", "")),
                     "required": "true" if f.get("required") else "",
+                    "entityLabel": c.get("entityLabel", ""),
+                    "simpleSearch": c.get("simpleSearch", ""),
                     "displayMode": c.get("displayMode", "criteria"),
                     "displayColumns": c.get("displayColumns", ""),
                     "apiEndpoint": c.get("apiEndpoint", ""),
