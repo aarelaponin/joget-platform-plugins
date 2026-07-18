@@ -66,3 +66,18 @@ def test_unknown_menu_type_is_error():
         assert False, "expected ValueError"
     except ValueError as e:
         assert "unknown menu type" in str(e)
+
+
+def test_selection_ui_only_when_consuming_action_exists():
+    # A001 / STA-01/05: the checkbox column is emitted ONLY when a selection-consuming
+    # action exists. crud with delete on (default) keeps it; delete:false drops it; a
+    # read-only datalist (no delete) has nothing to consume selection -> no dead column.
+    spec = {"userview": {"id": "uvSel", "name": "Sel", "categories": [
+        {"id": "c", "label": "C", "menus": [
+            {"type": "crud", "label": "Del on", "formId": "frmA", "datalistId": "la"},
+            {"type": "crud", "label": "Del off", "formId": "frmB", "datalistId": "lb", "delete": False},
+            {"type": "datalist", "label": "Read", "datalistId": "lc"}]}]}}
+    del_on, del_off, dlist = g.build_userview(spec)["categories"][0]["menus"]
+    assert (del_on["properties"]["selectionType"], del_on["properties"]["checkboxPosition"]) == ("multiple", "left")
+    assert (del_off["properties"]["selectionType"], del_off["properties"]["checkboxPosition"]) == ("", "")
+    assert (dlist["properties"]["selectionType"], dlist["properties"]["checkboxPosition"]) == ("", "")

@@ -48,6 +48,15 @@ def uid(name):
     return str(uuid.uuid5(NS, SEED + name))
 
 
+def _selection(consumes):
+    """The selection column (checkbox) belongs ONLY when a selection-consuming action
+    exists on the menu — today that is the delete action; a bulk action would extend it.
+    Without one, the checkboxes are a dead surface the user cannot act on (A001; STA-01/05).
+    Returns (checkboxPosition, selectionType). T3 (on jdx7): confirm empty strings suppress
+    the column on CrudMenu/DataListMenu 9.0.7 — the design's proposed 'off' value."""
+    return ("left", "multiple") if consumes else ("", "")
+
+
 def crud_menu(m):
     fid = m["formId"]
     dl = m.get("datalistId", f"list_{fid}")
@@ -55,22 +64,28 @@ def crud_menu(m):
     # different lists (worklist vs all-cases) — form-keyed ids would collide.
     # add=False -> no addFormId -> CrudMenu renders no New button (engine/audited-path
     # creation only); delete=False -> delete button off (e.g. case history retention).
+    # Selection column rides on a consuming action (delete on, the default) — delete:false
+    # with no bulk action gets no dead checkbox column (A001).
+    cbpos, seltype = _selection(bool(m.get("delete", True)))
     return {"className": "org.joget.plugin.enterprise.CrudMenu", "properties": {
         "id": uid("menu:" + dl + ":" + fid), "label": m["label"],
         "addFormId": fid if m.get("add", True) else "", "editFormId": fid,
         "datalistId": dl, "customId": f"{dl}_crud",
         "add-afterSaved": "list", "edit-afterSaved": "list",
         "list-showDeleteButton": "yes" if m.get("delete", True) else "", "rowCount": "true",
-        "buttonPosition": "bothLeft", "checkboxPosition": "left",
-        "selectionType": "multiple", "iconIncluded": False}}
+        "buttonPosition": "bothLeft", "checkboxPosition": cbpos,
+        "selectionType": seltype, "iconIncluded": False}}
 
 
 def datalist_menu(m):
     dl = m["datalistId"]
+    # a read-list menu carries no delete by default; selection UI only if a bulk action
+    # (or an explicit delete) is declared, else the checkbox column is dead (A001).
+    cbpos, seltype = _selection(bool(m.get("delete", False)))
     return {"className": "org.joget.apps.userview.lib.DataListMenu", "properties": {
         "id": uid("menu:dl:" + dl), "customId": dl, "label": m["label"], "datalistId": dl,
-        "rowCount": "", "buttonPosition": "bothLeft", "checkboxPosition": "left",
-        "selectionType": "multiple", "iconIncluded": False}}
+        "rowCount": "", "buttonPosition": "bothLeft", "checkboxPosition": cbpos,
+        "selectionType": seltype, "iconIncluded": False}}
 
 
 def form_menu(m):
