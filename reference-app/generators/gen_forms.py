@@ -244,10 +244,11 @@ def element(f):
         return {"className": "global.govstack.smartsearch.element.SmartSearchElement",
                 "properties": {
                     "id": fid, "label": label,
-                    "storeValue": f.get("idField", c.get("storeValue", "")),
+                    "storeValue": f.get("idField") or c.get("storeValue", ""),
                     "required": "true" if f.get("required") else "",
                     "entityLabel": c.get("entityLabel", ""),
                     "simpleSearch": c.get("simpleSearch", ""),
+                    "populate": c.get("populate", ""),
                     "displayMode": c.get("displayMode", "criteria"),
                     "displayColumns": c.get("displayColumns", ""),
                     "apiEndpoint": c.get("apiEndpoint", ""),
