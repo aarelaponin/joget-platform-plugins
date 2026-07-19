@@ -35,6 +35,16 @@ def ro(field):
 
 
 def validator(field):
+    # WP-H (ADR-072): a field carrying a unique_guard binding realizes the count-then-refuse
+    # UniqueGuard FormValidator (declared multi-attribute uniqueness + scope predicate). It
+    # occupies the field's single validator slot; the projector attaches it to a key field.
+    ug = field.get("unique_guard")
+    if ug:
+        return {"className": "com.fiscaladmin.joget.uniqueguard.UniqueGuard",
+                "properties": {"formDefId": ug.get("formDefId", ""),
+                               "attrs": ug.get("attrs", ""),
+                               "where": ug.get("where", ""),
+                               "message": ug.get("message", "")}}
     req = bool(field.get("required"))
     numeric = bool(field.get("storeNumeric"))
     if not req and not numeric:
