@@ -1,0 +1,35 @@
+[
+    {
+        "title": "Unique Guard",
+        "properties": [
+            {
+                "name": "formDefId",
+                "label": "Form / table to count within",
+                "type": "textfield",
+                "required": "True",
+                "description": "The formDefId whose rows are counted for the uniqueness check. Emitted by project_forms.py from the entity carrying uniqueness."
+            },
+            {
+                "name": "attrs",
+                "label": "Unique key attributes",
+                "type": "textfield",
+                "required": "True",
+                "description": "Comma-separated field ids forming the unique key (e.g. tin or case_no or tin,period)."
+            },
+            {
+                "name": "where",
+                "label": "Scope predicate (HQL-qualified)",
+                "type": "textfield",
+                "required": "False",
+                "description": "Optional scope, already qualified for HQL by the emitter, e.g. e.customProperties.status not in ('closed') — the one-open-case-per-TIN construct."
+            },
+            {
+                "name": "message",
+                "label": "Refusal message",
+                "type": "textarea",
+                "required": "False",
+                "description": "Shown to the officer when a duplicate is refused (VAL-02 grade). Falls back to a generic message when blank."
+            }
+        ]
+    }
+]
