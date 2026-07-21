@@ -219,6 +219,7 @@
                 apiKey: '${apiKey!}',
                 entityLabel: '${entityLabel!"farmer"}',
                 simpleSearch: '${simpleSearch!"false"}',
+                populate: '${populate!""}',
                 hiddenFieldId: '${fieldId!}',
                 storeValue: '${storeValue!"nationalId"}',
                 displayMode: '${displayMode!}',

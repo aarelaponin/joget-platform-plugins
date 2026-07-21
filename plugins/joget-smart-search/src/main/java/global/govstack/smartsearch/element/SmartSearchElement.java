@@ -239,6 +239,8 @@ public class SmartSearchElement extends Element implements FormBuilderPaletteEle
         dataModel.put("entityLabel", (entityLabel == null || entityLabel.trim().isEmpty()) ? "farmer" : entityLabel.trim());
         String simpleSearch = getPropertyString("simpleSearch");
         dataModel.put("simpleSearch", (simpleSearch == null || simpleSearch.trim().isEmpty()) ? "false" : simpleSearch.trim());
+        String populate = getPropertyString("populate");
+        dataModel.put("populate", (populate == null) ? "" : populate.trim());
         dataModel.put("elementId", elementId);
         dataModel.put("displayColumns", displayColumns);
 

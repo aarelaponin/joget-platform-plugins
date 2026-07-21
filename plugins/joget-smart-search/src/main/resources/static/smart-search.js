@@ -193,6 +193,7 @@
                 entityLabel: 'farmer',   // subject noun shown in the UI (taxpayer, citizen, business, ...)
                 hiddenFieldId: '',
                 storeValue: 'nationalId',  // Which farmer property to store: nationalId, id, or phone
+                populate: '',  // srcField:formFieldId,... populate sibling fields on select (PRE-01/PRE-04)
                 displayMode: 'popup',
                 displayColumns: ['nationalId', 'firstName', 'lastName', 'district', 'village'],
                 initialValue: '',
@@ -3087,6 +3088,41 @@
     /**
      * Select a farmer
      */
+    SearchInstance.prototype.populateFields = function(farmer) {
+        var map = this.config.populate;
+        if (!map) { return; }
+        if (typeof map === 'string') {
+            var obj = {};
+            map.split(',').forEach(function(pair) {
+                var kv = pair.split(':');
+                if (kv.length === 2) {
+                    var sK = kv[0].trim(), dK = kv[1].trim();
+                    if (sK && dK) { obj[sK] = dK; }
+                }
+            });
+            map = obj;
+        }
+        var form = null;
+        if (this.config.hiddenFieldId) {
+            var hf = document.getElementById(this.config.hiddenFieldId);
+            if (hf) { form = hf.form; }
+        }
+        Object.keys(map).forEach(function(sK) {
+            var dK = map[sK];
+            var val = farmer[sK];
+            if (val === undefined || val === null) { return; }
+            var scope = form || document;
+            var sel = '[name="' + dK + '"]';
+            var targets = scope.querySelectorAll(sel);
+            if (!targets.length) { targets = document.querySelectorAll(sel); }
+            for (var i = 0; i < targets.length; i++) {
+                targets[i].value = val;
+                targets[i].dispatchEvent(new Event('change', { bubbles: true }));
+                if (typeof jQuery !== 'undefined') { jQuery(targets[i]).trigger('change'); }
+            }
+        });
+    };
+
     SearchInstance.prototype.selectFarmer = function(farmer) {
         console.log('[FarmerSmartSearch] selectFarmer called');
         console.log('[FarmerSmartSearch] - farmer object:', JSON.stringify(farmer));
@@ -3126,6 +3162,9 @@
         } else {
             console.warn('[FarmerSmartSearch] No hiddenFieldId configured!');
         }
+
+        // Populate sibling form fields from the selected record (PRE-01/PRE-04)
+        this.populateFields(farmer);
 
         // Update display field
         this.updateDisplayField(farmer);

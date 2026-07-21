@@ -484,8 +484,10 @@ plugins:
     contract:
       element_class: global.govstack.smartsearch.element.SmartSearchElement
       # form-element knobs the generators target (gen_forms smart_search emit):
-      config_keys: [entityLabel, simpleSearch, displayColumns, storeValue, idField,
+      config_keys: [entityLabel, simpleSearch, displayColumns, storeValue, populate, idField,
                     apiEndpoint, apiId, apiKey, nationalIdPattern, nationalIdMinLength]
+      # populate: "srcField:formFieldId,..." — auto-fills sibling form fields on select
+      #   (client-side, in selectFarmer->populateFields; the PRE-01/PRE-04 fix). WP-7 adds value-shapes.
       # generic-registry backend knobs (SmartSearchApiPlugin "Generic Registry" section):
       api_config_keys: [registryTable, idColumn, identifierColumn, primaryColumn,
                         secondaryColumn, extraColumn1, extraColumn2, searchColumns]
