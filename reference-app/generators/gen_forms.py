@@ -35,16 +35,10 @@ def ro(field):
 
 
 def validator(field):
-    # WP-H (ADR-072): a field carrying a unique_guard binding realizes the count-then-refuse
-    # UniqueGuard FormValidator (declared multi-attribute uniqueness + scope predicate). It
-    # occupies the field's single validator slot; the projector attaches it to a key field.
-    ug = field.get("unique_guard")
-    if ug:
-        return {"className": "com.fiscaladmin.joget.uniqueguard.UniqueGuard",
-                "properties": {"formDefId": ug.get("formDefId", ""),
-                               "attrs": ug.get("attrs", ""),
-                               "where": ug.get("where", ""),
-                               "message": ug.get("message", "")}}
+    # A field's own validator slot: DefaultValidator for mandatory/numeric, else none.
+    # Uniqueness is NOT realized here — ADR-076 moved the UniqueGuard to the form ROOT
+    # validator slot (see form_validator): Joget always runs a root validator (D-067) and a
+    # readonly key can never skip it (D-068); a field slot is skipped for a readonly key.
     req = bool(field.get("required"))
     numeric = bool(field.get("storeNumeric"))
     if not req and not numeric:
@@ -313,6 +307,21 @@ def load_binder(fm):
     return {"className": "org.joget.apps.form.lib.WorkflowFormBinder", "properties": {}}
 
 
+def form_validator(spec):
+    # ADR-076: a form carrying a unique_guard binding realizes the count-then-refuse
+    # UniqueGuard FormValidator on the FORM ROOT validator slot — where Joget always runs it
+    # (D-067) and a readonly key cannot skip it (D-068). The plugin derives the form id +
+    # table from the root element it is attached to, so NO formDefId is emitted (the Finding-B
+    # seam removed, not re-greased).
+    ug = spec.get("unique_guard")
+    if not ug:
+        return dict(V_NONE)
+    return {"className": "com.fiscaladmin.joget.uniqueguard.UniqueGuard",
+            "properties": {"attrs": ug.get("attrs", ""),
+                           "where": ug.get("where", ""),
+                           "message": ug.get("message", "")}}
+
+
 def build_form(spec):
     fm = spec["form"]
     sections = []
@@ -333,6 +342,7 @@ def build_form(spec):
     return {"className": "org.joget.apps.form.model.Form", "properties": {
         "id": fm["id"], "name": fm["name"], "tableName": fm.get("table", fm["id"]),
         "description": fm.get("description", ""),
+        "validator": form_validator(spec),
         "loadBinder": load_binder(fm),
         "storeBinder": {"className": "org.joget.apps.form.lib.WorkflowFormBinder", "properties": {}},
         "permission": dict(V_NONE), "noPermissionMessage": "",

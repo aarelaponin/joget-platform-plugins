@@ -3,13 +3,6 @@
         "title": "Unique Guard",
         "properties": [
             {
-                "name": "formDefId",
-                "label": "Form / table to count within",
-                "type": "textfield",
-                "required": "True",
-                "description": "The formDefId whose rows are counted for the uniqueness check. Emitted by project_forms.py from the entity carrying uniqueness."
-            },
-            {
                 "name": "attrs",
                 "label": "Unique key attributes",
                 "type": "textfield",

@@ -18,7 +18,7 @@
 # tier:   G = generic-Joget (any app) · P = pattern-reusable (genericised then shipped)
 # status: active | planned | deprecated      ships: code | pattern
 
-registry_version: 0.9.3   # 0.9.3: joget-smart-search source promoted into this repo (module + build; source_of_truth=this repo). 0.9.2: joget-smart-search registered (ADR-004).
+registry_version: 0.9.4   # 0.9.4: joget-unique-guard registered — root-placed uniqueness FormValidator (ADR-076, CC-01 WP-2). 0.9.3: joget-smart-search source promoted into this repo (module + build; source_of_truth=this repo). 0.9.2: joget-smart-search registered (ADR-004).
 
 plugins:
 
@@ -44,6 +44,30 @@ plugins:
                     filters, orderBy, orderNumeric, pickFirst, related, mappings, constants]
     provenance: proven in production public-sector implementations (DX8 + DX9), multi-instance
     source_of_truth: this repo   # promoted from 03_debt_management/shared-plugins
+
+  - id: joget-unique-guard
+    module: plugins/joget-unique-guard
+    artifact: com.fiscaladmin.joget:joget-unique-guard
+    version: 1.0.0
+    category: foundation
+    tier: G
+    status: active
+    ships: code
+    license: proprietary
+    dx_compat: ["9.x"]
+    java_release: 11
+    summary: >
+      Generic count-then-refuse FormValidator enforcing declared multi-attribute uniqueness
+      with an optional HQL scope predicate (the one-open-case-per-TIN shape). Attached to the
+      form ROOT validator slot (ADR-076) so it always runs and cannot be skipped for a readonly
+      key (D-067/D-068); derives form id + table from the root, so no formDefId is configured.
+    registers:
+      - com.fiscaladmin.joget.uniqueguard.UniqueGuard
+    contract:
+      validator_class: com.fiscaladmin.joget.uniqueguard.UniqueGuard
+      config_keys: [attrs, where, message]
+    provenance: CH-01 WP-H / CC-01 WP-2; live t02 refusal proven on jdx7/9.0.5 (ADR-076/077); 9.0.7 pending WP-6
+    source_of_truth: this repo
 
   - id: form-creator-api
     module: plugins/form-creator-api
