@@ -18,7 +18,14 @@
 # tier:   G = generic-Joget (any app) · P = pattern-reusable (genericised then shipped)
 # status: active | planned | deprecated      ships: code | pattern
 
-registry_version: 0.9.5   # 0.9.5: gen_forms SelectBox validation accepts an optionsBinder-backed
+registry_version: 0.9.6   # 0.9.6: joget-require-guard registered, and gen_forms realizes an
+                          #        entity's `validations` on the form root — a conditional
+                          #        requirement declared in the model was enforced by nothing on
+                          #        the Joget path (it reached only the RegBB emitter). gen_forms
+                          #        REFUSES a form that would need both guards on the one root
+                          #        slot, and refuses require_grids/min_entries, which this
+                          #        validator does not realize.
+                          # 0.9.5: gen_forms SelectBox validation accepts an optionsBinder-backed
                           #        select (a lookup over another form) — it indexed p["options"]
                           #        unconditionally and raised KeyError on any ref attribute.
                           # 0.9.4: joget-unique-guard registered — root-placed uniqueness FormValidator (ADR-076, CC-01 WP-2). 0.9.3: joget-smart-search source promoted into this repo (module + build; source_of_truth=this repo). 0.9.2: joget-smart-search registered (ADR-004).
@@ -70,6 +77,33 @@ plugins:
       validator_class: com.fiscaladmin.joget.uniqueguard.UniqueGuard
       config_keys: [attrs, where, message]
     provenance: CH-01 WP-H / CC-01 WP-2; live t02 refusal proven on jdx7/9.0.5 (ADR-076/077); 9.0.7 pending WP-6
+    source_of_truth: this repo
+
+  - id: joget-require-guard
+    module: plugins/joget-require-guard
+    artifact: com.fiscaladmin.joget:joget-require-guard
+    version: 1.0.0
+    category: foundation
+    tier: G
+    status: active
+    ships: code
+    license: proprietary
+    dx_compat: ["9.x"]
+    java_release: 11
+    summary: >
+      Conditional-requirement FormValidator: when a named field holds a named value, named
+      fields must be non-empty. The Joget realization of the model's entities[].validations,
+      which until 0.9.6 reached only the RegBB emitter — so a conditional requirement in the
+      model validated, generated and deployed while no form enforced it. Root-placed for the
+      same reason as UniqueGuard (ADR-076): the root always runs and cannot be skipped by a
+      readonly or hidden field. One root slot, so a form carries one guard or the other;
+      gen_forms refuses a form needing both rather than dropping one.
+    registers:
+      - com.fiscaladmin.joget.requireguard.RequireGuard
+    contract:
+      validator_class: com.fiscaladmin.joget.requireguard.RequireGuard
+      config_keys: [rules]
+    provenance: UB-14b; found by executing registration's t03 (REG-FR-041) against the deployed app rather than reading it
     source_of_truth: this repo
 
   - id: form-creator-api

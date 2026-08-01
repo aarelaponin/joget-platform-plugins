@@ -49,6 +49,13 @@
         <module>plugins/joget-sla</module>
         <module>plugins/joget-tenant</module>
         <module>plugins/joget-smart-search</module>
+        <!-- These three were absent from the reactor until 2026-08-01. joget-unique-guard and
+             joget-transition-guard were built ad hoc and are deployed on jdx9 — a shipped,
+             running plugin that `mvn package` at the root does not build is a supply-chain
+             hole, not a convenience. joget-require-guard joins them from the start. -->
+        <module>plugins/joget-unique-guard</module>
+        <module>plugins/joget-transition-guard</module>
+        <module>plugins/joget-require-guard</module>
     </modules>
 
     <!--

@@ -313,7 +313,22 @@ def form_validator(spec):
     # (D-067) and a readonly key cannot skip it (D-068). The plugin derives the form id +
     # table from the root element it is attached to, so NO formDefId is emitted (the Finding-B
     # seam removed, not re-greased).
+    # 0.9.6: RequireGuard shares this slot — a form's conditional requirements (the model's
+    # entities[].validations) are enforced on the root for the same reason uniqueness is. Joget
+    # gives the root ONE validator, so a spec carrying both is a build refusal, not a silent
+    # drop: whichever we chose to keep, the other constraint would be law on paper and nothing
+    # at the keyboard, which is the defect the RequireGuard was written to end.
     ug = spec.get("unique_guard")
+    rg = spec.get("require_guard")
+    if ug and rg:
+        raise SystemExit(
+            f"form '{spec['form']['id']}': both a unique_guard and a require_guard are declared, "
+            f"and the form root carries exactly one validator. A composite guard is the fix.")
+    if rg:
+        if not rg.get("rules", "").strip():
+            raise SystemExit(f"form '{spec['form']['id']}': require_guard with no rules")
+        return {"className": "com.fiscaladmin.joget.requireguard.RequireGuard",
+                "properties": {"rules": rg["rules"]}}
     if not ug:
         return dict(V_NONE)
     return {"className": "com.fiscaladmin.joget.uniqueguard.UniqueGuard",

@@ -1,0 +1,14 @@
+[
+    {
+        "title": "Require Guard",
+        "properties": [
+            {
+                "name": "rules",
+                "label": "Conditional requirements",
+                "type": "textarea",
+                "required": "True",
+                "description": "One rule per line: whenField|whenEquals|requiredFields(csv)|message. Emitted from the model's entities[].validations — not hand-authored."
+            }
+        ]
+    }
+]
