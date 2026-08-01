@@ -372,9 +372,17 @@ def validate(form, path):
                 if not e["className"].startswith(("org.joget.", "global.govstack.")):
                     errs.append(f"non-FQN className {e['className']}")
                 p = e["properties"]
-                if e["className"].endswith("SelectBox"):
-                    if not p["options"] and not p["optionsBinder"]["className"]:
-                        errs.append(f"{p['id']}: SelectBox with neither options nor binder")
+                # The dropdown SelectBox must offer a value source: inline options OR an
+                # optionsBinder (a lookup over another form). Two earlier bugs here:
+                # indexing p["options"] assumed inline options always exist, so a
+                # lookup-backed select raised KeyError instead of validating; and the
+                # endswith() match also caught PopupSelectBox, which legitimately has
+                # neither — it selects from a datalist popup via listId (IDR-05/AP-04).
+                if e["className"].endswith(".SelectBox"):
+                    if not p.get("options") and not (p.get("optionsBinder") or {}).get("className"):
+                        errs.append(f"{p.get('id')}: SelectBox with neither options nor binder")
+                if e["className"].endswith(".PopupSelectBox") and not p.get("listId"):
+                    errs.append(f"{p.get('id')}: PopupSelectBox with no listId to select from")
     return [f"{os.path.basename(path)}: {e}" for e in errs]
 
 

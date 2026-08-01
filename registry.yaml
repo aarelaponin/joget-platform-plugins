@@ -18,7 +18,10 @@
 # tier:   G = generic-Joget (any app) · P = pattern-reusable (genericised then shipped)
 # status: active | planned | deprecated      ships: code | pattern
 
-registry_version: 0.9.4   # 0.9.4: joget-unique-guard registered — root-placed uniqueness FormValidator (ADR-076, CC-01 WP-2). 0.9.3: joget-smart-search source promoted into this repo (module + build; source_of_truth=this repo). 0.9.2: joget-smart-search registered (ADR-004).
+registry_version: 0.9.5   # 0.9.5: gen_forms SelectBox validation accepts an optionsBinder-backed
+                          #        select (a lookup over another form) — it indexed p["options"]
+                          #        unconditionally and raised KeyError on any ref attribute.
+                          # 0.9.4: joget-unique-guard registered — root-placed uniqueness FormValidator (ADR-076, CC-01 WP-2). 0.9.3: joget-smart-search source promoted into this repo (module + build; source_of_truth=this repo). 0.9.2: joget-smart-search registered (ADR-004).
 
 plugins:
 
