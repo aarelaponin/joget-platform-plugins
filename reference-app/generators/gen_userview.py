@@ -89,10 +89,22 @@ def datalist_menu(m):
 
 
 def form_menu(m):
+    """A FormMenu the user can actually SUBMIT, unless the spec asks for a display-only one.
+
+    0.9.7: `readonly` was hardcoded "true" here, so every form menu the kit has ever emitted
+    rendered uneditable — "New registration" could not be filled in. The acceptance suites never
+    saw it because they drive the data API, which is a different door; the defect is only visible
+    to a person clicking. Found 2026-08-02 by the owner, on the fifteenth deployment of an app
+    whose gate was green.
+    Read-only stays expressible (`readonly: true` on the menu) because a display-only form menu is
+    a real thing — a printable summary, a confirmation page. It is now a choice rather than the
+    only possible outcome.
+    """
     fid = m["formId"]
+    ro = bool(m.get("readonly", False))
     return {"className": "org.joget.apps.userview.lib.FormMenu", "properties": {
         "id": uid("menu:form:" + fid), "customId": fid, "label": m["label"],
-        "formId": fid, "readonly": "true", "readonlyLabel": "",
+        "formId": fid, "readonly": "true" if ro else "", "readonlyLabel": "",
         "messageShowAfterComplete": "", "iconIncluded": False}}
 
 

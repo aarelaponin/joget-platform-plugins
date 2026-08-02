@@ -18,7 +18,15 @@
 # tier:   G = generic-Joget (any app) · P = pattern-reusable (genericised then shipped)
 # status: active | planned | deprecated      ships: code | pattern
 
-registry_version: 0.9.6   # 0.9.6: joget-require-guard registered, and gen_forms realizes an
+registry_version: 0.9.7   # 0.9.7: gen_userview no longer hardcodes readonly="true" on every
+                          #        FormMenu. It had, since the generator was written, so NO form
+                          #        menu the kit ever emitted could be submitted — "New
+                          #        registration" rendered uneditable. Invisible to every acceptance
+                          #        suite, which drives the data API rather than the screen; found
+                          #        by the owner clicking the fifteenth deployment of a green app.
+                          #        `readonly: true` on the menu keeps display-only forms
+                          #        expressible; it is now a choice, not the only outcome.
+                          # 0.9.6: joget-require-guard registered, and gen_forms realizes an
                           #        entity's `validations` on the form root — a conditional
                           #        requirement declared in the model was enforced by nothing on
                           #        the Joget path (it reached only the RegBB emitter). gen_forms
