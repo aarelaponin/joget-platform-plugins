@@ -3,9 +3,13 @@ package com.fiscaladmin.joget.transitionguard;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
+import org.joget.apps.app.model.AppDefinition;
 import org.joget.apps.app.service.AppUtil;
+import org.joget.workflow.model.WorkflowProcessResult;
+import org.joget.workflow.model.service.WorkflowManager;
 import org.joget.apps.form.dao.FormDataDao;
 import org.joget.apps.form.model.FormRow;
 import org.joget.apps.form.model.FormRowSet;
@@ -64,6 +68,7 @@ public class TransitionGuard extends DefaultApplicationPlugin {
         String target = hit[0];
         String setNowCsv = hit[1];
         String guardExpr = hit[2];
+        String startProc = hit[3];
 
         String result;
         String guardFail = guardExpr.isEmpty() ? null : evalGuard(guardExpr, row);
@@ -80,6 +85,10 @@ public class TransitionGuard extends DefaultApplicationPlugin {
                 }
             }
             result = "OK: " + nz(row.getProperty(statusField));
+            if (!startProc.isEmpty()) {
+                String p = startProcess(startProc, recordId, entity);
+                result = result + " · " + p;
+            }
         } catch (InvalidTransitionException e) {
             result = "REJECTED: " + e.getMessage();
         } catch (Exception e) {
@@ -95,7 +104,7 @@ public class TransitionGuard extends DefaultApplicationPlugin {
         return null;
     }
 
-    /** returns [toState, setNowCsv, guardExpr] for the matching action, or null. */
+    /** returns [toState, setNowCsv, guardExpr, startProcessId] for the matching action, or null. */
     private String[] findTransition(String cfg, String action) {
         if (cfg == null) return null;
         for (String seg : cfg.split("\\|")) {
@@ -103,10 +112,46 @@ public class TransitionGuard extends DefaultApplicationPlugin {
             if (p.length >= 2 && action.equals(p[0].trim())) {
                 return new String[]{p[1].trim(),
                         p.length > 2 ? p[2].trim() : "",
-                        p.length > 3 ? p[3].trim() : ""};
+                        p.length > 3 ? p[3].trim() : "",
+                        p.length > 4 ? p[4].trim() : ""};
             }
         }
         return null;
+    }
+
+    /**
+     * Launches the process a transition declares, binding the record so the activity's form
+     * opens on it. Returns a short outcome string that lands in transition_result.
+     *
+     * Deliberately FAIL-SOFT: the status change is already committed and legal, and refusing
+     * to record it because the workflow engine was unhappy would leave the record in a state
+     * the lifecycle says it is not in. A failure here means the officer has no task — visible
+     * as an empty inbox and caught by the ui-journey leg — not a corrupt record.
+     */
+    private String startProcess(String processDefId, String recordId, String entity) {
+        try {
+            AppDefinition appDef = AppUtil.getCurrentAppDefinition();
+            if (appDef == null) return "process " + processDefId + " NOT started: no app context";
+            WorkflowManager wm = (WorkflowManager)
+                    AppUtil.getApplicationContext().getBean("workflowManager");
+            if (wm == null) return "process " + processDefId + " NOT started: no workflowManager";
+            // packageId:latest:processDefId — 'latest' so a redeployed package version does not
+            // strand the caller on an id that no longer resolves.
+            String full = appDef.getId() + ":latest:" + processDefId;
+            Map<String, String> vars = new HashMap<String, String>();
+            vars.put("recordId", recordId);
+            vars.put("id", recordId);
+            vars.put("entity", entity);
+            WorkflowProcessResult r = wm.processStart(full, null, vars, null, recordId, false);
+            if (r == null || r.getProcess() == null)
+                return "process " + processDefId + " NOT started (engine returned nothing)";
+            LogUtil.info(CN, "started " + full + " for " + entity + " " + recordId
+                    + " -> instance " + r.getProcess().getInstanceId());
+            return "started " + processDefId;
+        } catch (Exception e) {                       // noqa: the status move stands regardless
+            LogUtil.error(CN, e, "process start failed for " + processDefId + " / " + recordId);
+            return "process " + processDefId + " NOT started: " + e.getMessage();
+        }
     }
 
     /**
