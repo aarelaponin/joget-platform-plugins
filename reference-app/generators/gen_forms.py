@@ -325,10 +325,21 @@ def form_validator(spec):
             f"form '{spec['form']['id']}': both a unique_guard and a require_guard are declared, "
             f"and the form root carries exactly one validator. A composite guard is the fix.")
     if rg:
-        if not rg.get("rules", "").strip():
-            raise SystemExit(f"form '{spec['form']['id']}': require_guard with no rules")
+        # 2026-08-05: the same validator now carries CROSS-RECORD preconditions (`exists`) —
+        # "when this action is taken, a row must exist over there". A form may carry either
+        # leg or both; what it may not carry is neither, which would be a guard bound to
+        # nothing.
+        rules, exists = rg.get("rules", "").strip(), rg.get("exists", "").strip()
+        if not rules and not exists:
+            raise SystemExit(f"form '{spec['form']['id']}': require_guard with no rules and no "
+                             f"exists preconditions")
+        props = {}
+        if rules:
+            props["rules"] = rules
+        if exists:
+            props["exists"] = exists
         return {"className": "com.fiscaladmin.joget.requireguard.RequireGuard",
-                "properties": {"rules": rg["rules"]}}
+                "properties": props}
     if not ug:
         return dict(V_NONE)
     return {"className": "com.fiscaladmin.joget.uniqueguard.UniqueGuard",

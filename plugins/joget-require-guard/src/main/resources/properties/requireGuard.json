@@ -6,8 +6,15 @@
                 "name": "rules",
                 "label": "Conditional requirements",
                 "type": "textarea",
-                "required": "True",
-                "description": "One rule per line: whenField|whenEquals|requiredFields(csv)|message. Emitted from the model's entities[].validations — not hand-authored."
+                "required": "False",
+                "description": "One rule per line: whenField|whenEquals|requiredFields(csv)|message. Emitted from the model's entities[].validations \u2014 not hand-authored."
+            },
+            {
+                "name": "exists",
+                "label": "Cross-record preconditions",
+                "type": "textarea",
+                "required": "False",
+                "description": "One rule per line: whenField|whenEquals|form|table|theirAttr|ourAttr|where|message. Refuses when the count of matching rows in the other table is ZERO \u2014 the mirror of UniqueGuard. Emitted from the model's transitions[].requires \u2014 not hand-authored."
             }
         ]
     }
