@@ -37,6 +37,13 @@ import org.joget.commons.util.LogUtil;
  *              whenField|whenEquals|form|table|theirAttr|ourAttr|where|message
  *            "When this action is taken, a row must EXIST over there." Refuses when the
  *            count is ZERO, which is the mirror of UniqueGuard's refuse-when-positive.
+ *            An EMPTY whenField makes the rule UNCONDITIONAL — it holds on every save of
+ *            this form. That is what a REFERENTIAL rule needs ("the TIN on this request
+ *            must be one the taxpayer register knows"): it is a property of the row, not
+ *            of an action, and a create form has no action field to condition on. An
+ *            unconditional rule with an empty correlation value is SKIPPED, not refused —
+ *            emptiness is the `rules` leg's question, and answering "you left it blank"
+ *            with "we could not find it" is a different, misleading sentence.
  *
  * Why `exists` lives here and not in a fourth plugin (2026-08-05): the root carries exactly
  * ONE validator, this guard already owns that slot on every lifecycle form, and it already
@@ -161,12 +168,23 @@ public class RequireGuard extends FormValidator {
             String theirAttr = p[4].trim(), ourAttr = p[5].trim();
             String where = p[6].trim(), message = p[7].trim();
 
-            if (whenField.isEmpty() || otherForm.isEmpty() || otherTable.isEmpty()
+            if (otherForm.isEmpty() || otherTable.isEmpty()
                     || theirAttr.isEmpty() || ourAttr.isEmpty()) {
                 LogUtil.warn(CLASS_NAME, "exists-guard: incomplete rule '" + line + "' — skipping");
                 continue;
             }
-            if (!whenEquals.equalsIgnoreCase(valueOf(whenField, form, data, root))) {
+
+            // An EMPTY whenField means UNCONDITIONAL: the precondition holds on every save
+            // of this form, not only when one action is taken. That is what a referential
+            // rule needs — "the TIN on this request must be a TIN the taxpayer register
+            // knows" is not an action, it is a property of the row. Without it such a rule
+            // could only be stated on a lifecycle form carrying `lc_action`, so a CREATE
+            // form (which has no action field at all) could enforce nothing about the keys
+            // it captures, and a screen-side lookup was the only thing standing between an
+            // invented key and the database. The screen helping is not the store enforcing.
+            boolean unconditional = whenField.isEmpty();
+            if (!unconditional
+                    && !whenEquals.equalsIgnoreCase(valueOf(whenField, form, data, root))) {
                 continue;               // not this action — nothing to say
             }
 
@@ -176,6 +194,13 @@ public class RequireGuard extends FormValidator {
                     ? root.getPrimaryKeyValue(data)
                     : valueOf(ourAttr, form, data, root);
             if (ourValue == null || ourValue.trim().isEmpty()) {
+                if (unconditional) {
+                    // An unconditional rule is about the value that IS there. Emptiness is a
+                    // REQUIREDNESS question and the `rules` leg (or the field's own validator)
+                    // owns it; refusing here too would answer "you left it blank" with "we
+                    // could not find it", which is a different and misleading sentence.
+                    continue;
+                }
                 // Nothing to correlate on. REFUSE rather than pass: a precondition that cannot
                 // be evaluated has not been met, and this guard exists because "could not
                 // check" was silently reading as "fine" for the safeguard it protects.

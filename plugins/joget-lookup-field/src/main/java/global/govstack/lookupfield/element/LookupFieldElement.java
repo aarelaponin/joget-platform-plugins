@@ -18,15 +18,23 @@ import java.util.Map;
 /**
  * Lookup Field Form Element
  *
- * A Joget form element that watches a source SelectBox field, fetches a record
- * from another form by the selected primary key, and displays a specified column
- * value from that record.
+ * A Joget form element that watches a source field, fetches a record from another
+ * form by the value that field holds, and displays a specified column value from
+ * that record.
+ *
+ * The watched field may be a SelectBox (pick a key) OR a TextField (type a key).
+ * The TextField case is the one that scales: a register of thousands of taxpayers
+ * cannot be a dropdown, and browsing a register before you may type is three
+ * clicks the applicant should not need. A typed source fires the same AJAX lookup
+ * on change/blur and on debounced input, so the name appears as the key is typed.
  *
  * Features:
- * - Configure a source SelectBox to watch
+ * - Configure a source SelectBox OR TextField to watch
  * - Specify target form and column to look up
  * - Display as hidden, readonly, or editable field
- * - Client-side AJAX lookup with caching for performance
+ * - Client-side AJAX lookup with caching (hits AND misses) for performance
+ * - An unmatched key CLEARS the value and states "not found" — it never leaves the
+ *   previous record's value standing next to a key that does not resolve
  * - Server-side fallback via FormDataDao on form submission
  * - Multiple LookupFields watching the same source share a single AJAX cache
  */
@@ -46,7 +54,7 @@ public class LookupFieldElement extends Element implements FormBuilderPaletteEle
 
     @Override
     public String getDescription() {
-        return "Watches a SelectBox and auto-populates from a related form record";
+        return "Watches a SelectBox or TextField and auto-populates from a related form record";
     }
 
     @Override
@@ -104,11 +112,19 @@ public class LookupFieldElement extends Element implements FormBuilderPaletteEle
         String lookupColumn = getPropertyString("lookupColumn");
         String lookupKeyColumn = getPropertyString("lookupKeyColumn");
         String updateOn = getPropertyString("updateOn");
+        String notFoundMessage = getPropertyString("notFoundMessage");
+        String inputDebounceMs = getPropertyString("inputDebounceMs");
 
         // Apply defaults
         if (displayType == null || displayType.isEmpty()) displayType = "readonly";
         if (updateOn == null || updateOn.isEmpty()) updateOn = "change";
         if (lookupKeyColumn == null) lookupKeyColumn = "";
+        if (notFoundMessage == null || notFoundMessage.isEmpty()) {
+            notFoundMessage = "No matching record found";
+        }
+        if (inputDebounceMs == null || inputDebounceMs.trim().isEmpty()) {
+            inputDebounceMs = "400";
+        }
 
         // Get current app ID for REST API calls
         AppDefinition appDef = AppUtil.getCurrentAppDefinition();
@@ -131,6 +147,8 @@ public class LookupFieldElement extends Element implements FormBuilderPaletteEle
             config.put("lookupKeyColumn", lookupKeyColumn);
             config.put("appId", appId);
             config.put("updateOn", updateOn);
+            config.put("notFoundMessage", notFoundMessage);
+            config.put("inputDebounceMs", inputDebounceMs);
         } catch (Exception e) {
             LogUtil.error(CLASS_NAME, e, "Error building config JSON");
         }

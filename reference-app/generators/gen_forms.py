@@ -262,6 +262,29 @@ def element(f):
                     "autoSelectSingleResult": "true" if c.get("autoSelectSingleResult", True) else "",
                     "showRecentFarmers": "true" if c.get("showRecents", True) else "",
                     "maxRecentFarmers": str(c.get("maxRecents", 5))}}
+    if t == "lookup_field":
+        # TYPE-THE-KEY, SEE-THE-NAME (registry 0.9.8). The watched field holds a business
+        # key the user TYPES (a TIN) or picks; this element resolves it against another
+        # form and shows one column of the matched row, live, without a page reload.
+        # It is the answer to a register that cannot be a dropdown (thousands of rows)
+        # and must not be a browse-first detour (three attempts at that were rejected).
+        # An unmatched key clears the value and states not-found — the element never
+        # leaves the previous record's name standing beside a key that resolves to
+        # nothing. The store's own refusal is a separate mechanism (RequireGuard's
+        # unconditional `exists` leg); this one only helps the screen.
+        return {"className": "global.govstack.lookupfield.element.LookupFieldElement",
+                "properties": {
+                    "id": fid, "label": label,
+                    "displayType": f.get("displayType", "readonly"),
+                    "sourceFieldId": f["sourceFieldId"],
+                    "lookupFormId": f["lookupFormId"],
+                    "lookupColumn": f["lookupColumn"],
+                    "lookupKeyColumn": f.get("lookupKeyColumn", ""),
+                    "updateOn": f.get("updateOn", "change"),
+                    "inputDebounceMs": str(f.get("inputDebounceMs", 400)),
+                    "notFoundMessage": f.get("notFoundMessage", ""),
+                    "required": "true" if f.get("required") else "",
+                    "requiredMessage": f.get("requiredMessage", "")}}
     raise ValueError(f"unknown field type: {t}")
 
 
@@ -409,6 +432,12 @@ def validate(form, path):
                         errs.append(f"{p.get('id')}: SelectBox with neither options nor binder")
                 if e["className"].endswith(".PopupSelectBox") and not p.get("listId"):
                     errs.append(f"{p.get('id')}: PopupSelectBox with no listId to select from")
+                # A LookupField with any of its three coordinates missing resolves nothing
+                # and renders an empty box that looks exactly like a field nobody filled in.
+                if e["className"].endswith(".LookupFieldElement"):
+                    for k in ("sourceFieldId", "lookupFormId", "lookupColumn"):
+                        if not p.get(k):
+                            errs.append(f"{p.get('id')}: LookupField with no {k}")
     return [f"{os.path.basename(path)}: {e}" for e in errs]
 
 

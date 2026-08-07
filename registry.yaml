@@ -18,7 +18,21 @@
 # tier:   G = generic-Joget (any app) · P = pattern-reusable (genericised then shipped)
 # status: active | planned | deprecated      ships: code | pattern
 
-registry_version: 0.9.7   # 0.9.7: gen_userview no longer hardcodes readonly="true" on every
+registry_version: 0.9.8   # 0.9.8: TYPE-THE-KEY, SEE-THE-NAME. joget-lookup-field's watched
+                          #        field may now be a TEXTFIELD, not only a SelectBox: the
+                          #        lookup fires on change/blur AND on debounced typing, so a
+                          #        TIN typed into a text box shows the registered name without
+                          #        a reload. A dropdown does not scale past a demo register and
+                          #        browse-the-register-first was rejected three times. An
+                          #        unmatched key now CLEARS the value and says not-found — it
+                          #        used to blank the field silently, indistinguishable from a
+                          #        field nobody filled. gen_forms realizes the element
+                          #        (`lookup_field`); joget-require-guard's `exists` leg accepts
+                          #        an EMPTY whenField, making a referential precondition
+                          #        statable on a CREATE form (which carries no lc_action), so
+                          #        an unknown key is refused by the STORE and not only by the
+                          #        screen (SR-3).
+                          # 0.9.7: gen_userview no longer hardcodes readonly="true" on every
                           #        FormMenu. It had, since the generator was written, so NO form
                           #        menu the kit ever emitted could be submitted — "New
                           #        registration" rendered uneditable. Invisible to every acceptance
@@ -110,7 +124,12 @@ plugins:
       - com.fiscaladmin.joget.requireguard.RequireGuard
     contract:
       validator_class: com.fiscaladmin.joget.requireguard.RequireGuard
-      config_keys: [rules]
+      config_keys: [rules, exists]
+      binding_rule: >
+        `exists` with an EMPTY whenField is UNCONDITIONAL — the precondition holds on every
+        save, which is what a REFERENTIAL rule needs (a create form carries no lc_action to
+        condition on). Such a rule skips an empty correlation value: blank is a requiredness
+        question the `rules` leg owns.
     provenance: UB-14b; found by executing registration's t03 (REG-FR-041) against the deployed app rather than reading it
     source_of_truth: this repo
 
@@ -148,13 +167,23 @@ plugins:
     dx_compat: ["8.1", "9.x"]
     java_release: 17
     summary: >
-      Form element that watches a SelectBox and auto-populates fields from a related record
-      (field-level, live). Complements joget-form-prefill (form-level, on-load).
+      Form element that watches a SelectBox OR a TextField and auto-populates a field from a
+      related record (field-level, live). The TextField case is the one that scales: a key
+      typed into a text box resolves on change/blur and on debounced input, so a register of
+      thousands needs neither a dropdown nor a browse-first detour. An unmatched key clears
+      the value and states not-found — never a stale value beside a key that resolves to
+      nothing. Complements joget-form-prefill (form-level, on-load).
     registers:
       - global.govstack.lookupfield.element.LookupFieldElement
     contract:
       element_class: global.govstack.lookupfield.element.LookupFieldElement
-      config_keys: [sourceFieldId, lookupFormId, lookupColumn, lookupKeyColumn, updateOn, displayType]
+      config_keys: [sourceFieldId, lookupFormId, lookupColumn, lookupKeyColumn, updateOn,
+                    displayType, inputDebounceMs, notFoundMessage]
+      binding_rule: >
+        The screen-side half only. A key that must EXIST is enforced at store time by
+        joget-require-guard's unconditional `exists` leg (empty whenField), which the forms
+        projector emits alongside this element. Never claim referential integrity from this
+        element alone (SR-3).
     provenance: promoted from lst-frm-prj/plugins (project-neutral source)
     source_of_truth: this repo
 

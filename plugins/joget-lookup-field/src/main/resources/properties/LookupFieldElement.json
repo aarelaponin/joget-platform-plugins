@@ -51,7 +51,7 @@
             {
                 "name": "sourceFieldId",
                 "label": "Source Field ID",
-                "description": "The ID of the SelectBox field to watch. When this field changes, the lookup is triggered.",
+                "description": "The ID of the field to watch — a SelectBox (pick a key) or a TextField (type a key). A SelectBox triggers the lookup on change. A TextField triggers it on change, on blur, and while typing after a short pause, so the looked-up value appears without leaving the field.",
                 "type": "textfield",
                 "required": "true",
                 "value": ""
@@ -75,7 +75,7 @@
             {
                 "name": "lookupKeyColumn",
                 "label": "Lookup Key Column",
-                "description": "The column in the lookup form that matches the SelectBox value. For example, if the SelectBox uses idColumn='customerId', set this to 'customerId'. Leave empty to use Joget primary key (only works when SelectBox value IS the record ID).",
+                "description": "The column in the lookup form that matches the watched field's value. For example, if the SelectBox uses idColumn='customerId', or the TextField holds a TIN, set this to 'customerId' / 'tin'. Leave empty to use the Joget primary key (only works when the watched value IS the record ID).",
                 "type": "textfield",
                 "value": ""
             }
@@ -87,13 +87,27 @@
             {
                 "name": "updateOn",
                 "label": "Update On",
-                "description": "When to trigger the lookup",
+                "description": "When to trigger the lookup. A TextField source ALWAYS also triggers on blur and on debounced typing, whichever is chosen here.",
                 "type": "selectbox",
                 "options": [
                     {"value": "change", "label": "Field Change (recommended)"},
                     {"value": "blur", "label": "Field Blur (on focus out)"}
                 ],
                 "value": "change"
+            },
+            {
+                "name": "inputDebounceMs",
+                "label": "Typing Debounce (ms)",
+                "description": "TextField sources only: how long to wait after the last keystroke before looking up. Default 400.",
+                "type": "textfield",
+                "value": "400"
+            },
+            {
+                "name": "notFoundMessage",
+                "label": "Not-found Message",
+                "description": "Shown when the watched key matched no record. The value is CLEARED in that case — a key that resolves to nothing never keeps the previous record's value.",
+                "type": "textfield",
+                "value": "No matching record found"
             }
         ]
     }
