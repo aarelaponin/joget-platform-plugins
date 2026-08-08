@@ -191,26 +191,33 @@ def element(f):
         # key, i.e. the SAME row). Page set is serialised into the numberOfPage
         # elementselect object — the encoding verified against the JogetDxShowcase app
         # on the live instance: className = page count, properties = page%d_* knobs.
-        # page%d_validate stays empty: tabs browse freely, the server enforces every
-        # rule on save anyway (VAL-03).
+        # page%d_validate stays empty ON TABS: they browse freely, the server enforces
+        # every rule on save anyway (VAL-03). A WIZARD page sets validate (0.9.10) —
+        # both deployed farmersPortal wizards carry 'true' on every page.
         pages = f["pages"]
         if not 2 <= len(pages) <= 15:
             raise ValueError(f"multipaged '{fid}': {len(pages)} pages — the element supports 2-15")
+        # 0.9.10: the wizard keys. Every new key defaults to the exact 0.9.9 emission,
+        # so a spec carrying none of them (every detail_360 tabs element) is
+        # byte-identical — the bump is a degree of freedom, not a behaviour change.
         pp = {}
         for n, p in enumerate(pages, 1):
             pp[f"page{n}_label"] = p.get("label", f"Page {n}")
             pp[f"page{n}_formDefId"] = p["formDefId"]
             pp[f"page{n}_readonly"] = "true" if p.get("readonly") else ""
             pp[f"page{n}_readonlyLabel"] = ""
-            pp[f"page{n}_validate"] = ""
-            pp[f"page{n}_parentSubFormId"] = ""
-            pp[f"page{n}_subFormParentId"] = ""
+            pp[f"page{n}_validate"] = "true" if p.get("validate") else ""
+            pp[f"page{n}_parentSubFormId"] = p.get("parentSubFormId", "")
+            pp[f"page{n}_subFormParentId"] = p.get("subFormParentId", "")
         return {"className": "org.joget.plugin.enterprise.MultiPagedForm", "properties": {
             "id": fid, "displayMode": f.get("displayMode", "tab"),
             "ajaxMode": "true" if f.get("ajaxMode", True) else "",
-            "partiallyStore": "", "storeMainFormOnPartiallyStore": "",
+            "partiallyStore": "true" if f.get("partiallyStore") else "",
+            "storeMainFormOnPartiallyStore":
+                "true" if f.get("storeMainFormOnPartiallyStore") else "",
             "onlyAllowSubmitOnLastPage": "",
-            "prevButtonlabel": "Prev", "nextButtonlabel": "Next", "css": "",
+            "prevButtonlabel": f.get("prevButtonlabel", "Prev"),
+            "nextButtonlabel": f.get("nextButtonlabel", "Next"), "css": "",
             "numberOfPage": {"className": str(len(pages)), "properties": pp}}}
     if t == "period_picker":
         # KP-01 typed.period (the W-12 fix): a tax period is SELECTED from a governed

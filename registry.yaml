@@ -18,7 +18,23 @@
 # tier:   G = generic-Joget (any app) · P = pattern-reusable (genericised then shipped)
 # status: active | planned | deprecated      ships: code | pattern
 
-registry_version: 0.9.9   # 0.9.9: CREATE WITH ONE FORM, EDIT WITH ANOTHER. gen_userview's
+registry_version: 0.9.10  # 0.9.10: THE WIZARD IS A PROJECTION. gen_forms' multipaged element
+                          #        (in the library since detail_360/ADR-068) gains the keys the
+                          #        two DEPLOYED farmersPortal wizards actually carry, measured
+                          #        2026-08-08: per-page subFormParentId (the child fk column),
+                          #        parentSubFormId (the authored parent-side slot name) and
+                          #        validate (both deployed wizards set 'true' on every page -
+                          #        the empty-validate VAL-03 rule is a detail_360 TABS rule);
+                          #        root partiallyStore and storeMainFormOnPartiallyStore
+                          #        (independent on the platform: the farmer wizard sets the
+                          #        second with the first EMPTY) and authorable Prev/Next button
+                          #        labels ('Previous' on the deployed farmer wizard). Every new
+                          #        key defaults to the exact 0.9.9 emission, so a spec carrying
+                          #        none of them (every detail_360 tabs element) is byte-identical
+                          #        - the bump is a new degree of freedom, not a behaviour change.
+                          #        Closes the L1 purpose:wizard refusal (project_forms.py:468,
+                          #        joget-spec-kit) for the .jwa round-trip mission.
+                          # 0.9.9: CREATE WITH ONE FORM, EDIT WITH ANOTHER. gen_userview's
                           #        CrudMenu derived addFormId AND editFormId from the single
                           #        `form` key, so a menu could not open an existing record with
                           #        a form other than the one it creates with. A `purpose: create`
