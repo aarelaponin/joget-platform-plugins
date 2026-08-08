@@ -53,6 +53,29 @@ def static_options(opts):
 
 
 def element(f):
+    """Element dispatch plus the fidelity channels (registry 0.9.12, round-trip
+    mission). Two channels, both inert when unused (byte-identical emission):
+
+      * type `verbatim` - a deployed element re-emitted untouched
+        ({className, properties} straight from the harvested export; the 12
+        foreign elements on the farmersPortal wizard screens carry their full
+        config in the export, so nothing about them needs inventing);
+      * `props` - residual deployed properties the typed channels do not own
+        (placeholder, maxlength, hidden value, an authored validator...),
+        merged into the emitted properties LAST so the deployed value always
+        wins over a derived default.
+    """
+    if f.get("type") == "verbatim":
+        el = f["element"]
+        return {"className": el["className"], "properties": el.get("properties") or {}}
+    out = _element(f)
+    props = f.get("props")
+    if isinstance(props, dict) and props:
+        out["properties"].update(props)
+    return out
+
+
+def _element(f):
     t = f["type"]
     fid, label = f["id"], f.get("label", f["id"])
     if t == "html":
@@ -99,13 +122,19 @@ def element(f):
                 "properties": {"formDefId": lk["formDefId"],
                                "idColumn": lk.get("idColumn", "id").removeprefix("c_"),
                                "labelColumn": lk.get("labelColumn", "name").removeprefix("c_"),
-                               "groupingColumn": "",
+                               # 0.9.12: groupingColumn / useAjax / emptyLabel read from the
+                               # spec (deployed farmersPortal binders carry groupingColumn
+                               # 'district_code' / 'category', useAjax 'true' and an authored
+                               # emptyLabel); the defaults are the exact 0.9.11 emission.
+                               "groupingColumn": lk.get("groupingColumn", ""),
                                # FormOptionsBinder prepends its own WHERE — a leading WHERE in the
                                # spec causes "WHERE WHERE …" → HQL syntax error → the form renders
                                # "null". Strip any leading WHERE defensively (2026-06-19 fix).
                                "extraCondition": re.sub(r"^\s*WHERE\s+", "",
                                                         lk.get("extraCondition", ""), flags=re.I),
-                               "addEmptyOption": "true", "emptyLabel": "", "useAjax": "",
+                               "addEmptyOption": "true",
+                               "emptyLabel": lk.get("emptyLabel", ""),
+                               "useAjax": lk.get("useAjax", ""),
                                "cacheInterval": ""}}
         else:
             props["options"] = static_options(f.get("static_options", []))
@@ -389,7 +418,13 @@ def build_form(spec):
         for i, fld in enumerate(sec["fields"]):
             if sec_managed and "managed" not in fld and "readonly" not in fld:
                 fld = {**fld, "managed": True}
-            buckets[i % cols].append(element(fld))
+            # 0.9.12: an explicit `column` tag wins over the i%cols round-robin.
+            # The deployed farmerIncomePrograms splits 5/6 across two columns -
+            # MORE fields on the right, which i%cols can never produce. Absent
+            # the tag the distribution is byte-identical to 0.9.11.
+            c = fld.get("column")
+            c = c if isinstance(c, int) and 0 <= c < cols else i % cols
+            buckets[c].append(element(fld))
         sections.append({"className": "org.joget.apps.form.model.Section",
             # 0.9.11: an authored section id wins (round-trip fidelity - the
             # deployed farmersPortal sections carry authored ids); the minted

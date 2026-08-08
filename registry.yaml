@@ -18,7 +18,27 @@
 # tier:   G = generic-Joget (any app) · P = pattern-reusable (genericised then shipped)
 # status: active | planned | deprecated      ships: code | pattern
 
-registry_version: 0.9.11  # 0.9.11: THE JOINED REGISTER. gen_datalists'
+registry_version: 0.9.12  # 0.9.12: FULL FORM FIDELITY. The owner set the round-trip
+                          #        objective for the farmersPortal form family: regenerated
+                          #        forms must FULLY equal the deployed ones, no accepted
+                          #        losses. gen_forms gains two channels, both inert when
+                          #        unused (byte-identical emission, asserted literally in
+                          #        test_gen_forms_fidelity.py): field type `verbatim`
+                          #        re-emits a deployed element untouched ({className,
+                          #        properties} from the export - the 12 foreign elements on
+                          #        the wizard screens carry their full config there), and a
+                          #        field `props` dict merges into the emitted properties
+                          #        LAST (deployed placeholder x38, maxlength x15, hidden
+                          #        value x3, authored validators - 6 of the 7 deployed
+                          #        validator shapes are not derivable from `required`).
+                          #        The select lookup binder also reads groupingColumn /
+                          #        useAjax / emptyLabel (deployed: 'district_code',
+                          #        'category', 'true', '-- Select District --'), and a
+                          #        field-level `column` tag beats the i%cols round-robin
+                          #        (farmerIncomePrograms splits 5/6 - MORE fields on the
+                          #        right, which i%cols can never produce); defaults
+                          #        exactly the 0.9.11 emission.
+                          # 0.9.11: THE JOINED REGISTER. gen_datalists'
                           #        AdvancedFormRowDataListBinder emission gains `joins` - the
                           #        shape both deployed farmersPortal registers carry (measured
                           #        2026-08-08): child TABLES joined on <table>.<fk> = parent id
