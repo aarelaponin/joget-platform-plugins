@@ -165,6 +165,14 @@ def main():
                 binder = {"className": "org.joget.plugin.enterprise.AdvancedFormRowDataListBinder",
                           "properties": {"formDefId": d["binder"]["formDefId"],
                                          "extraCondition": d.get("extraCondition", "")}}
+                # 0.9.11: binder joins - the deployed farmersPortal register shape,
+                # measured 2026-08-08: joinFieldId is always the parent row `id`.
+                # Absent joins the emission is byte-identical to 0.9.10.
+                if d["binder"].get("joins"):
+                    binder["properties"]["joins"] = [
+                        {"joinFieldId": "id", "tableName": j["table"],
+                         "fieldId": f"{j['table']}.{j['fk']}"}
+                        for j in d["binder"]["joins"]]
             filters = [filter_entry(i, f) for i, f in enumerate(d.get("filters", []))]
             ras = [row_action(i, r) for i, r in enumerate(d.get("rowActions", []))]
             dl = envelope(d["id"], d["name"], binder, cols, filters, ras,

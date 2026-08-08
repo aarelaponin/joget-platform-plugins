@@ -18,7 +18,17 @@
 # tier:   G = generic-Joget (any app) · P = pattern-reusable (genericised then shipped)
 # status: active | planned | deprecated      ships: code | pattern
 
-registry_version: 0.9.10  # 0.9.10: THE WIZARD IS A PROJECTION. gen_forms' multipaged element
+registry_version: 0.9.11  # 0.9.11: THE JOINED REGISTER. gen_datalists'
+                          #        AdvancedFormRowDataListBinder emission gains `joins` - the
+                          #        shape both deployed farmersPortal registers carry (measured
+                          #        2026-08-08): child TABLES joined on <table>.<fk> = parent id
+                          #        (joinFieldId always 'id'; the deployed key is the TABLE -
+                          #        farm_location, not the form id farmerResidency). A companion
+                          #        register reads every column THROUGH the joins; without them
+                          #        the two lists were unexpressible and forms-02 shipped without
+                          #        its registers. Absent joins the emission is byte-identical to
+                          #        0.9.10 (asserted literally in test_gen_datalists_joins.py).
+                          # 0.9.10: THE WIZARD IS A PROJECTION. gen_forms' multipaged element
                           #        (in the library since detail_360/ADR-068) gains the keys the
                           #        two DEPLOYED farmersPortal wizards actually carry, measured
                           #        2026-08-08: per-page subFormParentId (the child fk column),

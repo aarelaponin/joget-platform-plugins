@@ -391,7 +391,12 @@ def build_form(spec):
                 fld = {**fld, "managed": True}
             buckets[i % cols].append(element(fld))
         sections.append({"className": "org.joget.apps.form.model.Section",
-            "properties": {"id": f"section{si}", "label": sec.get("label", "")},
+            # 0.9.11: an authored section id wins (round-trip fidelity - the
+            # deployed farmersPortal sections carry authored ids); the minted
+            # section<N> stays the default, byte-identical for every spec
+            # without the key.
+            "properties": {"id": sec.get("id") or f"section{si}",
+                           "label": sec.get("label", "")},
             "elements": [{"className": "org.joget.apps.form.model.Column",
                           "properties": {"width": width[c]}, "elements": buckets[c]}
                          for c in range(cols)]})
