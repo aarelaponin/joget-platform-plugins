@@ -62,6 +62,14 @@ def crud_menu(m):
     dl = m.get("datalistId", f"list_{fid}")
     # customId keyed by the DATALIST: two crud menus may expose the same form over
     # different lists (worklist vs all-cases) — form-keyed ids would collide.
+    # 0.9.9: editFormId is its own key. It was `fid` — the SAME form the menu adds with —
+    # since the generator was written, so a menu could not create with one form and edit
+    # with another. That is not an exotic need: a `purpose: create` form carries no
+    # lifecycle Action select (project_forms.is_create, and rightly — a create advances
+    # nothing), so EVERY entity with a lifecycle needs a different form to advance it.
+    # The tax-clearance applicant could open their own draft and had no control to submit
+    # it; the model said `dlMyRequests.source.form: frmClearanceMine` and the menu edited
+    # with frmClearanceApply anyway. Absent `editFormId` the behaviour is unchanged.
     # add=False -> no addFormId -> CrudMenu renders no New button (engine/audited-path
     # creation only); delete=False -> delete button off (e.g. case history retention).
     # Selection column rides on a consuming action (delete on, the default) — delete:false
@@ -69,7 +77,8 @@ def crud_menu(m):
     cbpos, seltype = _selection(bool(m.get("delete", True)))
     return {"className": "org.joget.plugin.enterprise.CrudMenu", "properties": {
         "id": uid("menu:" + dl + ":" + fid), "label": m["label"],
-        "addFormId": fid if m.get("add", True) else "", "editFormId": fid,
+        "addFormId": fid if m.get("add", True) else "",
+        "editFormId": m.get("editFormId") or fid,
         "datalistId": dl, "customId": f"{dl}_crud",
         "add-afterSaved": "list", "edit-afterSaved": "list",
         "list-showDeleteButton": "yes" if m.get("delete", True) else "", "rowCount": "true",

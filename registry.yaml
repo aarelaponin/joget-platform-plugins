@@ -18,7 +18,22 @@
 # tier:   G = generic-Joget (any app) · P = pattern-reusable (genericised then shipped)
 # status: active | planned | deprecated      ships: code | pattern
 
-registry_version: 0.9.8   # 0.9.8: TYPE-THE-KEY, SEE-THE-NAME. joget-lookup-field's watched
+registry_version: 0.9.9   # 0.9.9: CREATE WITH ONE FORM, EDIT WITH ANOTHER. gen_userview's
+                          #        CrudMenu derived addFormId AND editFormId from the single
+                          #        `form` key, so a menu could not open an existing record with
+                          #        a form other than the one it creates with. A `purpose: create`
+                          #        form carries no lifecycle Action select — correct, a create
+                          #        advances nothing — so for EVERY entity with a lifecycle the
+                          #        create form and the edit form legitimately differ. The
+                          #        tax-clearance applicant could open their own draft and had no
+                          #        control to submit it: TC-FR-001, the first line of the model,
+                          #        unreachable behind a full green board (totality 0 blocking,
+                          #        drift hand_edited 0, ui-probe 7/7). The userview spec now
+                          #        carries an optional `editFormId`, emitted from the crud menu's
+                          #        `edit_form` key (application-model.schema.yaml). Absent it the
+                          #        output is byte-identical to 0.9.8 — the bump is a new degree of
+                          #        freedom, not a behaviour change.
+                          # 0.9.8: TYPE-THE-KEY, SEE-THE-NAME. joget-lookup-field's watched
                           #        field may now be a TEXTFIELD, not only a SelectBox: the
                           #        lookup fires on change/blur AND on debounced typing, so a
                           #        TIN typed into a text box shows the registered name without
