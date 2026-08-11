@@ -51,7 +51,6 @@ public class GamStatusReuseTest {
 
     @Before
     public void setUp() {
-        CaseEventWriter.setDefaultEventFormId("gamEvent");
         dao = mock(FormDataDao.class);
 
         widgets.put("W1", row("name", "Widget One", "status", "DRAFT"));
@@ -84,7 +83,7 @@ public class GamStatusReuseTest {
 
     @Test
     public void legalTransitionAdvancesStatusAndWritesEvent() {
-        new StatusManager(dao).transition(
+        new StatusManager(dao, "gamEvent").transition(
                 "gamWidget", "gamWidget", "status", "W1", "W1", "ACTIVE", null, "tester", "legal move");
         assertEquals("ACTIVE", widgets.get("W1").getProperty("status"));
         assertEquals("one STATUS_CHANGED event appended", 1, events.size());
@@ -97,7 +96,7 @@ public class GamStatusReuseTest {
     public void illegalTransitionIsRejectedAndNothingIsWritten() {
         widgets.get("W1").setProperty("status", "ACTIVE");
         try {
-            new StatusManager(dao).transition(
+            new StatusManager(dao, "gamEvent").transition(
                     "gamWidget", "gamWidget", "status", "W1", "W1", "DRAFT", null, "tester", "illegal move");
             fail("expected InvalidTransitionException for ACTIVE -> DRAFT");
         } catch (InvalidTransitionException expected) {

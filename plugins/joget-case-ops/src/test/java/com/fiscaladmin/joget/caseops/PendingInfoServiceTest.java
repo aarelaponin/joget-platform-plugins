@@ -64,7 +64,7 @@ public class PendingInfoServiceTest {
         doAnswer(i -> { for (FormRow r : (FormRowSet) i.getArguments()[2]) events.add(r); return null; })
                 .when(dao).saveOrUpdate(eq("caseEvent"), eq("caseEvent"), any(FormRowSet.class));
 
-        svc = new PendingInfoService(dao, new MmConfigService(dao), new CaseEventWriter(dao));
+        svc = new PendingInfoService(dao, new MmConfigService(dao), new CaseEventWriter(dao, "caseEvent"));
         FormRow c = row("caseType", "TEST", "caseRef", "TT-1", "currentState", "INPROGRESS");
         c.setId("case-1");
         cases.put("case-1", c);

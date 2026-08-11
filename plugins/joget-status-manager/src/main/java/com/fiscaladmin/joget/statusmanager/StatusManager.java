@@ -33,8 +33,16 @@ public class StatusManager {
     private final MmConfigService cfg;
     private final CaseEventWriter events;
 
-    public StatusManager(FormDataDao dao) {
-        this(dao, new MmConfigService(dao), new CaseEventWriter(dao));
+    /**
+     * Convenience constructor — the consumer names its own event carrier.
+     * There is no default: this bundle is shared across OSGi consumers, and a
+     * per-JVM default is what sent CMBB's events into tax registration's chain
+     * between 3 and 11 August 2026 (see {@link CaseEventWriter}).
+     *
+     * @param eventFormId the consumer's event carrier form id, required
+     */
+    public StatusManager(FormDataDao dao, String eventFormId) {
+        this(dao, new MmConfigService(dao), new CaseEventWriter(dao, eventFormId));
     }
 
     /** Test seam — inject the config reader and event writer. */

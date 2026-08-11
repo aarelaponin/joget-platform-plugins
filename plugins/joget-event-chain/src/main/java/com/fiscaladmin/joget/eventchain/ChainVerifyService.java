@@ -23,8 +23,10 @@ import org.joget.apps.form.model.FormRowSet;
  * verbatim, so the check is independent of field ordering — it trusts the bytes
  * that were written and only re-derives the hash + the linkage.
  *
- * <p>The event and case table ids are configurable (defaults
- * {@link CaseEventWriter#DEFAULT_EVENT_FORM} and {@value #DEFAULT_CASE_FORM}).
+ * <p>The event table id is <b>required</b> — there is no process-wide default, for the
+ * reason recorded on {@link CaseEventWriter}. The case table id still defaults to
+ * {@value #DEFAULT_CASE_FORM}; {@link #setDefaultCaseFormId} is the same cross-bundle
+ * static pattern and is a recorded finding, untouched by the August 2026 event-chain fix.
  */
 public class ChainVerifyService {
 
@@ -46,16 +48,19 @@ public class ChainVerifyService {
     private final String eventFormId;
     private final String caseFormId;
 
-    public ChainVerifyService(FormDataDao dao) {
-        this(dao, CaseEventWriter.getDefaultEventFormId(), defaultCaseFormId);
-    }
-
+    /**
+     * @param eventFormId the consumer's own event carrier, required — a verifier aimed
+     *        at the wrong chain reports another module's history as this one's
+     */
     public ChainVerifyService(FormDataDao dao, String eventFormId, String caseFormId) {
+        if (eventFormId == null || eventFormId.trim().isEmpty()) {
+            throw new IllegalArgumentException(
+                    "ChainVerifyService: eventFormId is required — name the consumer's own event carrier");
+        }
         this.dao = dao;
-        this.eventFormId = (eventFormId == null || eventFormId.trim().isEmpty())
-                ? CaseEventWriter.getDefaultEventFormId() : eventFormId.trim();
+        this.eventFormId = eventFormId.trim();
         this.caseFormId = (caseFormId == null || caseFormId.trim().isEmpty())
-                ? DEFAULT_CASE_FORM : caseFormId.trim();
+                ? defaultCaseFormId : caseFormId.trim();
     }
 
     public static class Result {

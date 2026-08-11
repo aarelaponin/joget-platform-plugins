@@ -18,28 +18,25 @@ import org.joget.apps.form.model.FormRowSet;
  * Never updates or deletes — immutability is enforced by having no other write
  * path (the event table has no edit UI).
  *
- * <p>The event table (form id) is configurable so any consumer can point the
- * chain at its own carrier: pass it per-writer via the two-arg constructor, or
- * set a process-wide default once at start-up via {@link #setDefaultEventFormId}.
- * The default is {@value #DEFAULT_EVENT_FORM}.
+ * <p><b>The event table (form id) is per-writer and mandatory.</b> Every consumer
+ * states its own carrier at construction. There is deliberately no process-wide
+ * default and no setter.
+ *
+ * <p><b>Why (incident, 3–11 August 2026).</b> This class previously carried a
+ * {@code static} default event form id with a process-wide setter, which each
+ * consuming bundle called from its own OSGi Activator. This bundle is a shared
+ * <em>library</em> bundle: two consumer bundles in one JVM share one class
+ * instance, so the last Activator to start won for the whole process. When
+ * {@code joget-transition-guard} (tax registration, {@code statusEvent}) was
+ * installed alongside {@code cmbb-plugins} (collection management,
+ * {@code cmEvent}) on 3 August 2026, every CMBB/DMBB case event was appended to
+ * the tax-registration module's hash-linked chain instead of its own — silently,
+ * for eight days. Seventeen of twenty-four regression runners failed with an
+ * empty {@code cmEvent}, and the registration chain took ~30 foreign rows.
+ * A per-JVM default in a cross-bundle library is a defect by construction:
+ * make the caller say what it means.
  */
 public class CaseEventWriter {
-
-    /** Neutral default event table id; override per-instance or via setDefaultEventFormId. */
-    public static final String DEFAULT_EVENT_FORM = "caseEvent";
-
-    private static volatile String defaultEventFormId = DEFAULT_EVENT_FORM;
-
-    /** Set the process-wide default event table id (call once at consumer start-up). */
-    public static void setDefaultEventFormId(String formId) {
-        if (formId != null && !formId.trim().isEmpty()) {
-            defaultEventFormId = formId.trim();
-        }
-    }
-
-    public static String getDefaultEventFormId() {
-        return defaultEventFormId;
-    }
 
     private final FormDataDao dao;
     private final String eventFormId;
@@ -48,14 +45,19 @@ public class CaseEventWriter {
     private String lastHashCaseId;
     private long lastSeq = -1;
 
-    public CaseEventWriter(FormDataDao dao) {
-        this(dao, defaultEventFormId);
-    }
-
+    /**
+     * @param dao         the Joget form data access object
+     * @param eventFormId the consumer's own event carrier (form id), required
+     * @throws IllegalArgumentException if {@code eventFormId} is null or blank —
+     *         an unaimed writer is never silently pointed somewhere plausible
+     */
     public CaseEventWriter(FormDataDao dao, String eventFormId) {
+        if (eventFormId == null || eventFormId.trim().isEmpty()) {
+            throw new IllegalArgumentException(
+                    "CaseEventWriter: eventFormId is required — name the consumer's own event carrier");
+        }
         this.dao = dao;
-        this.eventFormId = (eventFormId == null || eventFormId.trim().isEmpty())
-                ? defaultEventFormId : eventFormId.trim();
+        this.eventFormId = eventFormId.trim();
     }
 
     public String getEventFormId() {

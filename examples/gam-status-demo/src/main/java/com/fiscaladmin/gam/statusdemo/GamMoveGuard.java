@@ -32,6 +32,8 @@ public class GamMoveGuard extends DefaultApplicationPlugin {
     private static final String CLASS_NAME = GamMoveGuard.class.getName();
     private static final String F_MOVE = "gamMove";
     private static final String F_WIDGET = "gamWidget";
+    /** This demo consumer's own event carrier — named here, never set process-wide. */
+    static final String F_EVENT = "gamEvent";
 
     @Override
     public String getName() {
@@ -93,7 +95,7 @@ public class GamMoveGuard extends DefaultApplicationPlugin {
         String result;
         try {
             // The whole point of the proof: a platform bundle drives a GAM entity.
-            new StatusManager(dao).transition(
+            new StatusManager(dao, F_EVENT).transition(
                     F_WIDGET, F_WIDGET, "status", widgetId, widgetId,
                     target, null, actor, reason);
             FormRow w = dao.load(F_WIDGET, F_WIDGET, widgetId);

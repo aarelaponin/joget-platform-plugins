@@ -63,7 +63,7 @@ public class LinkServiceTest {
         doAnswer(i -> { for (FormRow r : (FormRowSet) i.getArguments()[2]) events.add(r); return null; })
                 .when(dao).saveOrUpdate(eq("caseEvent"), eq("caseEvent"), any(FormRowSet.class));
 
-        svc = new LinkService(dao, new CaseEventWriter(dao));
+        svc = new LinkService(dao, new CaseEventWriter(dao, "caseEvent"));
         linkTypes.add(row("code", "REFERRAL", "name", "Referral", "targetCaseTypes", "TEST"));
         linkTypes.add(row("code", "STRICT", "name", "Strict", "targetCaseTypes", "AUDIT"));
         FormRow target = row("caseType", "TEST", "caseRef", "TT-TO");

@@ -52,7 +52,7 @@ public class ApprovalSweepEngine extends DefaultApplicationPlugin {
             return null;
         }
         LocalDateTime asOf = parseAsOf(Rows.prop(run, "asOf"));
-        ApprovalService svc = new ApprovalService(dao, new CaseEventWriter(dao), DecisionEffects.snapshot());
+        ApprovalService svc = new ApprovalService(dao, new CaseEventWriter(dao, ApprovalService.F_EVENT), DecisionEffects.snapshot());
         String result = svc.sweep(asOf, actor);
         LogUtil.info(CLASS_NAME, "SWEEP: " + result);
         run.setProperty("result", result);

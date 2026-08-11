@@ -61,7 +61,7 @@ public class ApprovalGateEngine extends DefaultApplicationPlugin {
         String approverLevel = declaredLevel.isEmpty()
                 ? new AuthorityResolver(dao, AuthorityResolver.directoryGroups()).resolveLevel(approver)
                 : declaredLevel;
-        ApprovalService svc = new ApprovalService(dao, new CaseEventWriter(dao), DecisionEffects.snapshot());
+        ApprovalService svc = new ApprovalService(dao, new CaseEventWriter(dao, ApprovalService.F_EVENT), DecisionEffects.snapshot());
         String result = svc.decide(approvalId, approver, approverLevel, outcome, reason, LocalDateTime.now());
         LogUtil.info(CLASS_NAME, "DECIDE " + approvalId + " (" + outcome + "): " + result);
         dec.setProperty("result", result);

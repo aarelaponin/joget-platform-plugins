@@ -62,7 +62,7 @@ public class HoldServiceTest {
             }
             return n;
         });
-        svc = new HoldService(dao, new CaseEventWriter(dao));
+        svc = new HoldService(dao, new CaseEventWriter(dao, "caseEvent"));
     }
 
     private long eventCount(String type) {

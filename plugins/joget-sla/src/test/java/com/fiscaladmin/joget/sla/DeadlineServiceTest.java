@@ -104,7 +104,7 @@ public class DeadlineServiceTest {
                 "priority", "0", "slaStatus", "");
         c.setId("d-1");
         cases.put("d-1", c);
-        svc = new DeadlineService(dao, cfg, new CaseEventWriter(dao));
+        svc = new DeadlineService(dao, cfg, new CaseEventWriter(dao, "caseEvent"));
     }
 
     private long ev(String type) {

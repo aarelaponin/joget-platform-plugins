@@ -34,6 +34,13 @@ import com.fiscaladmin.joget.statusmanager.StatusManager;
 public class TransitionGuard extends DefaultApplicationPlugin {
 
     private static final String CN = TransitionGuard.class.getName();
+
+    /**
+     * This bundle's own event carrier. Named here, not set process-wide from the
+     * Activator: joget-event-chain is a shared library bundle, and a static default
+     * set at bundle start re-aims every other consumer in the same JVM.
+     */
+    static final String EVENT_FORM = "statusEvent";
     private static final DateTimeFormatter TS = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     public String getName() { return "Lifecycle Transition Guard"; }
@@ -75,7 +82,7 @@ public class TransitionGuard extends DefaultApplicationPlugin {
         try {
             if (guardFail != null)
                 throw new InvalidTransitionException(nz(row.getProperty(statusField)), target, guardFail);
-            new StatusManager(dao).apply(entity, row, statusField, recordId, target,
+            new StatusManager(dao, EVENT_FORM).apply(entity, row, statusField, recordId, target,
                     Collections.<String>emptyList(), actor, action);
             if (!setNowCsv.isEmpty()) {
                 String now = LocalDateTime.now().format(TS);

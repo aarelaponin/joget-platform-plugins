@@ -18,7 +18,44 @@
 # tier:   G = generic-Joget (any app) · P = pattern-reusable (genericised then shipped)
 # status: active | planned | deprecated      ships: code | pattern
 
-registry_version: 0.9.12  # 0.9.12: FULL FORM FIDELITY. The owner set the round-trip
+registry_version: 0.10.0  # 0.10.0: NO PROCESS-WIDE AIM IN A SHARED BUNDLE (breaking).
+                          #        joget-event-chain is a LIBRARY bundle: two consumers in one
+                          #        JVM share one class, so CaseEventWriter's static default
+                          #        event form id was one field for the whole process. When
+                          #        joget-transition-guard (statusEvent, tax registration) was
+                          #        installed beside cmbb-plugins (cmEvent, collection
+                          #        management) on 3 Aug 2026, the last Activator to start won
+                          #        and every CMBB/DMBB case event was appended to the
+                          #        registration module's hash-linked chain - silently, until a
+                          #        regression sweep came back 7/24 green on 11 Aug with an
+                          #        empty cmEvent and 468 foreign rows in app_fd_statusEvent.
+                          #        REMOVED (breaking, deliberately): CaseEventWriter's
+                          #        DEFAULT_EVENT_FORM, setDefaultEventFormId,
+                          #        getDefaultEventFormId and the one-arg constructor;
+                          #        ChainVerifyService's one-arg constructor; StatusManager's
+                          #        one-arg constructor. CaseEventWriter(dao, eventFormId) is
+                          #        now the only way to build one and a blank id THROWS - an
+                          #        unaimed writer is never silently pointed somewhere
+                          #        plausible. Every consumer names its own carrier at the call
+                          #        site (24 sites); both Activators lose their binding line.
+                          #        Pinned by CaseEventWriterTest.twoWritersInOneJvm_doNotCross.
+                          #        Sweep re-run after the fix: 24/24 green.
+                          #        ARTIFACT VERSIONS DELIBERATELY UNCHANGED at 1.0.0, per this
+                          #        repo's convention (registry_version carries the changelog):
+                          #        every dependent pins the version in its pom and bnd derives
+                          #        each Import-Package range from it, so a major bump makes the
+                          #        six consumer bundles unresolvable unless all seven land in
+                          #        the same instant. ALL SEVEN MUST BE REDEPLOYED TOGETHER:
+                          #        joget-event-chain, joget-status-manager,
+                          #        joget-decision-approval, joget-transition-guard,
+                          #        joget-case-ops, joget-sla, and the consumer's own bundle.
+                          #        Open for the platform owner (DM-2/DM-3 in the debt-management
+                          #        PLATFORM_DEMANDS.md): eleven more process-wide statics of the
+                          #        same shape remain across these bundles, none colliding today
+                          #        only because no installed bundle happens to set them; and the
+                          #        preflight lint needs a CROSS-BUNDLE rule, since no per-app
+                          #        artefact check can see a defect that lives in a pair of them.
+                          # 0.9.12: FULL FORM FIDELITY. The owner set the round-trip
                           #        objective for the farmersPortal form family: regenerated
                           #        forms must FULLY equal the deployed ones, no accepted
                           #        losses. gen_forms gains two channels, both inert when
@@ -456,13 +493,19 @@ plugins:
       Tamper-evident, append-only case event log: a SHA-256 hash-chained event writer,
       a read-only chain verifier, and a configurable human case-reference generator.
       Library bundle (exports com.fiscaladmin.joget.eventchain) — no Joget plugin descriptors;
-      consumed by other engine plugins. The event/case table ids are configurable so any
-      consumer points it at its own carriers.
+      consumed by other engine plugins. The event table id is REQUIRED per writer: every
+      consumer names its own carrier at construction. There is no process-wide default and no
+      setter — see registry_version 0.10.0 for why (a static here is one field for every
+      consumer in the JVM, and it silently re-aimed CMBB's audit chain for eight days).
     registers: []                   # library — exports a package, registers no Joget plugins
     contract:
       exports_package: com.fiscaladmin.joget.eventchain
       classes: [CaseEventWriter, ChainVerifyService, CaseRefGenerator]
-      config_keys: [eventFormId, caseFormId]   # via constructor arg or setDefaultEventFormId
+      config_keys: [eventFormId, caseFormId]   # eventFormId: constructor arg ONLY, required,
+                                               #   blank throws. caseFormId: constructor arg,
+                                               #   or CaseRefGenerator/ChainVerifyService
+                                               #   setDefaultCaseFormId (still a process-wide
+                                               #   static — DM-2, unfixed, recorded)
     provenance: extracted + genericised from a collection-management building block (Phase 2, item 6)
     source_of_truth: this repo
 
@@ -489,7 +532,10 @@ plugins:
       exports_package: com.fiscaladmin.joget.statusmanager
       classes: [StatusManager, MmConfigService, GuardContext, GuardPhase, InvalidTransitionException]
       metamodel_tables: [mmCaseType, mmState, mmTransition, mmDocReq, mmEntityState, mmEntityTransition]
-      config_keys: [caseFormId, taskFormId, docFormId]   # GuardContext.setFormIds; event id via event-chain
+      config_keys: [caseFormId, taskFormId, docFormId]   # GuardContext.setFormIds (process-wide
+                                                         #   static — DM-2, unfixed, recorded).
+                                                         #   The event id is a REQUIRED ctor arg:
+                                                         #   StatusManager(dao, eventFormId).
     provenance: extracted + genericised from a collection-management building block (Phase 2, item 5);
                 domain phases (open/pre-close/close) + the case-envelope plugin stay in the consumer
     source_of_truth: this repo

@@ -77,16 +77,88 @@ public class CaseEventWriterTest {
     }
 
     @Test
-    public void defaultFormId_isNeutralAndConfigurable() {
-        String original = CaseEventWriter.getDefaultEventFormId();
+    public void eventFormId_isRequired() {
+        FormDataDao dao = mock(FormDataDao.class);
         try {
-            assertEquals("caseEvent", CaseEventWriter.DEFAULT_EVENT_FORM);
-            CaseEventWriter.setDefaultEventFormId("cmEvent");
-            FormDataDao dao = mock(FormDataDao.class);
-            assertEquals("no-arg ctor uses the configured default",
-                    "cmEvent", new CaseEventWriter(dao).getEventFormId());
-        } finally {
-            CaseEventWriter.setDefaultEventFormId(original);
+            new CaseEventWriter(dao, null);
+            fail("a null eventFormId must be refused, not silently defaulted");
+        } catch (IllegalArgumentException expected) {
+            assertTrue(expected.getMessage().contains("eventFormId is required"));
         }
+        try {
+            new CaseEventWriter(dao, "   ");
+            fail("a blank eventFormId must be refused, not silently defaulted");
+        } catch (IllegalArgumentException expected) {
+            assertTrue(expected.getMessage().contains("eventFormId is required"));
+        }
+    }
+
+    /**
+     * REGRESSION — the 3–11 August 2026 cross-bundle collision.
+     *
+     * <p>This library bundle is shared: two consumer bundles in one JVM see one
+     * {@code CaseEventWriter} class. When the aim lived in a static, the last
+     * Activator to start won for the whole process and CMBB's case events were
+     * appended to tax registration's chain. Two writers with different targets,
+     * alive at the same time, must write to their own carriers and to nothing else.
+     */
+    @Test
+    public void twoWritersInOneJvm_doNotCross() {
+        FormDataDao cmDao = mock(FormDataDao.class);
+        FormDataDao regDao = mock(FormDataDao.class);
+        when(cmDao.find(anyString(), anyString(), anyString(), any(), anyString(),
+                any(), anyInt(), anyInt())).thenReturn(new FormRowSet());
+        when(regDao.find(anyString(), anyString(), anyString(), any(), anyString(),
+                any(), anyInt(), anyInt())).thenReturn(new FormRowSet());
+
+        // Constructed in the order the bundles started on jdx9: CMBB first (8 July),
+        // then the registration guard (3 August) — the order that used to lose CMBB.
+        CaseEventWriter cmbb = new CaseEventWriter(cmDao, "cmEvent");
+        CaseEventWriter registration = new CaseEventWriter(regDao, "statusEvent");
+
+        assertEquals("cmEvent", cmbb.getEventFormId());
+        assertEquals("a later writer does not re-aim an earlier one",
+                "statusEvent", registration.getEventFormId());
+
+        // Interleave the appends — a later construction must not retarget a live writer.
+        cmbb.append("case-1", "CASE_CREATED", "alice", "", "OPEN", "created", null);
+        registration.append("reg-1", "CASE_CREATED", "bob", "", "OPEN", "created", null);
+        cmbb.append("case-1", "CASE_CLOSED", "alice", "OPEN", "CLOSED", "done", null);
+
+        verify(cmDao, times(2)).saveOrUpdate(eq("cmEvent"), eq("cmEvent"), any(FormRowSet.class));
+        verify(regDao, times(1)).saveOrUpdate(eq("statusEvent"), eq("statusEvent"), any(FormRowSet.class));
+        // The whole incident in one assertion: no CMBB row ever reached statusEvent.
+        verify(cmDao, never()).saveOrUpdate(eq("statusEvent"), anyString(), any(FormRowSet.class));
+        verify(regDao, never()).saveOrUpdate(eq("cmEvent"), anyString(), any(FormRowSet.class));
+    }
+
+    /** Each writer keeps its own seq/hash cursor — chains do not interleave. */
+    @Test
+    public void twoWritersInOneJvm_keepSeparateChains() {
+        FormDataDao cmDao = mock(FormDataDao.class);
+        FormDataDao regDao = mock(FormDataDao.class);
+        when(cmDao.find(anyString(), anyString(), anyString(), any(), anyString(),
+                any(), anyInt(), anyInt())).thenReturn(new FormRowSet());
+        when(regDao.find(anyString(), anyString(), anyString(), any(), anyString(),
+                any(), anyInt(), anyInt())).thenReturn(new FormRowSet());
+
+        CaseEventWriter cmbb = new CaseEventWriter(cmDao, "cmEvent");
+        CaseEventWriter registration = new CaseEventWriter(regDao, "statusEvent");
+
+        cmbb.append("case-1", "A", "u", "", "S1", "r", null);
+        registration.append("reg-1", "A", "u", "", "S1", "r", null);
+        cmbb.append("case-1", "B", "u", "S1", "S2", "r", null);
+
+        ArgumentCaptor<FormRowSet> cm = ArgumentCaptor.forClass(FormRowSet.class);
+        verify(cmDao, times(2)).saveOrUpdate(anyString(), anyString(), cm.capture());
+        assertEquals("0000000000", cm.getAllValues().get(0).get(0).getProperty("seq"));
+        assertEquals("CMBB's seq is not advanced by the registration writer",
+                "0000000001", cm.getAllValues().get(1).get(0).getProperty("seq"));
+
+        ArgumentCaptor<FormRowSet> reg = ArgumentCaptor.forClass(FormRowSet.class);
+        verify(regDao).saveOrUpdate(anyString(), anyString(), reg.capture());
+        assertEquals("the registration chain starts at its own genesis",
+                "0000000000", reg.getValue().get(0).getProperty("seq"));
+        assertEquals("", reg.getValue().get(0).getProperty("prevHash"));
     }
 }

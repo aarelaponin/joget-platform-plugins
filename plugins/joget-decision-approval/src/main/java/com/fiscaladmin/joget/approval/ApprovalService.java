@@ -50,6 +50,18 @@ public class ApprovalService {
     public static final String F_AUTH = "mmAuthority";
     public static final String F_CASE = "cmCase";
     public static final String F_COI = "mmCoi";
+    /**
+     * This bundle's event carrier, named here beside the other carriers it already
+     * fixes ({@code cmApproval}, {@code cmCase}, {@code cmDecision}, …). The aim is
+     * stated per writer, never as a process-wide static: joget-event-chain is a shared
+     * library bundle, and a static default set from one consumer's Activator re-aims
+     * every other consumer in the JVM (the 3–11 August 2026 collision).
+     *
+     * <p>FINDING: this bundle is registered as domain-agnostic but hardcodes the
+     * {@code cm*} carrier family throughout. {@code F_EVENT} does not add that coupling,
+     * it makes it visible. Genericising the carrier set is a separate change.
+     */
+    public static final String F_EVENT = "cmEvent";
     private static final List<String> SCOPE = Collections.singletonList("DEFAULT");
     private static final int FETCH_ALL = 100000;
     private static final long SLA_DAYS = 2;        // default approval SLA (calendar days)

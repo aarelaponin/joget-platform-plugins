@@ -53,7 +53,7 @@ public class ApprovalDelegateEngine extends DefaultApplicationPlugin {
         String approvalId = Rows.prop(row, "approvalId");
         String delegateTo = Rows.prop(row, "delegateTo");
         String reason = Rows.prop(row, "reason");
-        ApprovalService svc = new ApprovalService(dao, new CaseEventWriter(dao), DecisionEffects.snapshot());
+        ApprovalService svc = new ApprovalService(dao, new CaseEventWriter(dao, ApprovalService.F_EVENT), DecisionEffects.snapshot());
         String result = svc.delegate(approvalId, fromApprover, delegateTo, reason, LocalDateTime.now());
         LogUtil.info(CLASS_NAME, "DELEGATE " + approvalId + " -> " + delegateTo + ": " + result);
         row.setProperty("result", result);
