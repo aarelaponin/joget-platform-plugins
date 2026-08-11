@@ -12,7 +12,7 @@
     </parent>
 
     <artifactId>joget-event-chain</artifactId>
-    <version>1.0.0</version>
+    <version>2.0.0</version>
     <packaging>bundle</packaging>
     <name>joget-event-chain</name>
     <description>Tamper-evident, append-only case event log for Joget DX: a SHA-256

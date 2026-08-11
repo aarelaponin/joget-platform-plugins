@@ -40,15 +40,39 @@ registry_version: 0.10.0  # 0.10.0: NO PROCESS-WIDE AIM IN A SHARED BUNDLE (brea
                           #        site (24 sites); both Activators lose their binding line.
                           #        Pinned by CaseEventWriterTest.twoWritersInOneJvm_doNotCross.
                           #        Sweep re-run after the fix: 24/24 green.
-                          #        ARTIFACT VERSIONS DELIBERATELY UNCHANGED at 1.0.0, per this
-                          #        repo's convention (registry_version carries the changelog):
-                          #        every dependent pins the version in its pom and bnd derives
-                          #        each Import-Package range from it, so a major bump makes the
-                          #        six consumer bundles unresolvable unless all seven land in
-                          #        the same instant. ALL SEVEN MUST BE REDEPLOYED TOGETHER:
-                          #        joget-event-chain, joget-status-manager,
+                          #        ARTIFACT VERSIONS BUMPED (AL, Gate G1 ruling G1-4, 12 Aug
+                          #        2026 - supersedes this entry's first draft, which had left
+                          #        them at 1.0.0 per the repo's registry_version-carries-the-
+                          #        changelog convention). A removal from an exported package
+                          #        gets the honest semver signal:
+                          #          MAJOR 1.0.0 -> 2.0.0  joget-event-chain (CaseEventWriter
+                          #                 DEFAULT_EVENT_FORM / set- / getDefaultEventFormId /
+                          #                 (FormDataDao) ctor; ChainVerifyService (FormDataDao)
+                          #                 ctor REMOVED) and joget-status-manager
+                          #                 (StatusManager(FormDataDao) ctor REMOVED).
+                          #          MINOR 1.0.0 -> 1.1.0  joget-decision-approval,
+                          #                 joget-case-ops, joget-sla, joget-transition-guard,
+                          #                 examples/gam-status-demo - their own exported API is
+                          #                 source-compatible, but each imports a package whose
+                          #                 export version has majored, so each JAR must be
+                          #                 replaced in lockstep (Import-Package range moves
+                          #                 [1.0,2) -> [2.0,3)).
+                          #        This is a DEPLOYMENT-BREAKING signal by design: bnd derives
+                          #        each consumer's Import-Package range from the export version,
+                          #        so a 1.0.0-built consumer left behind on an instance now
+                          #        FAILS TO RESOLVE instead of silently binding to an API that
+                          #        no longer means what it did. ALL SEVEN MUST BE DEPLOYED
+                          #        TOGETHER: joget-event-chain, joget-status-manager,
                           #        joget-decision-approval, joget-transition-guard,
                           #        joget-case-ops, joget-sla, and the consumer's own bundle.
+                          #        Consumers pinned to 1.0.0 that the bump surfaced, re-pinned
+                          #        and rebuilt in the same change, none silently: the five
+                          #        in-repo modules above, examples/gam-status-demo, and - in a
+                          #        SEPARATE repo - cmbb-plugins (debt-management-platform,
+                          #        03_debt_management/cmbb/plugins/cmbb-plugins, itself
+                          #        8.1-SNAPSHOT so it carries no version of its own to move).
+                          #        No other consumer of either artifact exists in any repo on
+                          #        this workstation.
                           #        Open for the platform owner (DM-2/DM-3 in the debt-management
                           #        PLATFORM_DEMANDS.md): eleven more process-wide statics of the
                           #        same shape remain across these bundles, none colliding today
@@ -481,7 +505,7 @@ plugins:
   - id: joget-event-chain
     module: plugins/joget-event-chain
     artifact: com.fiscaladmin.joget:joget-event-chain
-    version: 1.0.0
+    version: 2.0.0
     category: foundation
     tier: P
     status: active
@@ -512,7 +536,7 @@ plugins:
   - id: joget-status-manager
     module: plugins/joget-status-manager
     artifact: com.fiscaladmin.joget:joget-status-manager
-    version: 1.0.0
+    version: 2.0.0
     category: foundation
     tier: P
     status: active
@@ -543,7 +567,7 @@ plugins:
   - id: joget-decision-approval
     module: plugins/joget-decision-approval
     artifact: com.fiscaladmin.joget:joget-decision-approval
-    version: 1.0.0
+    version: 1.1.0
     category: foundation
     tier: P
     status: active            # 3a+3b: full service core shipped; Joget-plugin engines/binder pending (3c)
@@ -582,7 +606,7 @@ plugins:
   - id: joget-case-ops
     module: plugins/joget-case-ops
     artifact: com.fiscaladmin.joget:joget-case-ops
-    version: 1.0.0
+    version: 1.1.0
     category: foundation
     tier: P
     status: active
@@ -612,7 +636,7 @@ plugins:
   - id: joget-sla
     module: plugins/joget-sla
     artifact: com.fiscaladmin.joget:joget-sla
-    version: 1.0.0
+    version: 1.1.0
     category: foundation
     tier: P
     status: active
