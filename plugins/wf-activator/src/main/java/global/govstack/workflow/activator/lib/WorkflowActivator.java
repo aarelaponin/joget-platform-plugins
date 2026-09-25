@@ -25,7 +25,7 @@ public class WorkflowActivator extends DefaultApplicationPlugin {
 
     private static final String PLUGIN_NAME = "Workflow Activator";
     private static final String PLUGIN_DESCRIPTION = "Automatically invoke workflow processes after form submission";
-    private static final String PLUGIN_VERSION = "8.0.6";
+    private static final String PLUGIN_VERSION = "8.0.7";
 
     @Override
     public String getName() {
@@ -72,7 +72,7 @@ public class WorkflowActivator extends DefaultApplicationPlugin {
         LogUtil.info(getClassName(), "===== WorkflowActivator v2.0 STARTING =====");
         LogUtil.info(getClassName(), "Properties count: " + properties.size());
         LogUtil.info(getClassName(), "Properties keys: " + properties.keySet());
-        LogUtil.error(getClassName(), null, "DEBUG: WorkflowActivator v2.0 - Properties: " + properties.keySet());
+        LogUtil.debug(getClassName(), "DEBUG: WorkflowActivator v2.0 - Properties: " + properties.keySet());
 
         // When used as Form Post Processing Tool, the primary key is in "recordId"
         String recordId = null;
@@ -371,6 +371,12 @@ public class WorkflowActivator extends DefaultApplicationPlugin {
                     }
                     LogUtil.info(getClassName(), "Added " + variables.size() + " total workflow variables");
                 }
+            } else if (hasRecordIdProperty(properties)) {
+                // A post-processing tool is given the saved record's id as "recordId" and no rows;
+                // execute() takes the id from there. This is the normal case, not an error.
+                LogUtil.info(getClassName(), "No FormRowSet in properties; the record ID is taken from the recordId property"
+                        + (passFormData ? "; form fields are not added as workflow variables" : ""));
+                LogUtil.info(getClassName(), "Available properties: " + properties.keySet());
             } else {
                 LogUtil.error(getClassName(), null, "No FormRowSet found in properties - cannot extract record ID");
                 LogUtil.info(getClassName(), "Available properties: " + properties.keySet());
@@ -391,6 +397,15 @@ public class WorkflowActivator extends DefaultApplicationPlugin {
         }
 
         return variables;
+    }
+
+    /**
+     * Whether the properties carry the record id that execute() uses: "recordId", or else "id",
+     * with a value that is not empty.
+     */
+    private static boolean hasRecordIdProperty(Map properties) {
+        Object value = properties.containsKey("recordId") ? properties.get("recordId") : properties.get("id");
+        return value != null && !value.toString().trim().isEmpty();
     }
 
     /**
