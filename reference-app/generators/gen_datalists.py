@@ -9,6 +9,13 @@ drill-down. Filter values + drill params reach a JDBC binder via #requestParam.<
 in the SQL (the verified JDBC filter mechanism), so a filter dropdown and a drill link
 feed the same SQL param. Same spec -> same JSON.
 
+0.11.0: a select filter may carry the platform's options binder (read at run time) and a
+controlField naming an earlier select filter (a divided list chosen in two steps); a date
+column is shown in its day-first pattern (displayFormat) and read in its stored format
+(dataFormat). See filter_entry, check_controls and date_format. A column's `optionsValue`
+formatter may carry the values and labels of a fixed list (`options`) in place of a form to read
+them from (METHOD-2026-09-26-02, point 19 (a)); see fk_format.
+
 Usage: gen_datalists.py <spec_dir> <out_dir>
 """
 import json
@@ -61,6 +68,16 @@ def badge_format(fmt):
 
 
 def fk_format(lookup):
+    if lookup.get("options") is not None and not lookup.get("formDefId"):
+        # 0.11.0 (METHOD-2026-09-26-02, point 19 (a)): a column over a FIXED list shows the
+        # value's label from the list's values written into the formatter - the platform's own
+        # OptionsValueFormatter reads its `options` grid of value and label (jw-enterprise-plugins
+        # 9.0.7, getOptionMap) and loads a binder only when one is named. A fixed list has no
+        # table to read, so it names none. A formatter with a formDefId is emitted as before.
+        return {"className": "org.joget.plugin.enterprise.OptionsValueFormatter",
+                "properties": {"options": [{"value": str(o["value"]), "label": str(o["label"])}
+                                           for o in lookup["options"]],
+                               "optionsBinder": {"className": "", "properties": {}}}}
     return {"className": "org.joget.plugin.enterprise.OptionsValueFormatter",
             "properties": {"optionsBinder": {
                 "className": "org.joget.apps.form.lib.FormOptionsBinder",
@@ -72,6 +89,24 @@ def fk_format(lookup):
                 "options": []}}
 
 
+STORED_DATE = "yyyy-MM-dd"                 # a date control stores this (gen_forms DatePicker dataFormat)
+STORED_MOMENT = "yyyy-MM-dd HH:mm:ss"      # a moment the transition guard sets is stored so
+
+
+def date_format(fmt):
+    """0.11.0 (METHOD-2026-09-25-11, item 3): the spec's `format` - the day-first pattern the
+    person reads - is the DateFormatter's displayFormat; its dataFormat is the format the value
+    is STORED in, which the formatter parses before it shows it. Up to 0.10.0 the pattern went
+    into dataFormat and displayFormat was left empty, so a stored 2026-09-25 did not parse as
+    dd/MM/yyyy, and the column showed the stored value, not the date day first. The stored
+    format is the spec's `dataFormat` where it names one, else the format of the library's own
+    writers: yyyy-MM-dd HH:mm:ss for a pattern that shows the time, yyyy-MM-dd for a date."""
+    shown = fmt.get("format", "dd/MM/yyyy")
+    stored = fmt.get("dataFormat") or (STORED_MOMENT if re.search(r"[Hh]", shown) else STORED_DATE)
+    return {"className": "org.joget.plugin.enterprise.DateFormatter",
+            "properties": {"dataFormat": stored, "displayFormat": shown}}
+
+
 def col(idx, name, label, fmt=None, action=None, render_html=False):
     """Full canonical column shape — ALWAYS sortable; label cleaned of provenance leaks."""
     return {"name": name, "id": f"column_{idx}", "label": clean_label(label), "hidden": "false",
@@ -81,8 +116,27 @@ def col(idx, name, label, fmt=None, action=None, render_html=False):
             "action": action or {"className": "", "properties": {}}}
 
 
+PLAIN_NAME = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+
+
 def filter_entry(idx, f):
-    """f: {id, label?, type? (text|select), options?, param?}. JDBC SQL reads #requestParam.<param>#."""
+    """f: {id, label?, type? (text|select), options?, param?, optionsBinder?, controlField?}.
+    JDBC SQL reads #requestParam.<param>#.
+
+    0.11.0, a select filter over a list of values (METHOD-2026-09-25-11, item 2):
+      * `optionsBinder` - the platform's own options binder ({className, properties}), placed on
+        the filter as it stands. The filter then offers the rows the binder reads when the list is
+        shown - a list of values' values in force, in its order, as the binder's query asks -
+        instead of the inline `options` fixed at the build. (SelectBoxDataListFilterType,
+        9.0.7: the binder's rows replace the inline options; the enterprise JDBC options binder
+        reads value, label and grouping from its query's first three columns, in its order.)
+      * `controlField` - a filter over a DIVIDED list is chosen in two steps: the category's
+        filter first, then the value's filter, which names the category's filter here. The
+        platform then offers only the values whose grouping (the value binder's third column)
+        holds the category chosen, as the form's two drop-downs do. The category's filter is an
+        ordinary select filter: like every filter it narrows the rows by its own column, so the
+        list's rows carry the category under that name. See check_controls.
+    Absent both keys the emission is byte-identical to 0.10.0."""
     fid = f["id"]
     param = f.get("param", "f_" + fid)
     ftype = f.get("type", "text")
@@ -91,6 +145,10 @@ def filter_entry(idx, f):
         opts += [o if isinstance(o, dict) else {"value": o, "label": o} for o in f.get("options", [])]
         t = {"className": "org.joget.plugin.enterprise.SelectBoxDataListFilterType",
              "properties": {"label": "", "defaultValue": "", "multiple": "", "size": "", "options": opts}}
+        if f.get("optionsBinder"):
+            t["properties"]["optionsBinder"] = f["optionsBinder"]
+        if f.get("controlField"):
+            t["properties"]["controlField"] = f["controlField"]
     elif ftype == "date_range":
         # a from/to date picker; formatJava is the STORED format it compares against.
         t = {"className": "org.joget.plugin.enterprise.DateRangeDataListFilterType",
@@ -103,20 +161,66 @@ def filter_entry(idx, f):
             "type": t, "filterParamName": param}
 
 
+def check_controls(dl_id, filters):
+    """0.11.0: a filter's `controlField` names an EARLIER select filter of the same list, by a
+    plain name. Otherwise the second step has no first: the platform's script finds the control
+    by its name, unquoted (jquery.dynamicoptions.js, `[name=...]`), so a name it cannot find - or
+    one with a dot, which breaks that lookup - leaves the value's drop-down offering nothing, and
+    nothing says why. Refused here instead."""
+    seen = {}
+    for f in filters:
+        ctl = f.get("controlField")
+        if ctl:
+            if f.get("type", "text") != "select":
+                raise ValueError(f"datalist '{dl_id}': filter '{f['id']}' has a controlField "
+                                 f"but is not a select filter")
+            if seen.get(ctl) != "select":
+                what = ("stands after it or is not in the list" if ctl not in seen
+                        else "is not a select filter")
+                raise ValueError(f"datalist '{dl_id}': filter '{f['id']}' names controlField "
+                                 f"'{ctl}', which {what} - the category is chosen first, in a "
+                                 f"select filter of the same list")
+            if not PLAIN_NAME.match(ctl):
+                raise ValueError(f"datalist '{dl_id}': filter '{f['id']}' names controlField "
+                                 f"'{ctl}', which is not a plain name (letters, digits, _) - the "
+                                 f"platform finds the control by its name unquoted")
+        seen[f["id"]] = f.get("type", "text")
+
+
 def row_action(idx, ra):
     """ra: {label, to (target menu customId), hrefColumn, hrefParam}. HyperlinkDataListAction."""
     href = ra["href"] if ra.get("href") else f"{UV}/{ra['to']}"
+    props = {"label": ra.get("label", "Open"), "href": href,
+             "hrefColumn": ra.get("hrefColumn", "id"),
+             "hrefParam": ra.get("hrefParam", ""), "target": ra.get("target", ""),
+             "confirmation": ""}
+    if ra.get("shownWhen"):
+        # METHOD-2026-10-09-05, item 8: shown only on a row whose column `shownWhen` holds a value
+        # — the platform's own rule on a row action (DataListDecorator.isRowActionVisible, Joget
+        # DX 8 and 9). `<>` '' and not `IS NOT EMPTY`, which the platform holds on every row (it
+        # reads a missing value as ''). Absent the key, the row action is as before.
+        props["rules"] = [{"join": "AND", "field": str(ra["shownWhen"]), "operator": "<>",
+                           "value": ""}]
     return {"className": "org.joget.apps.datalist.lib.HyperlinkDataListAction",
             "id": f"rowAction_{idx}", "label": ra.get("label", "Open"),
-            "properties": {"label": ra.get("label", "Open"), "href": href,
-                           "hrefColumn": ra.get("hrefColumn", "id"),
-                           "hrefParam": ra.get("hrefParam", ""), "target": ra.get("target", ""),
-                           "confirmation": ""}}
+            "properties": props}
 
 
-def envelope(dl_id, name, binder, cols, filters, row_actions, order_by="", order="ASC"):
+def list_action(idx, a):
+    """a: {label, href | to, hrefColumn, hrefParam}. An act on the rows a person chooses: the same
+    HyperlinkDataListAction among the datalist's own `actions`, which the platform shows as a
+    button over the list, with a box on each row to choose it; on the button it writes each chosen
+    row's value of hrefColumn, joined by ';', into hrefParam (wflow-core 9.0.7,
+    HyperlinkDataListAction.executeAction)."""
+    out = row_action(idx, a)
+    out["id"] = f"action_{idx}"
+    return out
+
+
+def envelope(dl_id, name, binder, cols, filters, row_actions, order_by="", order="ASC",
+             actions=None):
     return {"id": dl_id, "name": name, "binder": binder, "columns": cols,
-            "filters": filters, "actions": [], "rowActions": row_actions,
+            "filters": filters, "actions": list(actions or []), "rowActions": row_actions,
             "order": order, "orderBy": order_by, "useSession": "false",
             "showPageSizeSelector": "true", "pageSize": 0,
             "pageSizeSelectorOptions": "10,20,30,40,50,100",
@@ -151,9 +255,7 @@ def main():
                 elif fmt and fmt.get("type") == "status_badge":
                     cols.append(col(i, c["id"], c["label"], badge_format(fmt), action, render_html=True))
                 elif fmt and fmt.get("type") == "date":
-                    cols.append(col(i, c["id"], c["label"],
-                        {"className": "org.joget.plugin.enterprise.DateFormatter",
-                         "properties": {"dataFormat": fmt.get("format", "dd/MM/yyyy")}}, action))
+                    cols.append(col(i, c["id"], c["label"], date_format(fmt), action))
                 else:
                     cols.append(col(i, c["id"], c["label"], None, action, bool(c.get("renderHtml"))))
             if d["binder"].get("type") == "jdbc":  # sanctioned raw-SQL slot (P3)
@@ -173,11 +275,13 @@ def main():
                         {"joinFieldId": "id", "tableName": j["table"],
                          "fieldId": f"{j['table']}.{j['fk']}"}
                         for j in d["binder"]["joins"]]
+            check_controls(d["id"], d.get("filters", []))
             filters = [filter_entry(i, f) for i, f in enumerate(d.get("filters", []))]
             ras = [row_action(i, r) for i, r in enumerate(d.get("rowActions", []))]
+            las = [list_action(i, a) for i, a in enumerate(d.get("actions", []))]
             dl = envelope(d["id"], d["name"], binder, cols, filters, ras,
                           d.get("sort", {}).get("column", ""),
-                          "DESC" if d.get("sort", {}).get("desc") else "ASC")
+                          "DESC" if d.get("sort", {}).get("desc") else "ASC", actions=las)
             json.dump(dl, open(os.path.join(out_dir, d["id"] + ".json"), "w"), indent=2)
             count += 1
             print(f"  + {d['id']}.json (custom, {len(cols)} cols, {len(filters)} filters, {len(ras)} drill)")

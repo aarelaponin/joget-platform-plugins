@@ -19,7 +19,7 @@ import deploy_dx9 as d
 
 BASE = "http://localhost:8088/jw"
 UV = BASE + "/web/userview/gamsm/gamsmUv/_"
-USER, PW = "admin", os.environ.get("JDX8_PASSWORD", "admin")
+USER, PW = "admin", os.environ.get("JDX8_PASSWORD") or sys.exit("JDX8_PASSWORD is not set")
 JWA = "/tmp/APP_gamsm-1.jwa"
 ENTITY = "gamWidget"          # the guard's fixed entity key (schema forces snake_case upstream)
 s = requests.Session()

@@ -36,7 +36,8 @@ public class SmartSearchResources extends ExtDefaultPlugin implements PluginWebS
         "smart-search.js",
         "smart-search.css",
         "confidence-engine.js",
-        "recent-farmers.js"
+        "recent-farmers.js",
+        "record-search.js"
     };
 
     @Override

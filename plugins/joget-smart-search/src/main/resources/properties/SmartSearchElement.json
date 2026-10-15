@@ -173,5 +173,62 @@
                 "value": "true"
             }
         ]
+    },
+    {
+        "title": "Search a Record",
+        "properties": [
+            {
+                "name": "recordTable",
+                "label": "Record (table or view)",
+                "description": "The table or view searched, e.g. app_fd_person. When set, the element searches this record instead of farmers, and the settings on this page apply; leave it empty for the farmer search.",
+                "type": "textfield"
+            },
+            {
+                "name": "exactColumn",
+                "label": "Column searched exactly",
+                "description": "The column a value typed is looked for in exactly, such as an identification number, e.g. c_number. Its value is what the field stores, unless Value to Store names another column.",
+                "type": "textfield"
+            },
+            {
+                "name": "fragmentColumn",
+                "label": "Column searched by a fragment",
+                "description": "The column a part of what is typed is looked for in, case aside, when the exact column finds nothing, such as a name, e.g. c_name.",
+                "type": "textfield"
+            },
+            {
+                "name": "resultColumns",
+                "label": "Columns of the result",
+                "description": "The columns the result shows, in order, with the words at the head of each: enough to tell two of the same name apart.",
+                "type": "grid",
+                "columns": [
+                    {"key": "column", "label": "Column"},
+                    {"key": "label", "label": "Heading"}
+                ]
+            },
+            {
+                "name": "populate",
+                "label": "Fields the choice fills",
+                "description": "column:field pairs, comma-separated: each field of this form is filled from that column of the record chosen, e.g. c_name:holder_name,c_kind:holder_kind.",
+                "type": "textfield"
+            },
+            {
+                "name": "locks",
+                "label": "Fields locked",
+                "description": "The fields of this form, comma-separated, that are locked: only the choice fills them, and the person cannot type into them.",
+                "type": "textfield"
+            },
+            {
+                "name": "entityLabel",
+                "label": "What is searched, in a word",
+                "description": "The record in a word, e.g. person: the noun the search's words use (the farmer search's too).",
+                "type": "textfield"
+            },
+            {
+                "name": "notFound",
+                "label": "Words when nothing is found",
+                "description": "Shown when the search finds nothing; {searched} is replaced by what was typed.",
+                "type": "textarea"
+            }
+        ]
     }
 ]

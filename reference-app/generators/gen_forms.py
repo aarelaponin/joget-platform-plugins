@@ -281,6 +281,14 @@ def _element(f):
         # The searchable backend (taxpayer search API) is wired via apiEndpoint at deploy;
         # displayColumns/id-pattern come from the field config (dd facts, harvested).
         c = f.get("config", {}) if isinstance(f.get("config"), dict) else {}
+        # joget-smart-search 8.2.0: an element that names its record (`recordTable`, written
+        # through `props`) searches it through its own sealed service and reads no API
+        # definition, so the farmer search's API settings are written only where no record is
+        # named — an empty `apiKey` on every search read as a literal secret to the kit's lint
+        # (A003) and meant nothing to the record search (METHOD-2026-09-28-07, item 6)
+        api = {} if (f.get("props") or {}).get("recordTable") else {
+            "apiEndpoint": c.get("apiEndpoint", ""),
+            "apiId": c.get("apiId", ""), "apiKey": c.get("apiKey", "")}
         return {"className": "global.govstack.smartsearch.element.SmartSearchElement",
                 "properties": {
                     "id": fid, "label": label,
@@ -291,8 +299,7 @@ def _element(f):
                     "populate": c.get("populate", ""),
                     "displayMode": c.get("displayMode", "criteria"),
                     "displayColumns": c.get("displayColumns", ""),
-                    "apiEndpoint": c.get("apiEndpoint", ""),
-                    "apiId": c.get("apiId", ""), "apiKey": c.get("apiKey", ""),
+                    **api,
                     "nationalIdPattern": c.get("nationalIdPattern", ""),
                     "nationalIdMinLength": str(c.get("nationalIdMinLength", "")),
                     "autoSelectSingleResult": "true" if c.get("autoSelectSingleResult", True) else "",

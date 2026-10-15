@@ -26,10 +26,23 @@ Spec (YAML):
         - id: cat_ops
           label: "Operations"
           role: "group_officer"    # optional → GroupPermission allowedGroupIds; absent = open
+          hide: false              # optional (0.11.0): true → hidden from the menu (hide "yes");
+                                   # its menus still open by address, under the same permission
           menus:
             - {type: crud,     label: "Cases",  formId: frmCase, datalistId: list_frmCase}
             - {type: datalist, label: "Queue",  datalistId: list_queue}
             - {type: form,     label: "About",  formId: frmAbout}
+            # 0.11.0 (METHOD-2026-09-26-02, point 3), each optional: a form menu's `submit_label`
+            # (the words on its button) and `readonly` (written as the platform's "Yes"); a crud
+            # menu's `edit_readonly` (the record it opens is only read: no Save). Absent the two
+            # new keys, the emission is as before
+            - {type: form,     label: "Close the case", formId: actCaseClose,
+               submit_label: "Close the case"}
+            # METHOD-2026-10-09-05, item 7, optional on a crud or list menu: `chosen_actions:
+            # true` — the list declares an act on the rows a person chooses, so the menu draws the
+            # box on each row (checkboxPosition left, selectionType multiple) without a Delete.
+            - {type: crud,     label: "My cases", formId: frmWork, datalistId: lsMine,
+               delete: false, chosen_actions: true}
 
 Usage:  gen_userview.py <spec.yml> <out_dir>
 """
@@ -48,9 +61,18 @@ def uid(name):
     return str(uuid.uuid5(NS, SEED + name))
 
 
+def _consumes(m, delete_default):
+    """Whether the menu offers an action that takes the rows a person chooses: its Delete, or an
+    act on chosen rows that its list declares — the spec's `chosen_actions: true`, which the
+    kit's projector writes where the model's list carries `chosen_actions` (METHOD-2026-10-09-05,
+    item 7: the menu's own empty checkboxPosition overrode the list's, and the act's button stood
+    over a list with no box to choose a row by)."""
+    return bool(m.get("delete", delete_default)) or bool(m.get("chosen_actions"))
+
+
 def _selection(consumes):
     """The selection column (checkbox) belongs ONLY when a selection-consuming action
-    exists on the menu — today that is the delete action; a bulk action would extend it.
+    exists on the menu — the delete action, or an act on chosen rows (`_consumes`).
     Without one, the checkboxes are a dead surface the user cannot act on (A001; STA-01/05).
     Returns (checkboxPosition, selectionType). T3 (on jdx7): confirm empty strings suppress
     the column on CrudMenu/DataListMenu 9.0.7 — the design's proposed 'off' value."""
@@ -74,8 +96,8 @@ def crud_menu(m):
     # creation only); delete=False -> delete button off (e.g. case history retention).
     # Selection column rides on a consuming action (delete on, the default) — delete:false
     # with no bulk action gets no dead checkbox column (A001).
-    cbpos, seltype = _selection(bool(m.get("delete", True)))
-    return {"className": "org.joget.plugin.enterprise.CrudMenu", "properties": {
+    cbpos, seltype = _selection(_consumes(m, True))
+    props = {
         "id": uid("menu:" + dl + ":" + fid), "label": m["label"],
         "addFormId": fid if m.get("add", True) else "",
         "editFormId": m.get("editFormId") or fid,
@@ -83,14 +105,22 @@ def crud_menu(m):
         "add-afterSaved": "list", "edit-afterSaved": "list",
         "list-showDeleteButton": "yes" if m.get("delete", True) else "", "rowCount": "true",
         "buttonPosition": "bothLeft", "checkboxPosition": cbpos,
-        "selectionType": seltype, "iconIncluded": False}}
+        "selectionType": seltype, "iconIncluded": False}
+    if m.get("edit_readonly"):
+        # 0.11.0 (METHOD-2026-09-26-02, point 3): a record the menu opens only to be read. The
+        # platform's own edit-mode read-only (CrudMenu, Joget DX 9.0.7: "yes".equalsIgnoreCase(
+        # edit-readonly)) shows the form with no Save; its values read as labels, and no Edit
+        # button turns it back into a form to change. Absent the key, the emission is as before.
+        props.update({"edit-readonly": "yes", "edit-readonlyLabel": "true",
+                      "edit-showEditButton": ""})
+    return {"className": "org.joget.plugin.enterprise.CrudMenu", "properties": props}
 
 
 def datalist_menu(m):
     dl = m["datalistId"]
     # a read-list menu carries no delete by default; selection UI only if a bulk action
     # (or an explicit delete) is declared, else the checkbox column is dead (A001).
-    cbpos, seltype = _selection(bool(m.get("delete", False)))
+    cbpos, seltype = _selection(_consumes(m, False))
     return {"className": "org.joget.apps.userview.lib.DataListMenu", "properties": {
         "id": uid("menu:dl:" + dl), "customId": dl, "label": m["label"], "datalistId": dl,
         "rowCount": "", "buttonPosition": "bothLeft", "checkboxPosition": cbpos,
@@ -111,10 +141,18 @@ def form_menu(m):
     """
     fid = m["formId"]
     ro = bool(m.get("readonly", False))
-    return {"className": "org.joget.apps.userview.lib.FormMenu", "properties": {
+    props = {
         "id": uid("menu:form:" + fid), "customId": fid, "label": m["label"],
-        "formId": fid, "readonly": "true" if ro else "", "readonlyLabel": "",
-        "messageShowAfterComplete": "", "iconIncluded": False}}
+        # 0.11.0 (METHOD-2026-09-26-02, point 3): FormMenu reads its read-only checkbox as "Yes"
+        # (Joget DX 9.0.7, FormMenu: "Yes".equalsIgnoreCase(readonly)); the "true" written here
+        # since 0.9.7 was read as not read-only, and a form placed only for reading ended in Save
+        "formId": fid, "readonly": "Yes" if ro else "", "readonlyLabel": "",
+        "messageShowAfterComplete": "", "iconIncluded": False}
+    if m.get("submit_label"):
+        # 0.11.0: the words on the form's button (FormMenu `submitButtonLabel`; the platform
+        # writes its own "Save" when it is empty). Absent the key, the emission is as before.
+        props["submitButtonLabel"] = str(m["submit_label"])
+    return {"className": "org.joget.apps.userview.lib.FormMenu", "properties": props}
 
 
 def inbox_menu(m):
@@ -171,6 +209,15 @@ def dashboard_menus(m, dashboards_dir):
     return charts
 
 
+def _hidden(cat):
+    """0.11.0: the category's `hide` as the spec gives it — true (or "yes"/"true") hides it.
+    Up to 0.10.0 `hide` was written empty whatever the spec said, so a category the model hides
+    (the kit's categories of the forms that belong to a record, among them) was shown in the
+    menu, where such a form opens on nothing (joget-spec-kit totality T112)."""
+    v = cat.get("hide")
+    return v is True or str(v).strip().lower() in ("yes", "true")
+
+
 def category(cat, reports_dir=None, dashboards_dir=None):
     menus = []
     for m in cat["menus"]:
@@ -184,7 +231,8 @@ def category(cat, reports_dir=None, dashboards_dir=None):
         menus.append(builder(m))
     return {"className": "org.joget.apps.userview.model.UserviewCategory",
             "menus": menus, "properties": {
-                "hide": "", "permission": permission(cat.get("role")), "comment": "",
+                "hide": "yes" if _hidden(cat) else "",
+                "permission": permission(cat.get("role")), "comment": "",
                 "id": "category-" + uid("category:" + cat["id"]),
                 "label": cat["label"], "iconIncluded": ""}}
 

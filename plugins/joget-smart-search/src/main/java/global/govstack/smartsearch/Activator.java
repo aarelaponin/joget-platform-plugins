@@ -1,6 +1,7 @@
 package global.govstack.smartsearch;
 
 import global.govstack.smartsearch.api.SmartSearchApiPlugin;
+import global.govstack.smartsearch.element.RecordSearchWebService;
 import global.govstack.smartsearch.element.SmartSearchElement;
 import global.govstack.smartsearch.element.SmartSearchResources;
 import org.osgi.framework.BundleActivator;
@@ -44,6 +45,13 @@ public class Activator implements BundleActivator {
         registrationList.add(context.registerService(
             SmartSearchApiPlugin.class.getName(),
             new SmartSearchApiPlugin(),
+            null
+        ));
+
+        // Register the service the element's page asks when it searches a record its properties name
+        registrationList.add(context.registerService(
+            RecordSearchWebService.class.getName(),
+            new RecordSearchWebService(),
             null
         ));
     }

@@ -107,7 +107,7 @@ cp "$CMBB" "$AP/"
 ROOT=/Users/aarelaponin/IdeaProjects/rsr/mt-tca-prj/10-workstreams/itcas-programme/03_debt_management
 cd "$ROOT"
 RESTART=1 scripts/run_regression.sh          # expect: GREEN=24  FAILS=none
-export JDX9_PASSWORD=admin
+. ~/.joget/jdx9.env                          # sets JDX9_PASSWORD; the password is kept in that file, not here
 PY=/Users/aarelaponin/PycharmProjects/dev/joget-deployment-toolkit/.venv/bin/python
 "$PY" $(find cmbb dmbb -name run_t30.py | head -1)   # 8/8
 "$PY" $(find cmbb dmbb -name run_t31.py | head -1)   # 3/3
@@ -115,7 +115,7 @@ PY=/Users/aarelaponin/PycharmProjects/dev/joget-deployment-toolkit/.venv/bin/pyt
 
 Environment facts:
 - **jdx9** (debt app, Postgres `jwdb_mtca`): install `/Users/aarelaponin/joget-enterprise-linux-9.0.7-9`,
-  http://localhost:8089/jw, admin/admin. Restart = kill Bootstrap PID then `./tomcat.sh start`
+  http://localhost:8089/jw, password in `~/.joget/jdx9.env`. Restart = kill Bootstrap PID then `./tomcat.sh start`
   (the sweep does this for you with RESTART=1). catalina.out is under `apache-tomcat-11.0.21/logs/`.
 - **jdx8** (GAM, Postgres `jwdb_gam`): install `/Users/aarelaponin/joget-enterprise-linux-9.0.7`,
   http://localhost:8088/jw — only needed if revisiting the GAM reuse proof.

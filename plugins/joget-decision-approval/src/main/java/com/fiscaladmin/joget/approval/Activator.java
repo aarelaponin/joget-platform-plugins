@@ -29,6 +29,9 @@ public class Activator implements BundleActivator {
                 AuthorityMatrixEngine.class.getName(), new AuthorityMatrixEngine(), null));
         registrationList.add(context.registerService(
                 ApprovalInboxBinder.class.getName(), new ApprovalInboxBinder(), null));
+        // 1.2.0 (METHOD-2026-10-09-05, item 6): the routing move's approval level by amount
+        registrationList.add(context.registerService(
+                ApprovalRouteEngine.class.getName(), new ApprovalRouteEngine(), null));
     }
 
     public void stop(BundleContext context) {

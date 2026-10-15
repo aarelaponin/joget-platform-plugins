@@ -18,7 +18,35 @@
 # tier:   G = generic-Joget (any app) · P = pattern-reusable (genericised then shipped)
 # status: active | planned | deprecated      ships: code | pattern
 
-registry_version: 0.10.0  # 0.10.0: NO PROCESS-WIDE AIM IN A SHARED BUNDLE (breaking).
+registry_version: 0.11.0  # 0.11.0: THE INTERACTION PATTERNS REACH THE BUILD (METHOD-2026-09-25-11,
+                          #        25 Sep 2026). With the 0.10.0 generators, on a running application
+                          #        a category the spec hides was shown, a list's filter over a list
+                          #        of values could offer only the values written into it at the
+                          #        build, and a list's date column was not shown day first.
+                          #        Generators only; no plugin, no Java.
+                          #        gen_userview: a category's `hide` is written "yes" when the spec
+                          #        hides it (UserviewCategory's own checkbox value); it was written
+                          #        empty whatever the spec said (the kit's totality T112 named each).
+                          #        gen_datalists, select filter: `optionsBinder` places the platform's
+                          #        own options binder on SelectBoxDataListFilterType, whose rows then
+                          #        replace the inline options when the list is shown; `controlField`
+                          #        names an EARLIER select filter of the same list, so a divided list
+                          #        is chosen in two steps, category then value (the platform keeps the
+                          #        values whose grouping holds the category chosen). A control that is
+                          #        not an earlier select filter, or not a plain name, is REFUSED: the
+                          #        platform's script finds it by its name unquoted, and would leave the
+                          #        value's drop-down empty with no word why.
+                          #        gen_datalists, date column: the spec's `format` (the day-first
+                          #        pattern) is DateFormatter's displayFormat; dataFormat is the format
+                          #        the value is stored in (the spec's `dataFormat`, else yyyy-MM-dd, or
+                          #        yyyy-MM-dd HH:mm:ss for a pattern that shows the time). It had been
+                          #        the pattern in dataFormat and displayFormat empty, so a stored
+                          #        2026-09-25 failed to parse and the column showed the stored value.
+                          #        A spec using none of the new filter keys emits exactly the 0.10.0
+                          #        filter (asserted literally); the date column and a hidden category
+                          #        change the output by design. Tests: test_gen_userview.py,
+                          #        test_gen_datalists_interaction.py.
+                          # 0.10.0: NO PROCESS-WIDE AIM IN A SHARED BUNDLE (breaking).
                           #        joget-event-chain is a LIBRARY bundle: two consumers in one
                           #        JVM share one class, so CaseEventWriter's static default
                           #        event form id was one field for the whole process. When
@@ -564,13 +592,65 @@ plugins:
                 domain phases (open/pre-close/close) + the case-envelope plugin stay in the consumer
     source_of_truth: this repo
 
+  - id: joget-transition-guard
+    module: plugins/joget-transition-guard
+    artifact: com.fiscaladmin.joget:joget-transition-guard
+    version: 1.5.0
+    category: foundation
+    tier: P
+    status: active
+    ships: code
+    license: proprietary            # FiscalAdmin OÜ
+    dx_compat: ["9.x"]              # run on DX 9 only so far
+    java_release: 11
+    depends_on: [joget-event-chain, joget-status-manager]
+    summary: >
+      Config-driven lifecycle transition guard, wired as a form post-submission processor.
+      On save it reads the move chosen, looks it up in its `transitions` config, drives
+      StatusManager.apply (checked against the mmEntityTransition seed), stamps the move's
+      set-now fields and saves once; an illegal move is recorded, not applied. Two modes:
+      the form saved IS the record (the engine surface), or, with `targetField` set, the
+      form saved is a trigger form (an act) naming the record it moves, which the guard loads
+      through `targetForm`, moves, copies `copyFields` onto, saves, and reports on the act.
+      With `checkRoles` set, a move whose mmEntityTransition row names roles the actor holds
+      none of (directory group ids) is refused and recorded as refused. A set-now field marked
+      `@date` is written as the day alone, and an applied move writes the rows its `audit` (the
+      history entry) and `notify` (the alert) lines name (1.3.0). A guard is terms joined by
+      `and`; a term `none(<entity> where <condition>)` counts another record's rows, read through
+      the form and table `records` gives, with `this` standing for the record's `thisKey`, and
+      refuses the move where any is found or the count cannot be made; a line of `related` sets
+      columns on a related record's rows after an applied move (1.4.0). A line of `refused`
+      writes a history entry (`audit>`) or an alert (`notify>`) after a refused move, never after
+      an applied one; a refused move still writes no line of `audit` or `notify` (1.5.0). Every
+      property is generated by the kit's projectors from the model (tools/project_forms.py,
+      tools/acts.py).
+    registers:
+      - com.fiscaladmin.joget.transitionguard.TransitionGuard
+    contract:
+      plugin_class: com.fiscaladmin.joget.transitionguard.TransitionGuard
+      config_keys: [entity, tableName, statusField, actionField, transitions, targetField,
+                    targetKeyColumn, targetForm, actForm, actTable, checkRoles, reasonField,
+                    copyFields, audit, notify, records, thisKey, related, refused]
+      transitions_format: "action>toState>nowField1,dayField@date>guardExpr>processId | ..."
+    provenance: >
+      the kit's lifecycle realisation (ADR-066 engine surface); target mode and checkRoles added
+      by METHOD-2026-09-25-04 items 3 and 5 (1.2.0; MoveRolesTest, TransitionGuardTest); the day
+      of a move, `audit` and `notify` by METHOD-2026-10-08-07 items 1 to 3 (1.3.0; MoveRowsTest);
+      the guard over another record's rows (`records`, `thisKey`) and `related` by
+      METHOD-2026-10-08-11 items 4 and 5 (1.4.0; OtherRecordsTest); `refused`, what a refused
+      move writes, by METHOD-2026-10-12-14 under the owner's ruling of 11 October 2026 on round 1,
+      card 4 (1.5.0).
+      Entered here 25 Sep 2026 (METHOD-2026-09-25-01 item 23) under registry_version 0.11.0:
+      the entry changes no generator, so the registry version does not move.
+    source_of_truth: this repo
+
   - id: joget-decision-approval
     module: plugins/joget-decision-approval
     artifact: com.fiscaladmin.joget:joget-decision-approval
-    version: 1.1.0
+    version: 1.2.0
     category: foundation
     tier: P
-    status: active            # 3a+3b: full service core shipped; Joget-plugin engines/binder pending (3c)
+    status: active            # service core (3a+3b) and its Joget plugins (3c, 165e2d3, 4 Jul 2026) shipped; ApprovalRouteEngine 1.2.0
     ships: code
     license: proprietary            # FiscalAdmin OÜ
     dx_compat: ["8.1", "9.x"]
@@ -583,24 +663,40 @@ plugins:
       matrix routing SINGLE/CHAIN/QUORUM, rank gate, four-eyes SoD, COI + auto-COI, escalation/timeout
       sweep, delegation binding, all audited to the event chain and guarded by StatusManager),
       DecisionService, AuthorityResolver (directory-resolved rank), MatrixValidator, ApprovalInbox,
-      and a Rows helper. The Joget-plugin wrappers (gate/sweep/delegate/authority-matrix engines +
-      inbox binder + Activator/descriptors) are the next increment (see DAS-EXTRACTION-PLAN.md §3c).
+      and a Rows helper; and its Joget plugins, registered by the bundle's Activator: the gate,
+      sweep and delegate engines, the authority-matrix validator and the inbox binder (since
+      commit 165e2d3, 4 July 2026). ApprovalRouteEngine (1.2.0) is the approval level by amount:
+      a form post-processor in the transition guard's slot that runs the guard (by its class name,
+      `guardClass`, through the plugin manager; nothing of the guard's is imported) and then, where
+      the guard applied a routing move named in `routes` (`move>toState>amountAttr>levelAttr>
+      actionType`), writes on the record the level of the mmAuthority band its amount falls in
+      (ApprovalService.resolveRoute). The kit projects both the matrix and the engine from a
+      process's `approval.bands` (tools/project_workflow.py, tools/project_forms.py).
     registers:
       - com.fiscaladmin.joget.approval.ApprovalGateEngine
       - com.fiscaladmin.joget.approval.ApprovalSweepEngine
       - com.fiscaladmin.joget.approval.ApprovalDelegateEngine
       - com.fiscaladmin.joget.approval.AuthorityMatrixEngine
       - com.fiscaladmin.joget.approval.ApprovalInboxBinder
+      - com.fiscaladmin.joget.approval.ApprovalRouteEngine
     contract:
       exports_package: com.fiscaladmin.joget.approval
       classes: [DecisionEffect, DecisionEffects, ApprovalService, DecisionService, AuthorityResolver,
                 MatrixValidator, ApprovalInbox, Rows]
       plugins: [ApprovalGateEngine, ApprovalSweepEngine, ApprovalDelegateEngine,
-                AuthorityMatrixEngine, ApprovalInboxBinder]
+                AuthorityMatrixEngine, ApprovalInboxBinder, ApprovalRouteEngine]
+      # ApprovalRouteEngine's own keys; every other key it is given is the transition guard's,
+      # passed to the guard unchanged (joget-transition-guard's config_keys)
+      config_keys: [guardClass, routes]
       triggers: [cmApprovalDecision, cmApprovalSweep, cmApprovalDelegate, cmAuthorityCheck]
       spi: "consumer registers DecisionEffects.register(actionType, effect) at Activator start-up"
       carriers: [cmApproval, cmDecision, mmAuthority, mmCoi, mmRoleLevel, cmCase]
-    provenance: extracted + genericised from a collection-management building block (Phase 2, item 4)
+    provenance: >
+      extracted + genericised from a collection-management building block (Phase 2, item 4); the
+      Joget plugins by commit 165e2d3 (1.1.0); ApprovalRouteEngine by METHOD-2026-10-09-05 item 6
+      (1.2.0; ApprovalRouteEngineTest). registry_version stays 0.11.0: the same round gave
+      gen_userview (`chosen_actions`) and gen_datalists (`shownWhen`) one optional key each,
+      absent which they emit as before (the kit's decision page of 9 October 2026, card 6).
     source_of_truth: this repo
 
   - id: joget-case-ops
@@ -692,7 +788,7 @@ plugins:
   - id: joget-smart-search
     module: plugins/joget-smart-search
     artifact: global.govstack:joget-smart-search
-    version: 8.1-SNAPSHOT
+    version: 8.2.0                  # 8.1-SNAPSHOT -> 8.2.0 (minor: optional keys added; METHOD-2026-09-28-01)
     category: foundation
     govstack_bb: [Digital Registries]
     tier: P
@@ -707,14 +803,24 @@ plugins:
       subject (farmer / taxpayer / ...) and the search criteria are parameters. Backed by a
       config-driven REST search (RegistrySearchService) mapping any table columns to the
       element result contract. Farmer path unchanged under default config.
+      Since 8.2.0 the element also searches a record its own properties name (`recordTable`, a
+      table or view): exactly by `exactColumn`, else by a fragment of `fragmentColumn`; shows
+      `resultColumns`; fills the fields `populate` names from the record chosen and locks the
+      fields `locks` names; says `notFound` when nothing is found. Its page asks
+      RecordSearchWebService with the settings the server sealed when it drew the form, so no API
+      definition, API id or key is needed. The kit writes every one of them from the model
+      (joget-spec-kit tools/project_forms.py, record_search).
     registers:
       - global.govstack.smartsearch.element.SmartSearchElement
       - global.govstack.smartsearch.api.SmartSearchApiPlugin
+      - global.govstack.smartsearch.element.RecordSearchWebService
     contract:
       element_class: global.govstack.smartsearch.element.SmartSearchElement
-      # form-element knobs the generators target (gen_forms smart_search emit):
+      # form-element knobs the generators target (gen_forms smart_search emit; the record search's
+      # through the field's props):
       config_keys: [entityLabel, simpleSearch, displayColumns, storeValue, populate, idField,
-                    apiEndpoint, apiId, apiKey, nationalIdPattern, nationalIdMinLength]
+                    apiEndpoint, apiId, apiKey, nationalIdPattern, nationalIdMinLength,
+                    recordTable, exactColumn, fragmentColumn, resultColumns, locks, notFound]
       # populate: "srcField:formFieldId,..." — auto-fills sibling form fields on select
       #   (client-side, in selectFarmer->populateFields; the PRE-01/PRE-04 fix). WP-7 adds value-shapes.
       # generic-registry backend knobs (SmartSearchApiPlugin "Generic Registry" section):
@@ -727,10 +833,17 @@ plugins:
         scale, editable) auto-projects to a smart_search element in
         joget-spec-kit/tools/project_forms.py. The spec sets the knobs above under the field
         config; entityLabel sets the subject, simpleSearch=true drops location criteria so
-        name/id alone can search.
+        name/id alone can search. Since 8.2.0 the projector also writes the record search's
+        properties from the model: the record the reference names, its key (searched exactly
+        and stored), the attribute the reference shows (searched by a fragment), the columns of
+        the list config.search_list names, config.populate's fills and the fields they lock, and
+        config.not_found's words.
     provenance: >
       promoted from lst-frm-prj/plugins (project-neutral: pom renamed, dev cruft pruned; Lesotho
       district defaults remain behind simpleSearch=false, tracked as Issue #20). Proven live returning taxpayers on jdx7.
+      The record search (8.2.0, METHOD-2026-09-28-01): RecordSearchSettings, RecordSearch,
+      RecordSearchWebService, RecordSearchElement.ftl and record-search.js, with the plugin's
+      first tests (mvn test; node --test src/test/js/record-search.test.js). Built, not deployed.
     source_of_truth: this repo
 
 # ---------------------------------------------------------------------------

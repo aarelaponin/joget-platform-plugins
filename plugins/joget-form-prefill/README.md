@@ -14,8 +14,9 @@ It replaces two architecturally weak patterns: URL-parameter prefill (`?x=` → 
 On load, if the form is opening a **new** record and prefill is enabled, the binder:
 
 1. resolves a **key** from an ordered list of sources (first non-empty wins);
-2. looks up the source record via **`FormDataDao`** — `find` for the primary record, optional
-   `load` for related records (**no raw SQL**);
+2. looks up the source record via **`FormDataDao`** — `find` for the primary record (a match on
+   `id`, the row's own key, reads that row with `load`), optional `load` for related records
+   (**no raw SQL**);
 3. applies post-find **filters** (eq/ne), orders (numeric or lexical, descending), picks the first;
 4. **maps** fields onto this form (from the key, a primary field, an `alias.field` of a related
    record, or constants) and returns a synthetic row.
@@ -26,7 +27,7 @@ Any failure falls back to the default load; it never breaks the render.
 ## Build
 
 ```bash
-mvn -q -pl plugins/joget-form-prefill -am clean install   # 12 unit tests, JAR to target/ + ~/.m2
+mvn -q -pl plugins/joget-form-prefill -am clean install   # 17 unit tests, JAR to target/ + ~/.m2
 ```
 
 ## Deploy
@@ -35,7 +36,7 @@ Copy the JAR into the instance's plugin folder (hot-reloads in ~10s), or upload 
 **Manage Plugins**:
 
 ```bash
-cp target/joget-form-prefill-1.0.0.jar <joget>/wflow/app_plugins/
+cp target/joget-form-prefill-1.0.1.jar <joget>/wflow/app_plugins/   # and remove the older joget-form-prefill-*.jar
 ```
 
 It registers one plugin: `com.fiscaladmin.joget.formprefill.FormPrefillLoadBinder`.
@@ -94,9 +95,15 @@ launch-with-context and master-data lookups on both DX 8.x and DX 9.x).
 
 ## Tests
 
-`mvn test` runs 12 pure unit tests over `PrefillResolver` + `PrefillConfig` with an in-memory
+`mvn test` runs 17 pure unit tests over `PrefillResolver` + `PrefillConfig` with an in-memory
 `DataAccess` fake — key fallback, no-key, no-match, eq/ne filters, numeric pick-largest,
-alias mapping, constants, bad-field rejection, and grid parsing. No Joget runtime needed.
+alias mapping, constants, bad-field rejection, and grid parsing — and over the `FormDataDao`
+adapter (`DaoAccessTest`, `FormDataDao` faked with Mockito): a match on `id` reads the row by
+its key (found, not found, blank key), any other match field is read through `customProperties`.
+No Joget runtime needed.
+
+1.0.1 — a match on `id` no longer queries `customProperties.id` (which cannot be resolved, so the
+form opened empty); it reads the row by its key.
 
 ## Layout
 

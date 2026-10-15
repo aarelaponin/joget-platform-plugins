@@ -13,7 +13,7 @@
 
     <groupId>global.govstack</groupId>
     <artifactId>joget-smart-search</artifactId>
-    <version>8.1-SNAPSHOT</version>
+    <version>8.2.0</version>
     <packaging>bundle</packaging>
     <name>Joget Smart Search Plugin</name>
     <description>Partial-knowledge search form element over any Joget registry table, driven by
@@ -119,6 +119,19 @@
             <artifactId>commons-text</artifactId>
             <version>1.11.0</version>
             <scope>compile</scope>
+        </dependency>
+
+        <!-- Testing: the element's own tests (the record search searched over an in-memory database) -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <version>2.2.224</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>

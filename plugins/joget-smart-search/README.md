@@ -16,6 +16,33 @@ Smart Farmer Search form element with progressive criteria builder, fuzzy matchi
 - **Offline Support**: Statistics caching, works offline with recent farmers
 - **Connection Status**: Visual indicator for online/offline state
 
+## Searching a record the properties name (8.2.0)
+
+The same element searches any record, not only farmers, when its property `recordTable` names a
+table or a view. Everything it does is set from its own properties, on its properties page under
+*Search a Record*, and nothing of a domain is written into its code:
+
+| Property | What it sets |
+|---|---|
+| `recordTable` | the table or view searched, e.g. `app_fd_person`; empty means the farmer search, unchanged |
+| `exactColumn` | the column what is typed is looked for in exactly (a number), first |
+| `fragmentColumn` | the column a fragment of what is typed is looked for in, case aside (a name), when the exact search finds nothing |
+| `resultColumns` | the result's columns, in order, each with its heading: enough to tell two of the same name apart |
+| `storeValue` | the column whose value the field stores; the exact column when empty |
+| `populate` | `column:field` pairs: the form's fields a choice fills from the record chosen |
+| `locks` | the form's fields that are locked: read-only to the keyboard, out of the tab order, closed to the pointer |
+| `entityLabel` | the record in a word, used in "Choose the …" when a required choice is not made |
+| `notFound` | the words shown when nothing is found; `{searched}` is replaced by what was typed; the officer stays on the search |
+
+The page asks `RecordSearchWebService`
+(`/jw/web/json/plugin/global.govstack.smartsearch.element.RecordSearchWebService/service`) with the
+settings this server sealed when it drew the form (encrypted, and bound to a nonce the platform
+issued), so no API definition, API identifier or key is needed, and a page cannot make the service
+search a table or column of its own choosing. Table and column names must be plain names; what is
+typed is only ever bound as a parameter, and a `%` or `_` typed is searched for as itself. A result
+shows at most 20 rows and says when there are more. The tests: `mvn test` (the Java, over an
+in-memory database) and `node --test src/test/js/record-search.test.js` (the page's script).
+
 ## Project Structure
 
 ```

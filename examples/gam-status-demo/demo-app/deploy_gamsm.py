@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Self-contained deploy of the gamsm app to jdx8 (GAM, port 8088).
-Login (admin/admin) -> CSRF -> delete any prior gamsm -> import -> publish.
+Login (password from $JDX8_PASSWORD) -> CSRF -> delete any prior gamsm -> import -> publish.
 No toolkit dependency; no DB password needed."""
-import sys, requests
+import os, sys, requests
 
 BASE = "http://localhost:8088/jw"
-USER, PW = "admin", "admin"
+USER, PW = "admin", os.environ.get("JDX8_PASSWORD") or sys.exit("JDX8_PASSWORD is not set")
 JWA = "/tmp/APP_gamsm-1.jwa"
 s = requests.Session()
 

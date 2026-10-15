@@ -7,7 +7,11 @@ import org.joget.apps.form.model.FormBuilderPaletteElement;
 import org.joget.apps.form.model.FormData;
 import org.joget.apps.form.service.FormUtil;
 import org.joget.commons.util.LogUtil;
+import global.govstack.smartsearch.record.Json;
+import global.govstack.smartsearch.record.RecordSearchSettings;
 
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -21,6 +25,13 @@ import java.util.Map;
  * - Recent farmers quick-access (localStorage)
  *
  * Phase 3: Basic UI Implementation
+ *
+ * The search of a record the properties name (8.2.0): where the property recordTable names a table
+ * or a view, the element searches that record instead — exactly by exactColumn, or by a fragment of
+ * fragmentColumn — shows resultColumns, fills the form's fields populate names from the record
+ * chosen and locks the fields locks names, and says notFound when nothing is found. Everything is
+ * read from the element's properties (RecordSearchSettings); the page asks RecordSearchWebService.
+ * An element that names no record is the farmer search, unchanged.
  */
 public class SmartSearchElement extends Element implements FormBuilderPaletteElement {
 
@@ -89,6 +100,13 @@ public class SmartSearchElement extends Element implements FormBuilderPaletteEle
 
     @Override
     public String renderTemplate(FormData formData, Map dataModel) {
+        // An element whose properties name a record searches that record; one that names none is
+        // the farmer search below, unchanged.
+        RecordSearchSettings record = RecordSearchSettings.from(this::getProperty);
+        if (record.isRecordMode()) {
+            return renderRecordSearch(formData, dataModel, record);
+        }
+
         String template = "SmartSearchElement.ftl";
 
         // Get properties with defaults
@@ -267,6 +285,55 @@ public class SmartSearchElement extends Element implements FormBuilderPaletteEle
         return html;
     }
 
+    /**
+     * The search of the record the element's properties name (RecordSearchSettings): its field, its
+     * result's columns, the fields a choice fills and locks, and the settings sealed for the page to
+     * send back to RecordSearchWebService. Settings that cannot search are named on the form.
+     */
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private String renderRecordSearch(FormData formData, Map dataModel, RecordSearchSettings record) {
+        String fieldId = getPropertyString("id");
+        String value = FormUtil.getElementPropertyValue(this, formData);
+        if (value == null) {
+            value = "";
+        }
+        String elementId = "rss_" + fieldId + "_" + System.currentTimeMillis();
+        String serviceUrl = "/jw/web/json/plugin/" + RecordSearchWebService.class.getName() + "/service";
+        String resourceBase = "/jw/web/json/plugin/" + SmartSearchResources.class.getName() + "/service?file=";
+        List<String> problems = record.problems();
+
+        dataModel.put("recordMode", Boolean.TRUE);
+        dataModel.put("fieldId", fieldId);
+        dataModel.put("value", value);
+        dataModel.put("elementId", elementId);
+        dataModel.put("resourceBase", resourceBase);
+        dataModel.put("serviceUrl", serviceUrl);
+        dataModel.put("entityLabel", record.entityLabel());
+        dataModel.put("columns", record.columnLabels());
+        dataModel.put("fills", record.fillFields());
+        dataModel.put("locks", record.locks());
+        dataModel.put("problems", problems);
+
+        Map<String, Object> config = new LinkedHashMap<>();
+        config.put("elementId", elementId);
+        config.put("serviceUrl", serviceUrl);
+        config.put("entityLabel", record.entityLabel());
+        config.put("columns", record.columnLabels());
+        config.put("fills", record.fillFields());
+        config.put("locks", record.locks());
+        config.put("problems", problems);
+        dataModel.put("config", Json.of(config));
+
+        if (problems.isEmpty()) {
+            String[] sealed = RecordSearchWebService.seal(record.toText());
+            dataModel.put("token", sealed[0]);
+            dataModel.put("nonce", sealed[1]);
+        } else {
+            LogUtil.warn(CLASS_NAME, "The record search " + fieldId + " cannot search: " + problems);
+        }
+        return FormUtil.generateElementHtml(this, formData, "RecordSearchElement.ftl", dataModel);
+    }
+
     @Override
     public FormData formatDataForValidation(FormData formData) {
         // No special validation formatting needed
@@ -280,7 +347,10 @@ public class SmartSearchElement extends Element implements FormBuilderPaletteEle
         if ("true".equalsIgnoreCase(required)) {
             String value = FormUtil.getElementPropertyValue(this, formData);
             if (value == null || value.trim().isEmpty()) {
-                formData.addFormError(getPropertyString("id"), "Please select a farmer");
+                RecordSearchSettings record = RecordSearchSettings.from(this::getProperty);
+                formData.addFormError(getPropertyString("id"), record.isRecordMode()
+                        ? "Choose the " + record.entityLabel() + "."
+                        : "Please select a farmer");
                 return false;
             }
         }

@@ -35,7 +35,7 @@ public class FormPrefillLoadBinder extends WorkflowFormBinder {
     public String getName() { return "Form Prefill Load Binder"; }
 
     @Override
-    public String getVersion() { return "1.0.0"; }
+    public String getVersion() { return "1.0.1"; }
 
     @Override
     public String getLabel() { return "Form Prefill Load Binder"; }
@@ -133,9 +133,21 @@ public class FormPrefillLoadBinder extends WorkflowFormBinder {
         private final FormDataDao dao;
         DaoAccess(FormDataDao dao) { this.dao = dao; }
 
+        /** The match field that names the row's own key. */
+        static final String ID_FIELD = "id";
+
         @Override
         public List<Map<String, String>> findByField(String formId, String table, String matchField, String key) {
             List<Map<String, String>> out = new ArrayList<>();
+            if (ID_FIELD.equals(matchField)) {
+                // A row's id is its key, not a custom property: "customProperties.id" cannot be resolved.
+                // Read the row by its key, as loadById does — that one row, or none.
+                Map<String, String> row = loadById(formId, table, key);
+                if (row != null) {
+                    out.add(row);
+                }
+                return out;
+            }
             FormRowSet rs = dao.find(formId, table,
                     "WHERE e.customProperties." + matchField + " = ?1",
                     new Object[]{key}, null, Boolean.FALSE, 0, FETCH_LIMIT);

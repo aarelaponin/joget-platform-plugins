@@ -7,11 +7,11 @@ and an ILLEGAL gamMove -> read back gamWidget.status, gamMove.result and the
 gamEvent chain. All data goes through the Joget form path, so the GamMoveGuard
 post-processor (which calls the PLATFORM StatusManager) actually fires.
 """
-import re, sys, time, requests
+import os, re, sys, time, requests
 
 BASE = "http://localhost:8088/jw"
 UV = BASE + "/web/userview/gamsm/gamsmUv/_"
-USER, PW = "admin", "admin"
+USER, PW = "admin", os.environ.get("JDX8_PASSWORD") or sys.exit("JDX8_PASSWORD is not set")
 JWA = "/tmp/APP_gamsm-1.jwa"
 s = requests.Session()
 
