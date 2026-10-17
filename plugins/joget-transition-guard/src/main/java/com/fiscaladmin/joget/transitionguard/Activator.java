@@ -18,6 +18,9 @@ public class Activator implements BundleActivator {
         registrationList = new ArrayList<ServiceRegistration>();
         registrationList.add(context.registerService(
                 TransitionGuard.class.getName(), new TransitionGuard(), null));
+        // 1.6.0 (METHOD-2026-10-16-01, construct 1): a refusal's own words, before the act is saved
+        registrationList.add(context.registerService(
+                MoveRefusal.class.getName(), new MoveRefusal(), null));
     }
 
     public void stop(BundleContext context) {

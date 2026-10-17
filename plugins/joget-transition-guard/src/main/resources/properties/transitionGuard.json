@@ -12,6 +12,7 @@
     { "name": "audit", "label": "History entries written after an applied move, one line each (action>form>table>column=source,column='word',...)", "type": "textarea" },
     { "name": "notify", "label": "Alerts written after an applied move, one line each (action>role:<id> or attr:<id>>template>form>table>column=source,...)", "type": "textarea" },
     { "name": "refused", "label": "History entries and alerts written after a refused move, one line each (audit> followed by a history entry's line, or notify> followed by an alert's line)", "type": "textarea" },
+    { "name": "withheld", "label": "Moves withheld from the person the record names, one line each (action>attribute); a now field marked @actor is written with who made the move", "type": "textarea" },
     { "name": "targetField", "label": "Target mode: the act's field naming the record moved (empty: the saved row is the record)", "type": "textfield" },
     { "name": "targetKeyColumn", "label": "Target mode: the record's column that field matches (empty: its row id)", "type": "textfield" },
     { "name": "targetForm", "label": "Target mode: the form the record is read through", "type": "textfield" },

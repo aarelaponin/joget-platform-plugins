@@ -81,7 +81,16 @@ import com.fiscaladmin.joget.statusmanager.StatusManager;
  * a source is {@code moment}, {@code today} or a fixed {@code 'word'}. Fail-soft, as the rows
  * written beside a move are. An expression with no {@code none(...)} term is read as before.
  *
- * transitions format: {@code action>toState>nowField1,dayField@date>guardExpr>processId | ...}
+ * <p><b>A move withheld from its requester, and the name a move writes</b> (1.6.0;
+ * METHOD-2026-10-16-01, construct 2). A line of {@code withheld} ({@code action>attribute}) names
+ * the record's attribute holding who asked for it: the guard refuses the move to that person,
+ * whatever their roles, before its guard is read. A set-now field marked {@code @actor}
+ * ({@code approved_by@actor}) is written with who made the move. Before the act is saved, the
+ * move's form may carry {@link MoveRefusal}, which judges the move as this guard does and shows the
+ * refusal's own words on the page; this guard stays the refusal of record behind it.
+ *
+ * transitions format: {@code action>toState>nowField1,dayField@date,byField@actor>guardExpr>processId | ...}
+ * <br>withheld format, one line each: {@code action>attribute}
  * <br>audit format, one line each: {@code action>form>table>column=source,column='word',...}
  * <br>notify format, one line each: {@code action>role:<id>|attr:<id>>template>form>table>columns}
  * <br>refused format, one line each: {@code audit>} followed by an audit line, or {@code notify>}
@@ -106,9 +115,11 @@ public class TransitionGuard extends DefaultApplicationPlugin {
     private static final DateTimeFormatter TS = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     /** The mark of a set-now field written as the day alone (METHOD-2026-10-08-07, item 1). */
     static final String DAY_MARK = "@date";
+    /** The mark of a set-now field written with who made the move (METHOD-2026-10-16-01). */
+    static final String ACTOR_MARK = "@actor";
 
     public String getName() { return "Lifecycle Transition Guard"; }
-    public String getVersion() { return "1.5.0"; }
+    public String getVersion() { return "1.6.0"; }
     public String getDescription() { return "Drives StatusManager transitions from a form action (generated from the L1 model)."; }
     public String getLabel() { return "Lifecycle Transition Guard"; }
     public String getClassName() { return getClass().getName(); }
@@ -373,6 +384,15 @@ public class TransitionGuard extends DefaultApplicationPlugin {
                     throw new InvalidTransitionException(current, target,
                             "'" + actor + "' holds none of the roles that may make this move (" + roles + ")");
             }
+            // METHOD-2026-10-16-01, construct 2: a move withheld from the person the record names
+            // as its requester is refused to that person, whatever their roles
+            String held = withheldAttr(str(properties, "withheld"), action);
+            if (!held.isEmpty()) {
+                String requester = nz(row.getProperty(held)).trim();
+                if (!requester.isEmpty() && requester.equalsIgnoreCase(actor))
+                    throw new InvalidTransitionException(current, target,
+                            "'" + actor + "' is the record's " + held + " and may not make this move");
+            }
             String guardFail = guardExpr.isEmpty() ? null
                     : evalGuard(guardExpr, row, recordId, properties, dao);
             if (guardFail != null)
@@ -388,6 +408,10 @@ public class TransitionGuard extends DefaultApplicationPlugin {
                     if (fn.endsWith(DAY_MARK)) {
                         fn = fn.substring(0, fn.length() - DAY_MARK.length()).trim();
                         if (!fn.isEmpty()) row.setProperty(fn, today);
+                    } else if (fn.endsWith(ACTOR_MARK)) {
+                        // METHOD-2026-10-16-01, construct 2: who made the move, the act's own
+                        fn = fn.substring(0, fn.length() - ACTOR_MARK.length()).trim();
+                        if (!fn.isEmpty()) row.setProperty(fn, actor);
                     } else if (!fn.isEmpty()) {
                         row.setProperty(fn, now);
                     }
@@ -432,8 +456,23 @@ public class TransitionGuard extends DefaultApplicationPlugin {
         return rs == null || rs.size() != 1 ? null : rs.get(0);
     }
 
+    /**
+     * The attribute of the record naming the person the move {@code action} is withheld from, from
+     * the lines of {@code withheld} ({@code move>attribute}; METHOD-2026-10-16-01, construct 2), or
+     * "" where the move is withheld from nobody.
+     */
+    static String withheldAttr(String withheld, String action) {
+        if (withheld == null || action == null) return "";
+        for (String line : withheld.split("\n")) {
+            String[] p = line.trim().split(">", -1);
+            if (p.length == 2 && action.equals(p[0].trim()) && p[1].trim().matches("[A-Za-z0-9_]+"))
+                return p[1].trim();
+        }
+        return "";
+    }
+
     /** returns [toState, setNowCsv, guardExpr, startProcessId] for the matching action, or null. */
-    private String[] findTransition(String cfg, String action) {
+    static String[] findTransition(String cfg, String action) {
         if (cfg == null) return null;
         for (String seg : cfg.split("\\|")) {
             String[] p = seg.split(">", -1);
@@ -491,7 +530,7 @@ public class TransitionGuard extends DefaultApplicationPlugin {
      * A malformed expression blocks (fail-closed) — a guard that cannot be evaluated must
      * never silently allow the move.
      */
-    private String evalTerm(String expr, FormRow row) {
+    String evalTerm(String expr, FormRow row) {
         String[] p = expr.trim().split("\\s+", 3);
         if (p.length != 3) return "guard unparseable: '" + expr + "'";
         String attr = p[0], op = p[1], lit = p[2];
@@ -547,8 +586,8 @@ public class TransitionGuard extends DefaultApplicationPlugin {
     }
 
     /** {@code none(<entity> where <condition>)}: null when no row meets it; fail-closed. */
-    private String evalNone(String term, FormRow row, String recordId, Map properties,
-                            FormDataDao dao) {
+    String evalNone(String term, FormRow row, String recordId, Map properties,
+                    FormDataDao dao) {
         Matcher m = NONE.matcher(term.trim());
         if (!m.matches()) return "guard unparseable: '" + term + "'";
         String other = m.group(1);

@@ -12,7 +12,10 @@
     </parent>
 
     <artifactId>joget-decision-approval</artifactId>
-    <version>1.2.0</version>
+    <!-- 1.3.0 (METHOD-2026-10-16-01; MT-DM's request of 15 October 2026): RequesterWithheld, a
+         permission on a form element that withholds an act from the record's requester. A minor
+         step: a new plugin; the service, the gate and the route engine read as before. -->
+    <version>1.3.0</version>
     <packaging>bundle</packaging>
     <name>joget-decision-approval</name>
     <description>Configurable decision &amp; approval service for Joget DX: authority-matrix
@@ -64,6 +67,11 @@
         <dependency>
             <groupId>org.joget</groupId>
             <artifactId>wflow-core</artifactId>
+        </dependency>
+        <!-- 1.3.0: RequesterWithheld reads the record's key from the request -->
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
         </dependency>
         <dependency>
             <groupId>junit</groupId>

@@ -20,8 +20,13 @@
          none(...) term reads as before.
          1.5.0 (METHOD-2026-10-12-14; the owner's ruling of 11 October 2026 on round 1, card 4):
          a refused move writes the history entries and alerts its `refused` property names. A
-         minor step: one optional key added; an applied move writes exactly what it wrote. -->
-    <version>1.5.0</version>
+         minor step: one optional key added; an applied move writes exactly what it wrote.
+         1.6.0 (METHOD-2026-10-16-01; MT-DM's request of 15 October 2026): MoveRefusal, a form
+         validator that judges a move before its act is saved and says a refusal in the model's own
+         words; a move withheld from the person the record names (`withheld`); a set-now field
+         marked @actor written with who made the move. A minor step: one optional key and one
+         mark added, and a new plugin; a configuration that uses none of them reads as before. -->
+    <version>1.6.0</version>
     <packaging>bundle</packaging>
     <name>joget-transition-guard</name>
     <description>Generic config-driven lifecycle transition guard (form post-processor -> StatusManager).</description>
@@ -40,7 +45,7 @@
                         <Export-Package></Export-Package>
                         <Private-Package>{local-packages}</Private-Package>
                         <Bundle-Activator>com.fiscaladmin.joget.transitionguard.Activator</Bundle-Activator>
-                        <Import-Package>!*,com.fiscaladmin.joget.eventchain,com.fiscaladmin.joget.statusmanager,org.joget.commons.util,org.joget.plugin.base,org.joget.plugin.property.model,org.joget.apps.app.service,org.joget.apps.form.dao,org.joget.apps.form.model,org.joget.directory.model,org.joget.directory.model.service,org.joget.workflow.util,org.osgi.framework;version="1.3.0"</Import-Package>
+                        <Import-Package>!*,com.fiscaladmin.joget.eventchain,com.fiscaladmin.joget.statusmanager,org.joget.commons.util,org.joget.plugin.base,org.joget.plugin.property.model,org.joget.apps.app.service,org.joget.apps.form.dao,org.joget.apps.form.model,org.joget.apps.form.service,org.joget.directory.model,org.joget.directory.model.service,org.joget.workflow.util,org.osgi.framework;version="1.3.0"</Import-Package>
                         <Embed-Dependency>*;scope=compile;inline=false</Embed-Dependency>
                         <Embed-Transitive>false</Embed-Transitive>
                         <DynamicImport-Package>*</DynamicImport-Package>

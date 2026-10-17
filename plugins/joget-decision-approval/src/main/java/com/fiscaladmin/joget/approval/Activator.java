@@ -32,6 +32,9 @@ public class Activator implements BundleActivator {
         // 1.2.0 (METHOD-2026-10-09-05, item 6): the routing move's approval level by amount
         registrationList.add(context.registerService(
                 ApprovalRouteEngine.class.getName(), new ApprovalRouteEngine(), null));
+        // 1.3.0 (METHOD-2026-10-16-01, construct 2): an act withheld from the record's requester
+        registrationList.add(context.registerService(
+                RequesterWithheld.class.getName(), new RequesterWithheld(), null));
     }
 
     public void stop(BundleContext context) {
