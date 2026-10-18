@@ -14,8 +14,13 @@
     <artifactId>joget-decision-approval</artifactId>
     <!-- 1.3.0 (METHOD-2026-10-16-01; MT-DM's request of 15 October 2026): RequesterWithheld, a
          permission on a form element that withholds an act from the record's requester. A minor
-         step: a new plugin; the service, the gate and the route engine read as before. -->
-    <version>1.3.0</version>
+         step: a new plugin; the service, the gate and the route engine read as before.
+         1.3.1 (METHOD-2026-10-17-05, version 2): RequesterWithheld compiled against jakarta.servlet,
+         which Joget 9 serves; 1.3.0 named Joget 8's servlet API, and Tomcat's jakartaee migration rewrote the
+         placed jar at its first start, to an import Felix's unversioned export does not satisfy. The
+         request is read through WorkflowUtil by name, so the bytes name jakarta.servlet alone, and the
+         import carries no version range. A patch step: nothing a configuration says reads otherwise. -->
+    <version>1.3.1</version>
     <packaging>bundle</packaging>
     <name>joget-decision-approval</name>
     <description>Configurable decision &amp; approval service for Joget DX: authority-matrix
@@ -43,7 +48,7 @@
                     <instructions>
                         <Bundle-Activator>com.fiscaladmin.joget.approval.Activator</Bundle-Activator>
                         <Export-Package>com.fiscaladmin.joget.approval</Export-Package>
-                        <Import-Package>com.fiscaladmin.joget.eventchain,com.fiscaladmin.joget.statusmanager,org.joget.apps.app.service,org.joget.apps.datalist.model,org.joget.apps.form.dao,org.joget.apps.form.model,org.joget.commons.util,org.joget.plugin.base,org.joget.workflow.util,org.osgi.framework,*</Import-Package>
+                        <Import-Package>com.fiscaladmin.joget.eventchain,com.fiscaladmin.joget.statusmanager,org.joget.apps.app.service,org.joget.apps.datalist.model,org.joget.apps.form.dao,org.joget.apps.form.model,org.joget.commons.util,org.joget.plugin.base,org.joget.workflow.util,org.osgi.framework,jakarta.servlet.http;version="0",*</Import-Package>
                         <DynamicImport-Package>*</DynamicImport-Package>
                     </instructions>
                 </configuration>
@@ -68,10 +73,13 @@
             <groupId>org.joget</groupId>
             <artifactId>wflow-core</artifactId>
         </dependency>
-        <!-- 1.3.0: RequesterWithheld reads the record's key from the request -->
+        <!-- 1.3.0: RequesterWithheld reads the record's key from the request.
+             1.3.1: from jakarta.servlet, which Joget 9 serves (Joget 8's servlet API before). -->
         <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <version>6.0.0</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>junit</groupId>

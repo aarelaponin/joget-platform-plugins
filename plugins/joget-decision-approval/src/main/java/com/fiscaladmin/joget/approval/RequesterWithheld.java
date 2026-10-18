@@ -3,7 +3,7 @@ package com.fiscaladmin.joget.approval;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.form.dao.FormDataDao;
@@ -42,7 +42,7 @@ public class RequesterWithheld extends UserviewPermission implements FormPermiss
     private static final String CLASS_NAME = RequesterWithheld.class.getName();
 
     @Override public String getName() { return "Requester Withheld"; }
-    @Override public String getVersion() { return "1.3.0"; }
+    @Override public String getVersion() { return "1.3.1"; }
     @Override public String getDescription() {
         return "Decision & Approval - an act withheld from the person who asked for the record.";
     }
@@ -55,7 +55,7 @@ public class RequesterWithheld extends UserviewPermission implements FormPermiss
         try {
             User user = getCurrentUser();
             String username = user == null || user.getUsername() == null ? "" : user.getUsername();
-            HttpServletRequest req = WorkflowUtil.getHttpServletRequest();
+            HttpServletRequest req = currentRequest();
             String key = req == null ? "" : req.getParameter(getPropertyString("keyParam"));
             FormDataDao dao = (FormDataDao) AppUtil.getApplicationContext().getBean("formDataDao");
             String requester = dao == null ? "" : requester(dao, getPropertyString("formDefId"),
@@ -67,6 +67,18 @@ public class RequesterWithheld extends UserviewPermission implements FormPermiss
             LogUtil.error(CLASS_NAME, e, "requester-withheld: could not read the record - shown");
             return !"requester".equals(getPropertyString("show"));
         }
+    }
+
+    /**
+     * The viewer's request (1.3.1). Joget 9 serves jakarta.servlet; the library compiles against
+     * wflow-core 8.1, whose WorkflowUtil names javax.servlet in its signature. The method is called by
+     * name, so this class names jakarta.servlet alone and Tomcat's jakartaee migration leaves the jar
+     * as built. A request of another kind is no request: the record's key is then "", and nothing is
+     * withheld (the guard and the service still refuse a decision by the requester).
+     */
+    static HttpServletRequest currentRequest() throws Exception {
+        Object r = WorkflowUtil.class.getMethod("getHttpServletRequest").invoke(null);
+        return r instanceof HttpServletRequest ? (HttpServletRequest) r : null;
     }
 
     /** Whether the viewer holds one of {@code allowedGroupIds}, by the platform's GroupPermission. */

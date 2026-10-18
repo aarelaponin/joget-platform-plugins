@@ -658,10 +658,10 @@ plugins:
   - id: joget-decision-approval
     module: plugins/joget-decision-approval
     artifact: com.fiscaladmin.joget:joget-decision-approval
-    version: 1.3.0
+    version: 1.3.1
     category: foundation
     tier: P
-    status: active            # service core (3a+3b) and its Joget plugins (3c, 165e2d3, 4 Jul 2026) shipped; ApprovalRouteEngine 1.2.0; RequesterWithheld 1.3.0
+    status: active            # service core (3a+3b) and its Joget plugins (3c, 165e2d3, 4 Jul 2026) shipped; ApprovalRouteEngine 1.2.0; RequesterWithheld 1.3.0; on jakarta.servlet 1.3.1
     ships: code
     license: proprietary            # FiscalAdmin OÜ
     dx_compat: ["8.1", "9.x"]

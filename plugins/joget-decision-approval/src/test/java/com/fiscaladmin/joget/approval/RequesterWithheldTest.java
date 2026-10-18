@@ -59,6 +59,21 @@ public class RequesterWithheldTest {
         assertFalse("nobody signed in", RequesterWithheld.authorise("requester", "", "", true));
     }
 
+    /** 1.3.1: the class names jakarta.servlet, which Joget 9 serves, and no javax.servlet. */
+    @Test
+    public void theBytesNameJakartaServletAndNoJavaxServlet() throws Exception {
+        java.io.InputStream in = RequesterWithheld.class.getResourceAsStream("RequesterWithheld.class");
+        assertNotNull(in);
+        java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+        byte[] buf = new byte[4096];
+        for (int n; (n = in.read(buf)) > 0; ) out.write(buf, 0, n);
+        in.close();
+        String bytes = new String(out.toByteArray(), java.nio.charset.StandardCharsets.ISO_8859_1);
+        assertTrue(bytes.contains("jakarta/servlet/http/HttpServletRequest"));
+        assertFalse(bytes.contains("javax/servlet"));
+        assertEquals("1.3.1", new RequesterWithheld().getVersion());
+    }
+
     @Test
     public void theRequesterIsReadFromTheRecordByItsRowIdOrItsKey() {
         FormDataDao dao = mock(FormDataDao.class);
