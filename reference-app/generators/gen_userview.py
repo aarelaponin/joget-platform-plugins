@@ -152,7 +152,39 @@ def form_menu(m):
         # 0.11.0: the words on the form's button (FormMenu `submitButtonLabel`; the platform
         # writes its own "Save" when it is empty). Absent the key, the emission is as before.
         props["submitButtonLabel"] = str(m["submit_label"])
+    if m.get("after_save"):
+        props.update(after_save_props(m["after_save"], fid))
     return {"className": "org.joget.apps.userview.lib.FormMenu", "properties": props}
+
+
+def after_save_props(after, fid):
+    """The page after the save (joget-spec-kit METHOD-2026-10-23-03 and METHOD-2026-10-24-01, the
+    plan for fixing the method's third construct): the form menu's own redirection after the form
+    is saved, in place of the platform's "Form Submitted" (FormMenu, Joget DX 9.0.7: its
+    `redirectUrlAfterComplete`, with the value of one field of the form saved passed over by
+    `fieldPassover` — `id`, the row saved, read by Form.getPrimaryKeyValue — and the method
+    `param`, which writes `?` or `&`, `paramName`, `=` and the value after the address; the
+    method `append` writes `/` and the value). `after`, as the kit projects it:
+    `menu` the address of the page (a CRUD menu, `<list>_crud`, opened in edit mode on the
+    record; or a form or list menu, given the record under `param`); `carries` `saved` (the row
+    just saved, its `id`), `opened` (the record the form was opened with, the field `from`) or
+    `field` (the field `field` of the form). Absent the key, the menu is emitted as before."""
+    menu = str(after["menu"])
+    param = str(after.get("param") or "id")
+    crud = menu.endswith("_crud") or after.get("mode") == "edit"
+    url = menu + ("?_mode=edit" if crud else "")
+    carries = after.get("carries", "saved")
+    if carries == "opened":
+        field = str(after.get("from") or "")
+    elif carries == "field":
+        field = str(after.get("field") or "")
+    else:
+        field = "id"
+    if not field:
+        raise ValueError(f"form menu '{fid}': after_save carries {carries!r} and names no field")
+    return {"actionAfterSaved": "", "redirectUrlAfterComplete": url,
+            "redirectTargetOnComplete": "", "fieldPassover": field,
+            "fieldPassoverMethod": "param", "paramName": param}
 
 
 def inbox_menu(m):

@@ -25,8 +25,15 @@
          validator that judges a move before its act is saved and says a refusal in the model's own
          words; a move withheld from the person the record names (`withheld`); a set-now field
          marked @actor written with who made the move. A minor step: one optional key and one
-         mark added, and a new plugin; a configuration that uses none of them reads as before. -->
-    <version>1.6.0</version>
+         mark added, and a new plugin; a configuration that uses none of them reads as before.
+         1.7.0 (METHOD-2026-11-03-13; MT-DM's hand-off of 22 October 2026, items 1 and 3): no
+         refused move ends on "Form Submitted" - MoveRefusal refuses a failed term the model gives
+         no words before the save, in words drawn from the guard (the move's name, `moveName`, and
+         the term, filled from the record), and leaves to the root guard the term it already asks
+         (`rootAsks`); a column of a history entry or an alert may hold `words`, the words a
+         refusal was said in, never a code. A minor step: two optional keys and one source added;
+         a model whose every failed term has words, or whose moves have no guard, reads as before. -->
+    <version>1.7.0</version>
     <packaging>bundle</packaging>
     <name>joget-transition-guard</name>
     <description>Generic config-driven lifecycle transition guard (form post-processor -> StatusManager).</description>

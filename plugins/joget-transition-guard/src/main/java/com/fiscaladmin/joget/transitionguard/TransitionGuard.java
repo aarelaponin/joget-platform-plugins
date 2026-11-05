@@ -99,7 +99,8 @@ import com.fiscaladmin.joget.statusmanager.StatusManager;
  * <br>related format, one line each: {@code action>entity>condition>column=moment|today|'word',...}
  * <br>a source is {@code record}, {@code attr:<attribute of the record moved>}, {@code moment},
  * {@code today}, {@code actor}, {@code from}, {@code to}, {@code move}, {@code reason},
- * {@code entity}, and for an alert {@code recipient} and {@code template}.
+ * {@code entity}, {@code words} (1.7.0: the words a refusal was said in, never a code), and for an
+ * alert {@code recipient} and {@code template}.
  */
 public class TransitionGuard extends DefaultApplicationPlugin {
 
@@ -119,7 +120,7 @@ public class TransitionGuard extends DefaultApplicationPlugin {
     static final String ACTOR_MARK = "@actor";
 
     public String getName() { return "Lifecycle Transition Guard"; }
-    public String getVersion() { return "1.6.0"; }
+    public String getVersion() { return "1.7.0"; }
     public String getDescription() { return "Drives StatusManager transitions from a form action (generated from the L1 model)."; }
     public String getLabel() { return "Lifecycle Transition Guard"; }
     public String getClassName() { return getClass().getName(); }
@@ -235,10 +236,27 @@ public class TransitionGuard extends DefaultApplicationPlugin {
         final String to;
         final String reason;
         final LocalDateTime at;
+        /** The words a refused move was said in on the page (1.7.0), or null where none were. */
+        final String words;
         Move(String result, boolean applied, boolean refused, String from, String to, String reason,
              LocalDateTime at) {
+            this(result, applied, refused, from, to, reason, at, null);
+        }
+        Move(String result, boolean applied, boolean refused, String from, String to, String reason,
+             LocalDateTime at, String words) {
             this.result = result; this.applied = applied; this.refused = refused; this.from = from;
-            this.to = to; this.reason = reason; this.at = at;
+            this.to = to; this.reason = reason; this.at = at; this.words = words;
+        }
+
+        /**
+         * What a column of source {@code words} holds (1.7.0; METHOD-2026-11-03-13, item 3): the
+         * words the refusal was said in, else the guard's own result without its "REJECTED: ",
+         * never a code. An applied move has no refusal, and the column holds its result.
+         */
+        String said() {
+            if (words != null && !words.trim().isEmpty()) return words.trim();
+            String r = result == null ? "" : result.trim();
+            return r.startsWith("REJECTED: ") ? r.substring("REJECTED: ".length()).trim() : r;
         }
     }
 
@@ -337,6 +355,8 @@ public class TransitionGuard extends DefaultApplicationPlugin {
                         case "entity":    v = entity; break;
                         case "recipient": v = recipient; break;
                         case "template":  v = template; break;
+                        case "words":     v = m.said(); break;        // 1.7.0
+
                         default:
                             LogUtil.warn(CN, what + " column '" + col + "': unknown source '" + src + "' — left empty");
                             v = "";

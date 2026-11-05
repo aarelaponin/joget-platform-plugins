@@ -36,10 +36,11 @@ Copy the JAR into the instance's plugin folder (hot-reloads in ~10s), or upload 
 **Manage Plugins**:
 
 ```bash
-cp target/joget-form-prefill-1.0.1.jar <joget>/wflow/app_plugins/   # and remove the older joget-form-prefill-*.jar
+cp target/joget-form-prefill-1.1.0.jar <joget>/wflow/app_plugins/   # and remove the older joget-form-prefill-*.jar
 ```
 
-It registers one plugin: `com.fiscaladmin.joget.formprefill.FormPrefillLoadBinder`.
+It registers two plugins: `com.fiscaladmin.joget.formprefill.FormPrefillLoadBinder` and, since 1.1.0,
+`com.fiscaladmin.joget.formprefill.GridRowsPrefillBinder` (below).
 
 ## Configure (set the binder as a form's Load Binder)
 
@@ -121,3 +122,16 @@ src/main/java/com/fiscaladmin/joget/formprefill/
 This plugin is entry `joget-form-prefill` in the repo `registry.yaml`. Its **config contract**
 (the property keys above) is the public API that spec-driven generators target — changing a
 key is a breaking (major) version bump.
+
+## 1.1.0: a grid's lines carried from the record (GridRowsPrefillBinder)
+
+A second plugin in the same bundle (joget-spec-kit METHOD-2026-10-24-01): a grid's LOAD binder for a request
+whose lines are the rows of the record its form is opened on. On a record that exists, and on a submission, it
+loads the grid's own lines exactly as the platform's `MultirowFormBinder` does (the platform's binder itself,
+with the same `formDefId` and `foreignKey`). On a NEW record whose own load holds no line, it reads the key of
+the record from the address (`keyParam`) and returns one line for each row of `rowsTable` whose
+`parentField` holds it and that meets `where` (HQL over `e.customProperties`), each line referring to its
+row by `refField` (the row's `refColumn`, `id` by default) and taking the values `map` names. A carried
+line has no `id`: it is a new line, given its key by the grid's store binder (the platform's) when the request
+is saved. The rows are read through `FormDataDao` - no raw SQL. The library's `gen_forms` writes it on a grid
+whose spec carries `rowsFrom`. The pure part, `GridRows`, has its own tests (`GridRowsTest`).

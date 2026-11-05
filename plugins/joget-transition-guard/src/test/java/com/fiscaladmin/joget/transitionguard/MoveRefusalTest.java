@@ -126,12 +126,82 @@ public class MoveRefusalTest {
         verify(dao, never()).saveOrUpdate(anyString(), anyString(), any(FormRowSet.class));
     }
 
+    // ---- 1.7.0 (METHOD-2026-11-03-13; MT-DM's hand-off of 22 October 2026, items 1 and 3): no
+    // refused move ends on "Form Submitted". Until 1.7.0 a failed term the model gave no words was
+    // left to the guard after the save (refuse() returned null, and the platform said "Form
+    // Submitted"); now it is refused before the save in words drawn from the guard.
+
     @Test
-    public void aFailedTermTheModelGivesNoWordsIsLeftToTheGuard() {
+    public void aFailedTermTheModelGivesNoWordsIsRefusedBeforeTheSaveInTheGuardsWords() {
         Map<String, String> p = props();
-        p.put("refusals", NONE_TERM + "|" + VISIT);
+        p.put("refusals", NONE_TERM + "|" + VISIT);          // no words for `amount eq 0`
+        p.put("moveName", "Close the case");
+        String words = new MoveRefusal().refuse(p, dao, "anna", "DC-000001", "");
+        assertNotNull("a refused move is never left to the save behind 'Form Submitted'", words);
+        assertEquals("Close the case is refused: amount must be 0, and it is 250.00.", words);
+        // the history entry marked for a refusal is written before the save, as with model words
+        assertEquals("refused", history().getProperty("trigger_kind"));
+        verify(dao, never()).saveOrUpdate(eq("frmCase"), anyString(), any(FormRowSet.class));
+    }
+
+    @Test
+    public void aFailedTermOverAnotherRecordWithoutWordsIsRefusedWithTheCountTheGuardFound() {
+        Map<String, String> p = props();
+        p.remove("refusals");                                // the model words nothing
+        record.setProperty("amount", "0");
+        when(dao.count(eq("frmAction"), eq("patmin_action"), anyString(), any(Object[].class)))
+                .thenReturn(2L);
+        String words = new MoveRefusal().refuse(p, dao, "anna", "DC-000001", "");
+        assertNotNull(words);
+        assertEquals("Close is refused: it is made only while there is no action where dcase is "
+                + "this record and kind = visit, and 2 are found.", words);
+    }
+
+    @Test
+    public void theModelsOwnWordsStayFirstWhereTheModelGivesThem() {
+        Map<String, String> p = props();
+        p.put("moveName", "Close the case");
+        assertEquals("Cannot close: DC-000001 still owes 250.00",
+                new MoveRefusal().refuse(p, dao, "anna", "DC-000001", ""));
+    }
+
+    @Test
+    public void theTermTheFormsRootGuardAlreadyAsksIsLeftToIt() {
+        Map<String, String> p = props();
+        p.remove("refusals");
+        p.put("rootAsks", "amount eq 0");                    // the root guard says it in the model's words
         assertNull(new MoveRefusal().refuse(p, dao, "anna", "DC-000001", ""));
-        verify(dao, never()).saveOrUpdate(anyString(), anyString(), any(FormRowSet.class));
+    }
+
+    @Test
+    public void aMoveWithheldFromItsRequesterWithoutWordsIsRefusedInTheGuardsWords() {
+        Map<String, String> p = props();
+        p.remove("refusals");
+        p.put("withheld", "close>requested_by");
+        p.put("moveName", "Close the case");
+        record.setProperty("requested_by", "anna");
+        String words = new MoveRefusal().refuse(p, dao, "anna", "DC-000001", "");
+        assertEquals("Close the case is refused: you are the record's requested by, and another "
+                + "person makes this move.", words);
+    }
+
+    @Test
+    public void aRefusalsAlertWithoutATemplateRecordCarriesTheWordsNeverTheTemplatesId() {
+        // the kit maps a refusal's alert column to `words` where no record provides its template
+        Map<String, String> p = props();
+        p.remove("refusals");
+        p.put("moveName", "Close the case");
+        p.put("refused", "notify>close>attr:holder>closure_refused>alert>patmin_alert>"
+                + "addressed_to=recipient,summary=words,about=attr:case_number");
+        record.setProperty("holder", "carmen.abela");
+        String words = new MoveRefusal().refuse(p, dao, "anna", "DC-000001", "");
+        ArgumentCaptor<FormRowSet> rows = ArgumentCaptor.forClass(FormRowSet.class);
+        verify(dao).saveOrUpdate(eq("alert"), eq("patmin_alert"), rows.capture());
+        FormRow a = rows.getValue().get(0);
+        assertEquals(words, a.getProperty("summary"));
+        assertNotEquals("closure_refused", a.getProperty("summary"));
+        assertTrue(a.getProperty("summary"), a.getProperty("summary").contains("Close the case is refused"));
+        assertEquals("carmen.abela", a.getProperty("addressed_to"));
     }
 
     @Test

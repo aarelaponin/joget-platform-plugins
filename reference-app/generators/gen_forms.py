@@ -188,14 +188,17 @@ def _element(f):
         cols = [{"label": c.get("label", c["value"]), "value": c["value"],
                  "width": c.get("width", ""), "format": "", "formatType": ""}
                 for c in f.get("columns", [])]
+        load = {"className": "org.joget.plugin.enterprise.MultirowFormBinder",
+                "properties": {"formDefId": child, "foreignKey": fk}}
+        if f.get("rowsFrom"):
+            load = rows_from_binder(f["rowsFrom"], child, fk, fid)
         return {"className": "org.joget.plugin.enterprise.FormGrid", "properties": {
             "id": fid, "label": label, "formDefId": child,
             "pageSize": str(f.get("pageSize", 50)), "enableSorting": "true",
             "readonly": "true" if f.get("readonly") else "", "deleteGridData":
             "true" if f.get("deleteGridData") else "", "validateMaxRow": "",
             "requestParams": [], "options": cols,
-            "loadBinder": {"className": "org.joget.plugin.enterprise.MultirowFormBinder",
-                           "properties": {"formDefId": child, "foreignKey": fk}},
+            "loadBinder": load,
             "storeBinder": {"className": "org.joget.plugin.enterprise.MultirowFormBinder",
                             "properties": {"formDefId": child, "foreignKey": fk}},
             "validator": dict(V_NONE)}}
@@ -329,6 +332,43 @@ def _element(f):
                     "required": "true" if f.get("required") else "",
                     "requiredMessage": f.get("requiredMessage", "")}}
     raise ValueError(f"unknown field type: {t}")
+
+
+ROWS_BINDER = "com.fiscaladmin.joget.formprefill.GridRowsPrefillBinder"
+
+
+def _col(c):
+    """A column the kit writes as the platform holds it (`c_<attribute>`), as the form data API
+    names it (`<attribute>`); `id` is the row's own key."""
+    c = str(c or "")
+    return c[2:] if c.startswith("c_") else c
+
+
+def rows_from_binder(rf, child, fk, fid):
+    """The grid's load binder for a request whose lines are carried from the record it is opened
+    on (joget-spec-kit METHOD-2026-10-23-03 `rowsFrom`, carried into the build by
+    METHOD-2026-10-24-01: until then the key was in the spec and in no element of the package).
+    joget-form-prefill's GridRowsPrefillBinder: on a record that exists it loads the grid's own
+    lines exactly as the platform's MultirowFormBinder does (`formDefId`, `foreignKey`); on a new
+    one it reads the key of the record the form is opened on from the address (`keyParam`) and
+    returns one line for each row of `rowsTable` whose `parentField` holds it and that meets
+    `where`, each line referring to its row by `refField` (the row's `refColumn`, its `id` by
+    default) and taking the values `map` names. The rows are read through the platform's
+    FormDataDao, so a column is named as the form data API names it (`c_` set aside) and `where`
+    is written over `e.customProperties`. The store binder stays the platform's."""
+    for k in ("table", "parentColumn", "keyParam", "refField"):
+        if not rf.get(k):
+            raise ValueError(f"grid '{fid}': rowsFrom names no {k}")
+    table = str(rf["table"])
+    table = table[len("app_fd_"):] if table.startswith("app_fd_") else table
+    where = re.sub(r"(?<![\w.])c_([A-Za-z0-9_]+)", r"e.customProperties.\1", str(rf.get("where") or ""))
+    return {"className": ROWS_BINDER, "properties": {
+        "formDefId": child, "foreignKey": fk, "rowsTable": table,
+        "parentField": _col(rf["parentColumn"]), "keyParam": str(rf["keyParam"]),
+        "refField": str(rf["refField"]), "refColumn": _col(rf.get("refColumn") or "id"),
+        "where": where,
+        "map": [{"from": _col(m.get("from")), "to": str(m.get("to") or "")}
+                for m in rf.get("map") or []]}}
 
 
 def _bool_str(v, default=True):

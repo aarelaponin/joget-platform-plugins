@@ -12,7 +12,7 @@
     </parent>
 
     <artifactId>joget-form-prefill</artifactId>
-    <version>1.0.1</version>
+    <version>1.1.0</version>
     <packaging>bundle</packaging>
     <name>joget-form-prefill</name>
     <description>Configurable Joget DX form LOAD binder that pre-populates a new
