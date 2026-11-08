@@ -27,7 +27,7 @@ public class ApprovalSweepEngine extends DefaultApplicationPlugin {
     private static final String F_SWEEP = "cmApprovalSweep";
 
     @Override public String getName() { return "Approval Sweep Engine"; }
-    @Override public String getVersion() { return "1.0.0"; }
+    @Override public String getVersion() { return "1.4.0"; }
     @Override public String getDescription() {
         return "Decision & Approval — SLA sweep: escalate then time out overdue requests.";
     }
@@ -35,13 +35,28 @@ public class ApprovalSweepEngine extends DefaultApplicationPlugin {
     @Override public String getClassName() { return getClass().getName(); }
     @Override public String getPropertyOptions() { return "[]"; }
 
+    private final RowStamps stamps;
+
+    public ApprovalSweepEngine() {
+        this(RowStamps.platform());
+    }
+
+    /** The test seam (1.4.0): the clock and the user the rows it saves are stamped with. */
+    ApprovalSweepEngine(RowStamps stamps) {
+        this.stamps = stamps;
+    }
+
     @Override
     public Object execute(Map properties) {
         FormDataDao dao = (FormDataDao) AppUtil.getApplicationContext().getBean("formDataDao");
         if (dao == null) {
             throw new RuntimeException("ApprovalSweepEngine: formDataDao bean not available");
         }
-        String actor = WorkflowUtil.getCurrentUsername();
+        return run(properties, dao, WorkflowUtil.getCurrentUsername());
+    }
+
+    /** The engine's whole work, with the platform's pieces passed in (the test seam, 1.4.0). */
+    Object run(Map properties, FormDataDao dao, String actor) {
         String runId = resolveRun(dao, properties);
         if (runId == null) {
             LogUtil.warn(CLASS_NAME, "SWEEP: no cmApprovalSweep resolvable — skipped");
@@ -52,13 +67,11 @@ public class ApprovalSweepEngine extends DefaultApplicationPlugin {
             return null;
         }
         LocalDateTime asOf = parseAsOf(Rows.prop(run, "asOf"));
-        ApprovalService svc = new ApprovalService(dao, new CaseEventWriter(dao, ApprovalService.F_EVENT), DecisionEffects.snapshot());
+        ApprovalService svc = new ApprovalService(dao, new CaseEventWriter(dao, ApprovalService.F_EVENT), DecisionEffects.snapshot(), stamps);
         String result = svc.sweep(asOf, actor);
         LogUtil.info(CLASS_NAME, "SWEEP: " + result);
         run.setProperty("result", result);
-        FormRowSet set = new FormRowSet();
-        set.add(run);
-        dao.saveOrUpdate(F_SWEEP, F_SWEEP, set);
+        stamps.save(dao, F_SWEEP, F_SWEEP, run);            // 1.4.0: the sweep's result, stamped
         return null;
     }
 

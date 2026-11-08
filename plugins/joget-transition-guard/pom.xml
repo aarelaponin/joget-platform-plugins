@@ -38,8 +38,19 @@
          (form>table>nameColumn>contentColumn), a column may hold `template_key`, the identifier of
          the template row the notify names, and `content`, that row's content with its merge fields
          filled from the move and the record moved. A minor step: one optional key and two sources
-         added; a configuration that uses none of them reads as before. -->
-    <version>1.8.0</version>
+         added; a configuration that uses none of them reads as before.
+         1.9.0 (METHOD-2026-11-05-45; MT-DM's hand-off of 8 November 2026, item 46): the rows the
+         guard writes and changes carry the columns the platform fills when it saves a form's row,
+         by the rule of AppServiceImpl.storeFormData (Joget 9.0.7, lines 2161-2196): a history entry
+         or an alert it makes (and a refusal's, from MoveRefusal) takes dateCreated, dateModified
+         and the who-columns; the record moved, the target and the act saved, and the rows a
+         `related` line sets take dateModified and modifiedBy / modifiedByName, their created three
+         kept as loaded and filled only where the row holds no dateCreated. The move's instant is
+         read once, and its moment and every stamp are that reading in the JVM's zone. A move with
+         no person (an empty name, or the platform's roleAnonymous) is made by `system`, in the
+         history, the status event and the @actor mark; the stamps keep the platform's own value.
+         A minor step: no key added; the moments, words, codes and moves read as before. -->
+    <version>1.9.0</version>
     <packaging>bundle</packaging>
     <name>joget-transition-guard</name>
     <description>Generic config-driven lifecycle transition guard (form post-processor -> StatusManager).</description>

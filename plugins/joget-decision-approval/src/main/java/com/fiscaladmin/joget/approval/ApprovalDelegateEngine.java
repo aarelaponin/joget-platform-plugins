@@ -26,7 +26,7 @@ public class ApprovalDelegateEngine extends DefaultApplicationPlugin {
     private static final String F_DELEGATE = "cmApprovalDelegate";
 
     @Override public String getName() { return "Approval Delegate Engine"; }
-    @Override public String getVersion() { return "1.0.0"; }
+    @Override public String getVersion() { return "1.4.0"; }
     @Override public String getDescription() {
         return "Decision & Approval — delegate a pending request to another approver.";
     }
@@ -34,13 +34,28 @@ public class ApprovalDelegateEngine extends DefaultApplicationPlugin {
     @Override public String getClassName() { return getClass().getName(); }
     @Override public String getPropertyOptions() { return "[]"; }
 
+    private final RowStamps stamps;
+
+    public ApprovalDelegateEngine() {
+        this(RowStamps.platform());
+    }
+
+    /** The test seam (1.4.0): the clock and the user the rows it saves are stamped with. */
+    ApprovalDelegateEngine(RowStamps stamps) {
+        this.stamps = stamps;
+    }
+
     @Override
     public Object execute(Map properties) {
         FormDataDao dao = (FormDataDao) AppUtil.getApplicationContext().getBean("formDataDao");
         if (dao == null) {
             throw new RuntimeException("ApprovalDelegateEngine: formDataDao bean not available");
         }
-        String fromApprover = WorkflowUtil.getCurrentUsername();
+        return run(properties, dao, WorkflowUtil.getCurrentUsername());
+    }
+
+    /** The engine's whole work, with the platform's pieces passed in (the test seam, 1.4.0). */
+    Object run(Map properties, FormDataDao dao, String fromApprover) {
         String decId = resolveDelegate(dao, properties);
         if (decId == null) {
             LogUtil.warn(CLASS_NAME, "DELEGATE: no cmApprovalDelegate resolvable — skipped");
@@ -53,13 +68,11 @@ public class ApprovalDelegateEngine extends DefaultApplicationPlugin {
         String approvalId = Rows.prop(row, "approvalId");
         String delegateTo = Rows.prop(row, "delegateTo");
         String reason = Rows.prop(row, "reason");
-        ApprovalService svc = new ApprovalService(dao, new CaseEventWriter(dao, ApprovalService.F_EVENT), DecisionEffects.snapshot());
+        ApprovalService svc = new ApprovalService(dao, new CaseEventWriter(dao, ApprovalService.F_EVENT), DecisionEffects.snapshot(), stamps);
         String result = svc.delegate(approvalId, fromApprover, delegateTo, reason, LocalDateTime.now());
         LogUtil.info(CLASS_NAME, "DELEGATE " + approvalId + " -> " + delegateTo + ": " + result);
         row.setProperty("result", result);
-        FormRowSet set = new FormRowSet();
-        set.add(row);
-        dao.saveOrUpdate(F_DELEGATE, F_DELEGATE, set);
+        stamps.save(dao, F_DELEGATE, F_DELEGATE, row);      // 1.4.0: the delegation's result, stamped
         return null;
     }
 

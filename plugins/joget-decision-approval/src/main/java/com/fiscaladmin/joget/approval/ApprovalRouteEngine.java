@@ -41,6 +41,17 @@ public class ApprovalRouteEngine extends DefaultApplicationPlugin {
     static final String GUARD_CLASS = "com.fiscaladmin.joget.transitionguard.TransitionGuard";
     static final String RESULT_FIELD = "transition_result";
 
+    private final RowStamps stamps;
+
+    public ApprovalRouteEngine() {
+        this(RowStamps.platform());
+    }
+
+    /** The test seam (1.4.0): the clock and the user the rows it saves are stamped with. */
+    ApprovalRouteEngine(RowStamps stamps) {
+        this.stamps = stamps;
+    }
+
     /** Runs the transition guard: false where no such plugin is installed. The test seam. */
     interface Guard {
         boolean run(String className, Map properties);
@@ -61,7 +72,7 @@ public class ApprovalRouteEngine extends DefaultApplicationPlugin {
     };
 
     @Override public String getName() { return "Approval Route Engine"; }
-    @Override public String getVersion() { return "1.2.0"; }
+    @Override public String getVersion() { return "1.4.0"; }
     @Override public String getDescription() {
         return "Decision & Approval — runs the transition guard, then sets the approval level a routed record's amount calls for.";
     }
@@ -215,10 +226,9 @@ public class ApprovalRouteEngine extends DefaultApplicationPlugin {
         return rs == null || rs.size() != 1 ? null : rs.get(0);
     }
 
-    private static void save(FormDataDao dao, String form, String table, FormRow row) {
-        FormRowSet set = new FormRowSet();
-        set.add(row);
-        dao.saveOrUpdate(form, table, set);
+    /** 1.4.0: the record's level and result, and the saved act's result, stamped as the platform stamps a row. */
+    private void save(FormDataDao dao, String form, String table, FormRow row) {
+        stamps.save(dao, form, table, row);
     }
 
     private static String str(Map m, String k) {

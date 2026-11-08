@@ -104,8 +104,16 @@ public class ApprovalService {
     private final StatusManager status;
     private final MmConfigService mm;
     private final Map<String, DecisionEffect> effects;
+    private final RowStamps stamps;
 
     public ApprovalService(FormDataDao dao, CaseEventWriter events, Map<String, DecisionEffect> effects) {
+        this(dao, events, effects, RowStamps.platform());
+    }
+
+    /** The test seam (1.4.0): the clock and the user the rows it saves are stamped with. */
+    ApprovalService(FormDataDao dao, CaseEventWriter events, Map<String, DecisionEffect> effects,
+                    RowStamps stamps) {
+        this.stamps = stamps;
         this.dao = dao;
         this.events = events;
         this.effects = effects;
@@ -622,9 +630,7 @@ public class ApprovalService {
     }
 
     private void save(FormRow row) {
-        FormRowSet set = new FormRowSet();
-        set.add(row);
-        dao.saveOrUpdate(F_APPROVAL, F_APPROVAL, set);
+        stamps.save(dao, F_APPROVAL, F_APPROVAL, row);      // 1.4.0: stamped as the platform stamps a row
     }
 
     private void updateSchemas() {

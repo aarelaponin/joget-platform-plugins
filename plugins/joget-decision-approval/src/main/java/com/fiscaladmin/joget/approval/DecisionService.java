@@ -30,10 +30,17 @@ public class DecisionService {
 
     private final FormDataDao dao;
     private final CaseEventWriter events;
+    private final RowStamps stamps;
 
     public DecisionService(FormDataDao dao, CaseEventWriter events) {
+        this(dao, events, RowStamps.platform());
+    }
+
+    /** The test seam (1.4.0): the clock and the user the rows it saves are stamped with. */
+    DecisionService(FormDataDao dao, CaseEventWriter events, RowStamps stamps) {
         this.dao = dao;
         this.events = events;
+        this.stamps = stamps;
     }
 
     /** 1-based rank of a level name, or 0 when unknown/blank. */
@@ -145,8 +152,6 @@ public class DecisionService {
     }
 
     private void save(FormRow row) {
-        FormRowSet set = new FormRowSet();
-        set.add(row);
-        dao.saveOrUpdate(F_DECISION, F_DECISION, set);
+        stamps.save(dao, F_DECISION, F_DECISION, row);      // 1.4.0: stamped as the platform stamps a row
     }
 }

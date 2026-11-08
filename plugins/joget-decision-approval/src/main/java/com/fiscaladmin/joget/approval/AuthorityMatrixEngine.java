@@ -26,7 +26,7 @@ public class AuthorityMatrixEngine extends DefaultApplicationPlugin {
     private static final String F_AUTH = "mmAuthority";
 
     @Override public String getName() { return "Authority Matrix Validator"; }
-    @Override public String getVersion() { return "1.0.0"; }
+    @Override public String getVersion() { return "1.4.0"; }
     @Override public String getDescription() {
         return "Decision & Approval — mmAuthority band consistency validation.";
     }
@@ -34,12 +34,28 @@ public class AuthorityMatrixEngine extends DefaultApplicationPlugin {
     @Override public String getClassName() { return getClass().getName(); }
     @Override public String getPropertyOptions() { return "[]"; }
 
+    private final RowStamps stamps;
+
+    public AuthorityMatrixEngine() {
+        this(RowStamps.platform());
+    }
+
+    /** The test seam (1.4.0): the clock and the user the rows it saves are stamped with. */
+    AuthorityMatrixEngine(RowStamps stamps) {
+        this.stamps = stamps;
+    }
+
     @Override
     public Object execute(Map properties) {
         FormDataDao dao = (FormDataDao) AppUtil.getApplicationContext().getBean("formDataDao");
         if (dao == null) {
             throw new RuntimeException("AuthorityMatrixEngine: formDataDao bean not available");
         }
+        return run(properties, dao);
+    }
+
+    /** The engine's whole work, with the platform's pieces passed in (the test seam, 1.4.0). */
+    Object run(Map properties, FormDataDao dao) {
         String id = resolveId(dao, properties);
         FormRow row = id == null ? null : dao.load(F_CHECK, F_CHECK, id);
         if (row == null) {
@@ -88,8 +104,6 @@ public class AuthorityMatrixEngine extends DefaultApplicationPlugin {
     }
 
     private void save(FormDataDao dao, FormRow row) {
-        FormRowSet set = new FormRowSet();
-        set.add(row);
-        dao.saveOrUpdate(F_CHECK, F_CHECK, set);
+        stamps.save(dao, F_CHECK, F_CHECK, row);            // 1.4.0: the check's result, stamped
     }
 }

@@ -19,8 +19,18 @@
          which Joget 9 serves; 1.3.0 named Joget 8's servlet API, and Tomcat's jakartaee migration rewrote the
          placed jar at its first start, to an import Felix's unversioned export does not satisfy. The
          request is read through WorkflowUtil by name, so the bytes name jakarta.servlet alone, and the
-         import carries no version range. A patch step: nothing a configuration says reads otherwise. -->
-    <version>1.3.1</version>
+         import carries no version range. A patch step: nothing a configuration says reads otherwise.
+         1.4.0 (METHOD-2026-11-05-45; MT-DM's hand-off of 8 November 2026, item 46): every row the
+         service and its engines save carries the columns the platform fills when it saves a form's
+         row, by the rule of AppServiceImpl.storeFormData (Joget 9.0.7, lines 2161-2196): a new
+         approval request takes dateCreated, dateModified and the who-columns; every row they load,
+         change and save (the record's level and result and the saved act's result by
+         ApprovalRouteEngine; the approval, the decision, the gate, sweep and delegate records and the
+         authority check) takes dateModified and modifiedBy / modifiedByName, its created three kept
+         as loaded and filled only where the row holds no dateCreated. A minor step: no key added,
+         nothing a configuration says reads otherwise; the engines gain a package-private run()
+         for their tests. -->
+    <version>1.4.0</version>
     <packaging>bundle</packaging>
     <name>joget-decision-approval</name>
     <description>Configurable decision &amp; approval service for Joget DX: authority-matrix

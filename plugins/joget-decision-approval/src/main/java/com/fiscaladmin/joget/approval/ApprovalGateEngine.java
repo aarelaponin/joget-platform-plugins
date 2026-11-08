@@ -27,7 +27,7 @@ public class ApprovalGateEngine extends DefaultApplicationPlugin {
     private static final String F_DECISION = "cmApprovalDecision";
 
     @Override public String getName() { return "Approval Gate Engine"; }
-    @Override public String getVersion() { return "1.0.0"; }
+    @Override public String getVersion() { return "1.4.0"; }
     @Override public String getDescription() {
         return "Decision & Approval — decide (approve/reject/return) then run the registered effect.";
     }
@@ -35,13 +35,28 @@ public class ApprovalGateEngine extends DefaultApplicationPlugin {
     @Override public String getClassName() { return getClass().getName(); }
     @Override public String getPropertyOptions() { return "[]"; }
 
+    private final RowStamps stamps;
+
+    public ApprovalGateEngine() {
+        this(RowStamps.platform());
+    }
+
+    /** The test seam (1.4.0): the clock and the user the rows it saves are stamped with. */
+    ApprovalGateEngine(RowStamps stamps) {
+        this.stamps = stamps;
+    }
+
     @Override
     public Object execute(Map properties) {
         FormDataDao dao = (FormDataDao) AppUtil.getApplicationContext().getBean("formDataDao");
         if (dao == null) {
             throw new RuntimeException("ApprovalGateEngine: formDataDao bean not available");
         }
-        String approver = WorkflowUtil.getCurrentUsername();
+        return run(properties, dao, WorkflowUtil.getCurrentUsername());
+    }
+
+    /** The engine's whole work, with the platform's pieces passed in (the test seam, 1.4.0). */
+    Object run(Map properties, FormDataDao dao, String approver) {
         String decId = resolveDecision(dao, properties);
         if (decId == null) {
             LogUtil.warn(CLASS_NAME, "DECIDE: no cmApprovalDecision resolvable — skipped");
@@ -61,13 +76,11 @@ public class ApprovalGateEngine extends DefaultApplicationPlugin {
         String approverLevel = declaredLevel.isEmpty()
                 ? new AuthorityResolver(dao, AuthorityResolver.directoryGroups()).resolveLevel(approver)
                 : declaredLevel;
-        ApprovalService svc = new ApprovalService(dao, new CaseEventWriter(dao, ApprovalService.F_EVENT), DecisionEffects.snapshot());
+        ApprovalService svc = new ApprovalService(dao, new CaseEventWriter(dao, ApprovalService.F_EVENT), DecisionEffects.snapshot(), stamps);
         String result = svc.decide(approvalId, approver, approverLevel, outcome, reason, LocalDateTime.now());
         LogUtil.info(CLASS_NAME, "DECIDE " + approvalId + " (" + outcome + "): " + result);
         dec.setProperty("result", result);
-        FormRowSet set = new FormRowSet();
-        set.add(dec);
-        dao.saveOrUpdate(F_DECISION, F_DECISION, set);
+        stamps.save(dao, F_DECISION, F_DECISION, dec);      // 1.4.0: the decision's result, stamped
         return null;
     }
 

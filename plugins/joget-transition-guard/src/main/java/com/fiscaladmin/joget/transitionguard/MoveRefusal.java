@@ -60,8 +60,19 @@ public class MoveRefusal extends FormValidator {
     static final String WITHHELD = "withheld_from";
     static final Pattern PLACEHOLDER = Pattern.compile("\\{([A-Za-z0-9_]+)\\}");
 
+    /** The guard whose rows a refusal writes (1.9.0: so that its clock and its user can be passed in). */
+    private final TransitionGuard guard;
+
+    public MoveRefusal() {
+        this(new TransitionGuard());
+    }
+
+    MoveRefusal(TransitionGuard guard) {
+        this.guard = guard;
+    }
+
     @Override public String getName() { return "Move Refusal"; }
-    @Override public String getVersion() { return "1.7.0"; }
+    @Override public String getVersion() { return "1.9.0"; }
     @Override public String getDescription() {
         return "Judges a move before its act is saved and says a refusal in the model's own words.";
     }
@@ -80,8 +91,7 @@ public class MoveRefusal extends FormValidator {
             String key = value(keyField, root, data);
             String reasonField = str(getProperties(), "reasonField");
             String reason = reasonField.isEmpty() ? "" : value(reasonField, root, data);
-            String actor = WorkflowUtil.getCurrentUsername();
-            String words = refuse(getProperties(), dao, actor == null ? "" : actor, key, reason);
+            String words = refuse(getProperties(), dao, guard.actor(), key, reason);
             if (words == null) return true;
             data.addFormError(FormUtil.getElementParameterName(root != null ? root : element), words);
             return false;
@@ -124,7 +134,6 @@ public class MoveRefusal extends FormValidator {
         String from = str(properties, "fromState");
         if (!from.isEmpty() && !from.equals(current)) return null;   // the root guard's too
         Map<String, String> words = refusals(str(properties, "refusals"));
-        TransitionGuard guard = new TransitionGuard();
         String said = null;
         String why = null;
         String held = TransitionGuard.withheldAttr(str(properties, "withheld"), action);
@@ -156,7 +165,7 @@ public class MoveRefusal extends FormValidator {
         }
         if (said == null) return null;
         TransitionGuard.Move m = new TransitionGuard.Move("REJECTED: " + why, false, true,
-                current, current, reason == null ? "" : reason, LocalDateTime.now(), said);
+                current, current, reason == null ? "" : reason, guard.stampNow(), said);
         String notWritten = guard.writeRefusedRows(properties, dao, entity, record, record.getId(),
                 action, actor, m);
         LogUtil.info(CN, entity + " " + key + " action=" + action + " by " + actor

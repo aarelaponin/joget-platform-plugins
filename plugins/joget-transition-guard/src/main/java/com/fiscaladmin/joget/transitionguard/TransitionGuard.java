@@ -1,5 +1,6 @@
 package com.fiscaladmin.joget.transitionguard;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -133,9 +134,50 @@ public class TransitionGuard extends DefaultApplicationPlugin {
     static final String DAY_MARK = "@date";
     /** The mark of a set-now field written with who made the move (METHOD-2026-10-16-01). */
     static final String ACTOR_MARK = "@actor";
+    /** What the history's actor reads where the move has no person (1.9.0): the solution's own word. */
+    static final String SYSTEM_ACTOR = "system";
+    /** The platform's name for a session nobody is signed in to (DirectoryUtil.ROLE_ANONYMOUS). */
+    static final String ANONYMOUS = "roleAnonymous";
+
+    private final Clock clock;
+    private final RowStamp.Who who;
+
+    public TransitionGuard() {
+        this(Clock.systemDefaultZone(), RowStamp.PLATFORM);
+    }
+
+    /** The test seam (1.9.0): a fixed clock, and the person, or nobody, the platform says is acting. */
+    TransitionGuard(Clock clock, RowStamp.Who who) {
+        this.clock = clock;
+        this.who = who;
+    }
+
+    /**
+     * One stamp for a move (1.9.0): the clock read once, the platform's user read with it. The
+     * move's moment and the platform's columns on every row it writes or changes are that reading.
+     */
+    RowStamp stampNow() {
+        return new RowStamp(clock, who);
+    }
+
+    /**
+     * Who acted on a move, as the history reads it (1.9.0, MT-DM's hand-off of 8 November 2026, item
+     * 46 (a)): the platform's user name, or the solution's word for a move with no person - an
+     * empty name, or the platform's {@code roleAnonymous} - which is {@code system}. The platform's
+     * columns on the rows keep the platform's own value ({@link RowStamp}).
+     */
+    static String actorOf(String platformUser) {
+        return platformUser == null || platformUser.isEmpty() || ANONYMOUS.equals(platformUser)
+                ? SYSTEM_ACTOR : platformUser;
+    }
+
+    /** Who acts now: the platform's user as {@link RowStamp.Who} reads it, by {@link #actorOf}. */
+    String actor() {
+        return actorOf(who.username());
+    }
 
     public String getName() { return "Lifecycle Transition Guard"; }
-    public String getVersion() { return "1.8.0"; }
+    public String getVersion() { return "1.9.0"; }
     public String getDescription() { return "Drives StatusManager transitions from a form action (generated from the L1 model)."; }
     public String getLabel() { return "Lifecycle Transition Guard"; }
     public String getClassName() { return getClass().getName(); }
@@ -146,8 +188,7 @@ public class TransitionGuard extends DefaultApplicationPlugin {
     public Object execute(Map properties) {
         FormDataDao dao = (FormDataDao) AppUtil.getApplicationContext().getBean("formDataDao");
         if (dao == null) { LogUtil.warn(CN, "formDataDao unavailable"); return null; }
-        String actor = WorkflowUtil.getCurrentUsername();
-        if (actor == null || actor.isEmpty()) actor = "system";
+        String actor = actor();
         MmConfigService cfg = new MmConfigService(dao);
         run(properties, dao, cfg, new StatusManager(dao, EVENT_FORM), GroupLookup.DIRECTORY, actor);
         return null;
@@ -178,6 +219,7 @@ public class TransitionGuard extends DefaultApplicationPlugin {
             if (m == null) return null;
             row.setProperty(actionField, "");
             row.setProperty(RESULT_FIELD, m.result);
+            m.stamp.apply(row);
             FormRowSet set = new FormRowSet();
             set.add(row);
             dao.saveOrUpdate(entity, tableName, set);
@@ -209,6 +251,7 @@ public class TransitionGuard extends DefaultApplicationPlugin {
         String targetForm = def(str(properties, "targetForm"), entity);
         String keyColumn = str(properties, "targetKeyColumn");
         String result;
+        RowStamp stamp = null;                        // the move's own; a fresh one where there is no move
         FormRow target = findTarget(dao, targetForm, tableName, keyColumn, key);
         if (target == null) {
             result = "REJECTED: no " + entity + " record " + (key.isEmpty() ? "is named" : "'" + key + "'")
@@ -217,9 +260,11 @@ public class TransitionGuard extends DefaultApplicationPlugin {
             Move m = move(properties, dao, cfg, sm, groups, actor, entity, target, target.getId(),
                           statusField, action, act);
             if (m == null) return null;
+            stamp = m.stamp;
             result = m.result;
             if (m.applied) {
                 FormRowSet set = new FormRowSet();
+                stamp.apply(target);
                 set.add(target);
                 dao.saveOrUpdate(targetForm, tableName, set);
                 result = result
@@ -231,6 +276,8 @@ public class TransitionGuard extends DefaultApplicationPlugin {
             }
         }
         act.setProperty(RESULT_FIELD, result);
+        if (stamp == null) stamp = stampNow();
+        stamp.apply(act);
         FormRowSet aset = new FormRowSet();
         aset.add(act);
         dao.saveOrUpdate(actForm, actTable, aset);
@@ -251,16 +298,18 @@ public class TransitionGuard extends DefaultApplicationPlugin {
         final String to;
         final String reason;
         final LocalDateTime at;
+        /** The one reading of the clock this move's moment and every row's platform columns come from (1.9.0). */
+        final RowStamp stamp;
         /** The words a refused move was said in on the page (1.7.0), or null where none were. */
         final String words;
         Move(String result, boolean applied, boolean refused, String from, String to, String reason,
-             LocalDateTime at) {
-            this(result, applied, refused, from, to, reason, at, null);
+             RowStamp stamp) {
+            this(result, applied, refused, from, to, reason, stamp, null);
         }
         Move(String result, boolean applied, boolean refused, String from, String to, String reason,
-             LocalDateTime at, String words) {
+             RowStamp stamp, String words) {
             this.result = result; this.applied = applied; this.refused = refused; this.from = from;
-            this.to = to; this.reason = reason; this.at = at; this.words = words;
+            this.to = to; this.reason = reason; this.stamp = stamp; this.at = stamp.at; this.words = words;
         }
 
         /**
@@ -507,6 +556,7 @@ public class TransitionGuard extends DefaultApplicationPlugin {
                 }
                 r.setProperty(col, v == null ? "" : v);
             }
+            m.stamp.apply(r);                         // 1.9.0: a row made, stamped as the platform stamps one
             FormRowSet set = new FormRowSet();
             set.add(r);
             dao.saveOrUpdate(form, table, set);
@@ -538,7 +588,8 @@ public class TransitionGuard extends DefaultApplicationPlugin {
         String result;
         boolean applied = false;
         boolean refused = false;
-        LocalDateTime at = LocalDateTime.now();
+        RowStamp stamp = stampNow();                  // 1.9.0: the one reading of the clock for this move
+        LocalDateTime at = stamp.at;
         try {
             if ("true".equalsIgnoreCase(str(properties, "checkRoles"))) {
                 String scope = sm.resolveScope(entity, Collections.<String>emptyList());
@@ -598,7 +649,7 @@ public class TransitionGuard extends DefaultApplicationPlugin {
             result = "ERROR: " + e.getMessage();
             LogUtil.error(CN, e, "transition failed for " + entity + " " + recordId);
         }
-        return new Move(result, applied, refused, current, nz(row.getProperty(statusField)), reason, at);
+        return new Move(result, applied, refused, current, nz(row.getProperty(statusField)), reason, stamp);
     }
 
     /**
@@ -819,6 +870,7 @@ public class TransitionGuard extends DefaultApplicationPlugin {
                         r.setProperty(col, v);
                     }
                 }
+                for (FormRow changed : rows) m.stamp.apply(changed);     // 1.9.0: rows changed, stamped
                 dao.saveOrUpdate(place[0], place[1], rows);
             } catch (Exception e) {                   // noqa: the move stands regardless
                 LogUtil.error(CN, e, other + " not written for " + entity + " " + recordId);
