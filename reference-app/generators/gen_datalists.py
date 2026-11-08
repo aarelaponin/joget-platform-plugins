@@ -16,6 +16,17 @@ column is shown in its day-first pattern (displayFormat) and read in its stored 
 formatter may carry the values and labels of a fixed list (`options`) in place of a form to read
 them from (METHOD-2026-09-26-02, point 19 (a)); see fk_format.
 
+0.12.0 (METHOD-2026-11-05-17; MT-DM's hand-off of 5 November 2026, items 21, 10 and 18): a list's
+sort direction is written as the platform reads it - "1" descending, "" ascending (wflow-core
+9.0.7, DataList.ORDER_DESCENDING_VALUE "1"; DataList.getQueryParam sorts descending only where
+the default order equals "1"), where 0.11.0 wrote "DESC" and "ASC", so that every descending list
+was shown ascending; a select filter may carry `multiple`, which makes it a choice of several (the
+platform's own value "true" of SelectBoxDataListFilterType's `multiple`); and a column may carry
+the formatter `currency`, an amount shown with its grouping and its decimals, written through the
+platform's BeanShellFormatter, since the platform has no number formatter (see currency_format).
+A spec using neither new key emits exactly the 0.11.0 filter and column (asserted literally in
+test_gen_datalists_order.py); the sort direction changes every list's `order` by design.
+
 Usage: gen_datalists.py <spec_dir> <out_dir>
 """
 import json
@@ -107,6 +118,39 @@ def date_format(fmt):
             "properties": {"dataFormat": stored, "displayFormat": shown}}
 
 
+def _java_str(s: str) -> str:
+    return '"' + s.replace("\\", "\\\\").replace('"', '\\"') + '"'
+
+
+def currency_format(fmt):
+    """0.12.0 (item 18 of MT-DM's hand-off of 5 November 2026): an amount, shown with its grouping
+    and its decimals and, where the spec names one, its currency's symbol before it - "€9,850.00"
+    for 9850 with `symbol: "€"`. The platform 9.0.7 carries no number formatter for a list column:
+    its formatters are OptionsValueFormatter, NestedDatalistFormatter, ProcessStatusDatalistFormatter,
+    ConditionFormatter, DateFormatter and BeanShellFormatter (jw-enterprise-plugins 9.0.7), and
+    DefaultFormatter and ImageFormatter (wflow-core 9.0.7). So the amount is written through the
+    platform's own BeanShellFormatter, as the status badge is, by java.text.DecimalFormat with
+    English symbols, whatever the server's locale. Spec keys, each optional: `symbol` (none by
+    default) and `decimals` (2 by default, 0 to 6). The value is read with the spaces around it
+    taken off; one that does not read as a number - an empty value or none among them - is shown
+    as stored, an empty or absent value as empty."""
+    decimals = fmt.get("decimals", 2)
+    if isinstance(decimals, bool) or not isinstance(decimals, int) or not 0 <= decimals <= 6:
+        raise ValueError(f"a currency column's decimals must be a whole number from 0 to 6, not {decimals!r}")
+    symbol = str(fmt.get("symbol") or "")
+    prefix = "'" + symbol.replace("'", "''") + "'" if symbol else ""
+    pattern = prefix + "#,##0" + ("." + "0" * decimals if decimals else "")
+    script = (
+        'String v = (value==null)?"":value.toString().trim();'
+        "try {"
+        "java.text.DecimalFormat f = new java.text.DecimalFormat(" + _java_str(pattern) + ","
+        " java.text.DecimalFormatSymbols.getInstance(java.util.Locale.ENGLISH));"
+        "return f.format(new java.math.BigDecimal(v));"
+        "} catch (Exception e) { return v; }")
+    return {"className": "org.joget.plugin.enterprise.BeanShellFormatter",
+            "properties": {"script": script}}
+
+
 def col(idx, name, label, fmt=None, action=None, render_html=False):
     """Full canonical column shape — ALWAYS sortable; label cleaned of provenance leaks."""
     return {"name": name, "id": f"column_{idx}", "label": clean_label(label), "hidden": "false",
@@ -136,7 +180,15 @@ def filter_entry(idx, f):
         holds the category chosen, as the form's two drop-downs do. The category's filter is an
         ordinary select filter: like every filter it narrows the rows by its own column, so the
         list's rows carry the category under that name. See check_controls.
-    Absent both keys the emission is byte-identical to 0.10.0."""
+    Absent both keys the emission is byte-identical to 0.10.0.
+
+    0.12.0, a select filter of several choices (item 10 of MT-DM's hand-off of 5 November 2026):
+      * `multiple` - true makes the filter a choice of several: SelectBoxDataListFilterType's
+        `multiple` is written "true", the platform's own value for its multi-select box
+        (jw-enterprise-plugins 9.0.7, selectBoxDataListFilterType.json; its template then draws
+        the select box `multiple`). How a query list's own SQL reads the several values is the
+        model's (the kit's half, R6). Absent the key, or false, `multiple` is written "" as
+        before, and the emission is byte-identical to 0.11.0."""
     fid = f["id"]
     param = f.get("param", "f_" + fid)
     ftype = f.get("type", "text")
@@ -144,7 +196,8 @@ def filter_entry(idx, f):
         opts = [{"value": "", "label": "- any -"}]
         opts += [o if isinstance(o, dict) else {"value": o, "label": o} for o in f.get("options", [])]
         t = {"className": "org.joget.plugin.enterprise.SelectBoxDataListFilterType",
-             "properties": {"label": "", "defaultValue": "", "multiple": "", "size": "", "options": opts}}
+             "properties": {"label": "", "defaultValue": "", "multiple": "true" if f.get("multiple") else "",
+                            "size": "", "options": opts}}
         if f.get("optionsBinder"):
             t["properties"]["optionsBinder"] = f["optionsBinder"]
         if f.get("controlField"):
@@ -217,7 +270,23 @@ def list_action(idx, a):
     return out
 
 
-def envelope(dl_id, name, binder, cols, filters, row_actions, order_by="", order="ASC",
+#: 0.12.0 (item 21): the sort direction as the platform reads it. wflow-core 9.0.7,
+#: DataList.getQueryParam, sorts descending only where the list's default order equals
+#: DataList.ORDER_DESCENDING_VALUE, "1"; any other value is ascending. The datalist builder writes
+#: "1" for descending and "2" or "" for ascending (jw/js/dbuilder.core.js, the `order` select box).
+#: Ascending is written "" - the builder's "no order chosen", read ascending - so that a list
+#: sorted ascending carries no order of its own. Up to 0.11.0 the generator wrote "DESC" and
+#: "ASC", and the platform showed every descending list ascending.
+ORDER_DESC = "1"
+ORDER_ASC = ""
+
+
+def sort_order(desc) -> str:
+    """The platform's `order` for a spec's `sort.desc`."""
+    return ORDER_DESC if desc else ORDER_ASC
+
+
+def envelope(dl_id, name, binder, cols, filters, row_actions, order_by="", order=ORDER_ASC,
              actions=None):
     return {"id": dl_id, "name": name, "binder": binder, "columns": cols,
             "filters": filters, "actions": list(actions or []), "rowActions": row_actions,
@@ -256,6 +325,8 @@ def main():
                     cols.append(col(i, c["id"], c["label"], badge_format(fmt), action, render_html=True))
                 elif fmt and fmt.get("type") == "date":
                     cols.append(col(i, c["id"], c["label"], date_format(fmt), action))
+                elif fmt and fmt.get("type") == "currency":
+                    cols.append(col(i, c["id"], c["label"], currency_format(fmt), action))
                 else:
                     cols.append(col(i, c["id"], c["label"], None, action, bool(c.get("renderHtml"))))
             if d["binder"].get("type") == "jdbc":  # sanctioned raw-SQL slot (P3)
@@ -281,7 +352,7 @@ def main():
             las = [list_action(i, a) for i, a in enumerate(d.get("actions", []))]
             dl = envelope(d["id"], d["name"], binder, cols, filters, ras,
                           d.get("sort", {}).get("column", ""),
-                          "DESC" if d.get("sort", {}).get("desc") else "ASC", actions=las)
+                          sort_order(d.get("sort", {}).get("desc")), actions=las)
             json.dump(dl, open(os.path.join(out_dir, d["id"] + ".json"), "w"), indent=2)
             count += 1
             print(f"  + {d['id']}.json (custom, {len(cols)} cols, {len(filters)} filters, {len(ras)} drill)")

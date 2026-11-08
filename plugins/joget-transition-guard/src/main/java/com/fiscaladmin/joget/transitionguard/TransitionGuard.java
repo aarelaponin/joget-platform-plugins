@@ -97,10 +97,25 @@ import com.fiscaladmin.joget.statusmanager.StatusManager;
  * followed by a notify line
  * <br>records format, one line each: {@code entity>form>table}
  * <br>related format, one line each: {@code action>entity>condition>column=moment|today|'word',...}
+ * <br>templates format, one line: {@code form>table>nameColumn>contentColumn} (1.8.0), or, for templates kept
+ * in versions, {@code form>table>nameColumn>contentColumn>fromColumn>toColumn}, {@code toColumn} possibly empty
  * <br>a source is {@code record}, {@code attr:<attribute of the record moved>}, {@code moment},
  * {@code today}, {@code actor}, {@code from}, {@code to}, {@code move}, {@code reason},
  * {@code entity}, {@code words} (1.7.0: the words a refusal was said in, never a code), and for an
- * alert {@code recipient} and {@code template}.
+ * alert {@code recipient} and {@code template} (the template's name, as the notify line names it),
+ * {@code template_key} and {@code content} (1.8.0; MT-DM DM3-2026-10-27-159).
+ *
+ * <p><b>An alert's template</b> (1.8.0). Where {@code templates} names where the templates are kept,
+ * a column of source {@code template_key} holds the identifier of the template row whose
+ * {@code nameColumn} is the notify's template, the key a reference to it holds; and a column of
+ * source {@code content} holds that row's {@code contentColumn}, each merge field {@code {name}} in
+ * it filled from the move ({@code refusal_words} on a refusal, {@code reason}, {@code actor},
+ * {@code recipient}, {@code moment}, {@code today}) or else from the record moved (its attribute
+ * {@code name}); a field nothing fills is left as written. Where {@code templates} names the columns of the
+ * template's validity, the row is the version in effect on the move's day. Where no one such row is found -
+ * none, none in effect, or more than one - the key is left empty, the content is the template's name, as
+ * {@code template} writes it, and the result says which. Without {@code templates}, nothing is read and a
+ * configuration reads as before.
  */
 public class TransitionGuard extends DefaultApplicationPlugin {
 
@@ -120,7 +135,7 @@ public class TransitionGuard extends DefaultApplicationPlugin {
     static final String ACTOR_MARK = "@actor";
 
     public String getName() { return "Lifecycle Transition Guard"; }
-    public String getVersion() { return "1.7.0"; }
+    public String getVersion() { return "1.8.0"; }
     public String getDescription() { return "Drives StatusManager transitions from a form action (generated from the L1 model)."; }
     public String getLabel() { return "Lifecycle Transition Guard"; }
     public String getClassName() { return getClass().getName(); }
@@ -278,7 +293,8 @@ public class TransitionGuard extends DefaultApplicationPlugin {
             if ("audit".equals(kind)) {
                 said.append(writeAudit(rest, dao, entity, record, recordId, action, actor, m));
             } else if ("notify".equals(kind)) {
-                said.append(writeNotify(rest, dao, entity, record, recordId, action, actor, m));
+                said.append(writeNotify(rest, str(properties, "templates"), dao, entity, record, recordId,
+                        action, actor, m));
             } else {
                 LogUtil.warn(CN, "refused line of an unknown kind '" + kind + "' — not written");
             }
@@ -299,7 +315,8 @@ public class TransitionGuard extends DefaultApplicationPlugin {
             said.append(writeAudit(line, dao, entity, record, recordId, action, actor, m));
         }
         for (String line : str(properties, "notify").split("\n")) {
-            said.append(writeNotify(line, dao, entity, record, recordId, action, actor, m));
+            said.append(writeNotify(line, str(properties, "templates"), dao, entity, record, recordId,
+                    action, actor, m));
         }
         return said.toString();
     }
@@ -309,29 +326,139 @@ public class TransitionGuard extends DefaultApplicationPlugin {
                               String recordId, String action, String actor, Move m) {
         String[] p = line.trim().split(">", -1);
         if (p.length != 4 || !action.equals(p[0].trim())) return "";
-        return writeRow(dao, p[1], p[2], p[3], "", "", entity, record, recordId, action,
+        return writeRow(dao, p[1], p[2], p[3], "", "", "", entity, record, recordId, action,
                 actor, m, "history entry");
     }
 
-    /** One notify line ({@code action>to>template>form>table>columns}), where it names the move. */
-    private String writeNotify(String line, FormDataDao dao, String entity, FormRow record,
-                               String recordId, String action, String actor, Move m) {
+    /**
+     * One notify line ({@code action>to>template>form>table>columns}), where it names the move;
+     * {@code templates} says where its template is read, for the sources {@code template_key} and
+     * {@code content} (1.8.0), or is empty.
+     */
+    private String writeNotify(String line, String templates, FormDataDao dao, String entity,
+                               FormRow record, String recordId, String action, String actor, Move m) {
         String[] p = line.trim().split(">", -1);
         if (p.length != 6 || !action.equals(p[0].trim())) return "";
         String to = p[1].trim();
         String recipient = to.startsWith("attr:") ? nz(record.getProperty(to.substring(5))) : to;
-        return writeRow(dao, p[3], p[4], p[5], recipient, p[2].trim(), entity, record,
+        return writeRow(dao, p[3], p[4], p[5], recipient, p[2].trim(), templates, entity, record,
                 recordId, action, actor, m, "alert");
     }
 
+    /** A column name the guard puts in a condition: letters, digits and the underscore only. */
+    private static final Pattern COLUMN = Pattern.compile("[A-Za-z0-9_]+");
+    /** A merge field of a template's content (1.8.0): {@code {name}}. */
+    private static final Pattern MERGE = Pattern.compile("\\{([A-Za-z0-9_]+)\\}");
+
+    /**
+     * The template row named {@code name}, read where {@code templates} says
+     * ({@code form>table>nameColumn>contentColumn}; 1.8.0), or null where it names no place, or no
+     * one row holds that name. Where the line goes on to name the columns of the template's validity,
+     * {@code ...>fromColumn>toColumn} (a template kept in versions, one row a version; METHOD-2026-11-05-03
+     * version 2), the row is the version of that name in effect on {@code day}: its {@code fromColumn} on or
+     * before the day, and its {@code toColumn} empty, or not named, or on or after it, as the kit's
+     * currently-effective view reads an effective-dated record (tools/project_views.py); of several in effect,
+     * the one whose {@code fromColumn} is latest, the later version superseding the earlier (on the day one
+     * version's end meets the next one's start); where none is in effect, or two in effect start on the same
+     * latest day, null. Each date is compared as its first ten characters, {@code yyyy-MM-dd}, a date's
+     * storage. {@code why} is given the words that say why no row was chosen.
+     */
+    static FormRow templateRow(FormDataDao dao, String templates, String name, String day, StringBuilder why) {
+        String[] t = nz(templates).trim().split(">", -1);
+        boolean dated = t.length == 6;
+        if ((t.length != 4 && !dated) || name == null || name.isEmpty() || !COLUMN.matcher(t[2].trim()).matches()) {
+            why.append("not found");
+            return null;
+        }
+        try {
+            FormRowSet rs = dao.find(t[0].trim(), t[1].trim(), "WHERE e.customProperties." + t[2].trim() + " = ?1",
+                    new Object[]{name}, null, Boolean.FALSE, 0, dated ? null : 2);
+            if (rs == null || rs.isEmpty()) {
+                why.append("not found");
+                return null;
+            }
+            if (!dated) {
+                if (rs.size() == 1) return rs.get(0);
+                why.append("is held by more than one row");
+                return null;
+            }
+            FormRow best = null;
+            String bestFrom = null;
+            boolean tie = false;
+            for (FormRow r : rs) {
+                if (!inEffect(r, t[4].trim(), t[5].trim(), day)) continue;
+                String from = dayOf(r.getProperty(t[4].trim()));
+                int c = bestFrom == null ? 1 : from.compareTo(bestFrom);
+                if (c > 0) {
+                    best = r;
+                    bestFrom = from;
+                    tie = false;
+                } else if (c == 0) {
+                    tie = true;
+                }
+            }
+            if (best != null && !tie) return best;
+            why.append(best == null ? "has no version in effect on " + day
+                    : "has two versions in effect on " + day + " from the same day");
+            return null;
+        } catch (Exception e) {                       // noqa: fail-soft, the alert is still written
+            LogUtil.warn(CN, "template '" + name + "' not read from " + t[1].trim() + ": " + e.getMessage());
+            why.append("not read");
+            return null;
+        }
+    }
+
+    /** Whether a template's row is in effect on {@code day}: from on or before it, to empty or on or after it. */
+    static boolean inEffect(FormRow r, String fromColumn, String toColumn, String day) {
+        String from = dayOf(r.getProperty(fromColumn));
+        String to = toColumn.isEmpty() ? "" : dayOf(r.getProperty(toColumn));
+        return !from.isEmpty() && from.compareTo(day) <= 0 && (to.isEmpty() || to.compareTo(day) >= 0);
+    }
+
+    private static String dayOf(String v) {
+        String s = nz(v).trim();
+        return s.length() > 10 ? s.substring(0, 10) : s;
+    }
+
+    /**
+     * A template's content with each merge field {@code {name}} filled (1.8.0): from the move
+     * ({@code refusal_words} on a refusal, {@code reason}, {@code actor}, {@code recipient},
+     * {@code moment}, {@code today}), else from the record moved; a field nothing fills is left as
+     * written.
+     */
+    static String fill(String content, FormRow record, String recipient, String actor, Move m) {
+        Matcher x = MERGE.matcher(nz(content));
+        StringBuffer sb = new StringBuffer();
+        while (x.find()) {
+            String f = x.group(1);
+            String v;
+            switch (f) {
+                case "refusal_words": v = m.refused ? m.said() : null; break;
+                case "reason":        v = m.reason; break;
+                case "actor":         v = actor; break;
+                case "recipient":     v = recipient; break;
+                case "moment":        v = m.at.format(TS); break;
+                case "today":         v = m.at.toLocalDate().toString(); break;
+                default:              v = record == null ? null : record.getProperty(f);
+            }
+            x.appendReplacement(sb, Matcher.quoteReplacement(v == null || v.trim().isEmpty() ? x.group(0) : v));
+        }
+        x.appendTail(sb);
+        return sb.toString().trim();
+    }
+
     private String writeRow(FormDataDao dao, String form, String table, String columns,
-                            String recipient, String template, String entity, FormRow record,
-                            String recordId, String action, String actor, Move m, String what) {
+                            String recipient, String template, String templates, String entity,
+                            FormRow record, String recordId, String action, String actor, Move m,
+                            String what) {
         form = form.trim();
         table = table.trim();
         try {
             FormRow r = new FormRow();
             r.setId(UUID.randomUUID().toString());
+            FormRow[] tpl = null;                     // 1.8.0: the template row, read once where a column asks for it
+            StringBuilder why = new StringBuilder();  // why no row was chosen, said in the result
+            String note = "";
             for (String c : columns.split(",")) {
                 int eq = c.indexOf('=');
                 if (eq <= 0) continue;
@@ -356,6 +483,22 @@ public class TransitionGuard extends DefaultApplicationPlugin {
                         case "recipient": v = recipient; break;
                         case "template":  v = template; break;
                         case "words":     v = m.said(); break;        // 1.7.0
+                        case "template_key":                          // 1.8.0: the template's own key
+                        case "content":                               // 1.8.0: the template's words, filled
+                            if (tpl == null) tpl = new FormRow[]{templateRow(dao, templates, template,
+                                    m.at.toLocalDate().toString(), why)};
+                            if (tpl[0] == null) {
+                                v = "content".equals(src) ? template : "";
+                                if (note.isEmpty())
+                                    note = " · " + what + " template '" + template + "' " + why
+                                            + " — its name written, no key";
+                            } else {
+                                String[] t = templates.trim().split(">", -1);
+                                v = "content".equals(src)
+                                        ? fill(tpl[0].getProperty(t[3].trim()), record, recipient, actor, m)
+                                        : tpl[0].getId();
+                            }
+                            break;
 
                         default:
                             LogUtil.warn(CN, what + " column '" + col + "': unknown source '" + src + "' — left empty");
@@ -367,7 +510,7 @@ public class TransitionGuard extends DefaultApplicationPlugin {
             FormRowSet set = new FormRowSet();
             set.add(r);
             dao.saveOrUpdate(form, table, set);
-            return "";
+            return note;
         } catch (Exception e) {                       // noqa: the move stands regardless
             LogUtil.error(CN, e, what + " not written to " + table + " for " + entity + " " + recordId);
             return " · " + what + " NOT written: " + e.getMessage();
