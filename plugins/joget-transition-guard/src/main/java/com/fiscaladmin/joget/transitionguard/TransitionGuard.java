@@ -177,7 +177,7 @@ public class TransitionGuard extends DefaultApplicationPlugin {
     }
 
     public String getName() { return "Lifecycle Transition Guard"; }
-    public String getVersion() { return "1.9.0"; }
+    public String getVersion() { return "1.10.0"; }
     public String getDescription() { return "Drives StatusManager transitions from a form action (generated from the L1 model)."; }
     public String getLabel() { return "Lifecycle Transition Guard"; }
     public String getClassName() { return getClass().getName(); }
@@ -612,7 +612,8 @@ public class TransitionGuard extends DefaultApplicationPlugin {
             if (guardFail != null)
                 throw new InvalidTransitionException(current, target, guardFail);
             sm.apply(entity, row, statusField, recordId, target,
-                    Collections.<String>emptyList(), actor, reason.isEmpty() ? action : action + ": " + reason);
+                    Collections.<String>emptyList(), actor, reason.isEmpty() ? action : action + ": " + reason,
+                    stamp.instant);               // 1.10.0: the status event is this move's reading too
             applied = true;
             if (!setNowCsv.isEmpty()) {
                 String now = at.format(TS);

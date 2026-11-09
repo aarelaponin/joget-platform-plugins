@@ -1,6 +1,8 @@
 package com.fiscaladmin.joget.approval;
 
 import java.time.Clock;
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 import org.joget.apps.app.service.AppUtil;
@@ -81,12 +83,42 @@ final class RowStamps {
         return new RowStamps(Clock.systemDefaultZone(), PLATFORM);
     }
 
-    /** Stamps {@code row} as storeFormData stamps a row it saves, at this moment. */
+    /**
+     * The moment of an act that starts a move, read from this clock (1.5.0, version 2 of R34; R36): the gate and
+     * delegate engines read it once, call the service with it and save their result row with it, so the act, the
+     * engine's result row and the move's rows and events are one reading of the one clock. The sweep engine's
+     * moment is its {@code asOf}: this reading where the {@code asOf} is blank or cannot be parsed, so one
+     * reading; the {@code asOf} it was given otherwise, so no reading of the clock, and the result row, the
+     * rows and the events carry that {@code asOf}. For the platform's clock it is {@code LocalDateTime.now()}.
+     */
+    LocalDateTime now() {
+        return LocalDateTime.now(clock);
+    }
+
+    /**
+     * A move's moment (the {@code now} the service is called with) as an instant, in the clock's
+     * zone (the JVM's zone for the platform's clock): the instant the move's events are handed to
+     * the event writer with, so an event's stamps and the move's own moment are one reading.
+     */
+    Instant instantOf(LocalDateTime moment) {
+        return moment.atZone(clock.getZone()).toInstant();
+    }
+
+    /** Stamps {@code row} as storeFormData stamps a row it saves, at the clock's reading now. */
     void stamp(FormRow row) {
+        stamp(row, clock.instant());
+    }
+
+    /**
+     * Stamps {@code row} as storeFormData stamps a row it saves, at {@code at} (1.5.0, version 2 of R34): the
+     * instant of the move that saves it, which is the instant the move's events are handed, so a row and the
+     * events of one move are one reading and not two readings of a clock a second apart.
+     */
+    void stamp(FormRow row, Instant at) {
         if (row == null) {
             return;
         }
-        Date d = Date.from(clock.instant());
+        Date d = Date.from(at);
         String user = who.username();
         String name = who.fullName();
         row.setDateModified(d);
@@ -99,9 +131,18 @@ final class RowStamps {
         }
     }
 
-    /** The bundle's save of one row: stamped, then saved by the data access object. */
+    /** The bundle's save of one row that belongs to no move with a moment: stamped from the clock now, then saved. */
     void save(FormDataDao dao, String form, String table, FormRow row) {
-        stamp(row);
+        save(dao, form, table, row, null);
+    }
+
+    /**
+     * The bundle's save of one row a move writes (1.5.0): stamped from the move's moment ({@code moment}, the
+     * {@code now} the move is called with, {@code asOf} for the sweep) as {@link #instantOf} turns it, the same
+     * instant its events are handed; with no moment, from the clock read once at the save.
+     */
+    void save(FormDataDao dao, String form, String table, FormRow row, LocalDateTime moment) {
+        stamp(row, moment == null ? clock.instant() : instantOf(moment));
         FormRowSet set = new FormRowSet();
         set.add(row);
         dao.saveOrUpdate(form, table, set);

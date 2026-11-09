@@ -96,6 +96,7 @@ public class DecisionService {
         int approvals = (int) Rows.parseLong(Rows.prop(d, "approvalsCount"), 0);
         String reasons = Rows.prop(d, "reasons");
 
+        events.atMoment(stamps.instantOf(now));      // 1.5.0: the event is this move's reading
         events.append(caseId, "DECISION_PROPOSED", actor, "", "",
                 "decision proposed: " + actionType,
                 "\"decisionId\":\"" + CaseEventWriter.esc(decisionId) + "\""
@@ -128,9 +129,10 @@ public class DecisionService {
         d.setProperty("decisionStatus", status);
         d.setProperty("result", result);
         d.setProperty("decidedAt", ISO.format(now));
-        save(d);
+        save(d, now);
 
         String eventType = "APPROVED".equals(status) ? "DECISION_APPROVED" : "DECISION_REJECTED";
+        events.atMoment(stamps.instantOf(now));
         events.append(caseId, eventType, actor, "", "", result,
                 "\"decisionId\":\"" + CaseEventWriter.esc(decisionId) + "\""
                         + ",\"actionType\":\"" + CaseEventWriter.esc(actionType) + "\"");
@@ -151,7 +153,8 @@ public class DecisionService {
         return c.isEmpty() ? Rows.prop(d, "caseRef") : c;
     }
 
-    private void save(FormRow row) {
-        stamps.save(dao, F_DECISION, F_DECISION, row);      // 1.4.0: stamped as the platform stamps a row
+    /** Saves the decision row stamped from the move's moment (1.5.0), the same instant its events are handed. */
+    private void save(FormRow row, LocalDateTime moment) {
+        stamps.save(dao, F_DECISION, F_DECISION, row, moment);
     }
 }

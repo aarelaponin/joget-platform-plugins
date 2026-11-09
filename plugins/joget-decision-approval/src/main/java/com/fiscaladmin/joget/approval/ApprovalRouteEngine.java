@@ -72,7 +72,7 @@ public class ApprovalRouteEngine extends DefaultApplicationPlugin {
     };
 
     @Override public String getName() { return "Approval Route Engine"; }
-    @Override public String getVersion() { return "1.4.0"; }
+    @Override public String getVersion() { return "1.5.0"; }
     @Override public String getDescription() {
         return "Decision & Approval — runs the transition guard, then sets the approval level a routed record's amount calls for.";
     }

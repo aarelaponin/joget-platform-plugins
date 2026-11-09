@@ -72,7 +72,7 @@ public class MoveRefusal extends FormValidator {
     }
 
     @Override public String getName() { return "Move Refusal"; }
-    @Override public String getVersion() { return "1.9.0"; }
+    @Override public String getVersion() { return "1.10.0"; }
     @Override public String getDescription() {
         return "Judges a move before its act is saved and says a refusal in the model's own words.";
     }

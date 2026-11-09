@@ -1,5 +1,6 @@
 package com.fiscaladmin.joget.statusmanager;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -111,6 +112,20 @@ public class StatusManager {
     public void transition(String entity, String tableName, String statusField, String recordId,
                            String caseId, String targetStatus, List<String> scopeChain,
                            String actor, String reason) {
+        transition(entity, tableName, statusField, recordId, caseId, targetStatus, scopeChain,
+                actor, reason, null);
+    }
+
+    /**
+     * {@link #transition} for a caller that holds the move's instant (2.1.0): the event it appends
+     * is stamped, and its {@code eventTime} and payload {@code timestamp} are read, from
+     * {@code at}, so the event and the caller's own rows are one reading. {@code null}: the event
+     * writer reads its clock once, as before. The row this method itself saves is not stamped
+     * here; it is saved by the data access object as it always was.
+     */
+    public void transition(String entity, String tableName, String statusField, String recordId,
+                           String caseId, String targetStatus, List<String> scopeChain,
+                           String actor, String reason, Instant at) {
         FormRow row = dao.load(entity, tableName, recordId);
         if (row == null) {
             throw new InvalidTransitionException("", targetStatus,
@@ -130,7 +145,7 @@ public class StatusManager {
         String extra = "\"entity\":\"" + CaseEventWriter.esc(entity) + "\""
                 + ",\"recordId\":\"" + CaseEventWriter.esc(recordId) + "\""
                 + ",\"scope\":\"" + CaseEventWriter.esc(scope) + "\"";
-        events.append(caseId, EVENT_TYPE, actor, current, targetStatus, reason, extra);
+        emit(caseId, current, targetStatus, actor, reason, extra, at);
     }
 
     /**
@@ -147,6 +162,18 @@ public class StatusManager {
      */
     public void apply(String entity, FormRow row, String statusField, String caseId,
                       String targetStatus, List<String> scopeChain, String actor, String reason) {
+        apply(entity, row, statusField, caseId, targetStatus, scopeChain, actor, reason, null);
+    }
+
+    /**
+     * {@link #apply} for a caller that holds the move's instant (2.1.0), as for
+     * {@link #transition(String, String, String, String, String, String, List, String, String, Instant)}:
+     * the {@code STATUS_CHANGED} event is stamped from {@code at}. {@code null}: the event writer
+     * reads its clock once, as before.
+     */
+    public void apply(String entity, FormRow row, String statusField, String caseId,
+                      String targetStatus, List<String> scopeChain, String actor, String reason,
+                      Instant at) {
         String current = nz(row.getProperty(statusField));
         String scope = resolveScope(entity, scopeChain);
         if (!canTransition(entity, scopeChain, current, targetStatus)) {
@@ -158,6 +185,15 @@ public class StatusManager {
         String extra = "\"entity\":\"" + CaseEventWriter.esc(entity) + "\""
                 + ",\"recordId\":\"" + CaseEventWriter.esc(row.getId()) + "\""
                 + ",\"scope\":\"" + CaseEventWriter.esc(scope) + "\"";
+        emit(caseId, current, targetStatus, actor, reason, extra, at);
+    }
+
+    /** Appends the STATUS_CHANGED event, handing the caller's instant to the writer when there is one. */
+    private void emit(String caseId, String current, String targetStatus, String actor, String reason,
+                      String extra, Instant at) {
+        if (at != null) {
+            events.atMoment(at);
+        }
         events.append(caseId, EVENT_TYPE, actor, current, targetStatus, reason, extra);
     }
 

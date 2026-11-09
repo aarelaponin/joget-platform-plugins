@@ -26,7 +26,7 @@ public class ApprovalDelegateEngine extends DefaultApplicationPlugin {
     private static final String F_DELEGATE = "cmApprovalDelegate";
 
     @Override public String getName() { return "Approval Delegate Engine"; }
-    @Override public String getVersion() { return "1.4.0"; }
+    @Override public String getVersion() { return "1.5.0"; }
     @Override public String getDescription() {
         return "Decision & Approval — delegate a pending request to another approver.";
     }
@@ -69,10 +69,11 @@ public class ApprovalDelegateEngine extends DefaultApplicationPlugin {
         String delegateTo = Rows.prop(row, "delegateTo");
         String reason = Rows.prop(row, "reason");
         ApprovalService svc = new ApprovalService(dao, new CaseEventWriter(dao, ApprovalService.F_EVENT), DecisionEffects.snapshot(), stamps);
-        String result = svc.delegate(approvalId, fromApprover, delegateTo, reason, LocalDateTime.now());
+        LocalDateTime moment = stamps.now();                // 1.5.0: the move's one reading of the clock
+        String result = svc.delegate(approvalId, fromApprover, delegateTo, reason, moment);
         LogUtil.info(CLASS_NAME, "DELEGATE " + approvalId + " -> " + delegateTo + ": " + result);
         row.setProperty("result", result);
-        stamps.save(dao, F_DELEGATE, F_DELEGATE, row);      // 1.4.0: the delegation's result, stamped
+        stamps.save(dao, F_DELEGATE, F_DELEGATE, row, moment);   // 1.4.0: the delegation's result, stamped; 1.5.0: at the move's moment
         return null;
     }
 

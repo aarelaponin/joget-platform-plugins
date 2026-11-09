@@ -2,8 +2,10 @@ package com.fiscaladmin.joget.sla;
 
 import java.time.DayOfWeek;
 import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -185,15 +187,15 @@ public class DeadlineService {
                     d.setProperty("pausedAt", "");
                     status = "RUNNING";
                     resumed++;
-                    events.append(caseId, "SLA_RESUMED", actor, "", "",
-                            "clock " + prop(d, "clockCode") + " resumed", null);
+                    append(caseId, "SLA_RESUMED", actor,
+                            "clock " + prop(d, "clockCode") + " resumed", null, asOf);
                 } else if ("RUNNING".equals(status) && onHold && pauseOnHold) {
                     d.setProperty("status", "PAUSED");
                     d.setProperty("pausedAt", ISO.format(asOf));
                     status = "PAUSED";
                     paused++;
-                    events.append(caseId, "SLA_PAUSED", actor, "", "",
-                            "clock " + prop(d, "clockCode") + " paused (on hold)", null);
+                    append(caseId, "SLA_PAUSED", actor,
+                            "clock " + prop(d, "clockCode") + " paused (on hold)", null, asOf);
                 }
 
                 LocalDateTime dueAt = parse(prop(d, "dueAt"), asOf.plusDays(1));
@@ -209,14 +211,14 @@ public class DeadlineService {
                     if (!ref.isBefore(dueAt) && level < 2 && maxLevels >= 2) {
                         d.setProperty("status", "BREACHED");
                         d.setProperty("escalationLevel", "2");
-                        escalate(c, d, sla, 2, "SLA_BREACHED", actor, ref, dueAt);
+                        escalate(c, d, sla, 2, "SLA_BREACHED", actor, ref, dueAt, asOf);
                         breached++;
                         escalated++;
                     } else if (!ref.isBefore(dueAt)) {
                         d.setProperty("status", "BREACHED");
                     } else if (!ref.isBefore(critAt) && level < 1 && maxLevels >= 1) {
                         d.setProperty("escalationLevel", "1");
-                        escalate(c, d, sla, 1, "SLA_ESCALATED", actor, ref, dueAt);
+                        escalate(c, d, sla, 1, "SLA_ESCALATED", actor, ref, dueAt, asOf);
                         escalated++;
                     }
                 }
@@ -241,7 +243,8 @@ public class DeadlineService {
     }
 
     private void escalate(FormRow c, FormRow d, FormRow sla, int level,
-                          String eventType, String actor, LocalDateTime ref, LocalDateTime dueAt) {
+                          String eventType, String actor, LocalDateTime ref, LocalDateTime dueAt,
+                          LocalDateTime asOf) {
         String caseId = c.getId();
         long daysOverdue = Math.max(0, Duration.between(dueAt, ref).toDays());
         String chain = sla == null ? "" : prop(sla, "escalationChain");
@@ -257,8 +260,7 @@ public class DeadlineService {
                 .append(",\"clockCode\":\"").append(CaseEventWriter.esc(prop(d, "clockCode")))
                 .append("\",\"level\":").append(level);
         String extra = eb.toString();
-        events.append(caseId, eventType, actor, "", "",
-                "SLA escalation level " + level, extra);
+        append(caseId, eventType, actor, "SLA escalation level " + level, extra, asOf);
         List<String> notify = jsonList(chain, "notify");
         if (notify.isEmpty()) {
             notify = List.of("assignee", "supervisor"); // default
@@ -266,9 +268,8 @@ public class DeadlineService {
         for (String who : notify) {
             String recipient = "assignee".equals(who) ? prop(c, "assignee")
                     : "supervisor".equals(who) ? supervisorRole : who;
-            events.append(caseId, "NOTIF_PENDING", actor, "", "",
-                    "SLA escalation notice", "\"recipient\":\""
-                            + CaseEventWriter.esc(recipient) + "\"," + extra);
+            append(caseId, "NOTIF_PENDING", actor, "SLA escalation notice",
+                    "\"recipient\":\"" + CaseEventWriter.esc(recipient) + "\"," + extra, asOf);
         }
         if (!chain.contains("\"bumpPriority\":false")) { // default true
             long pr = parseLong(prop(c, "priority"), 0) + 1;
@@ -280,13 +281,29 @@ public class DeadlineService {
             String from = prop(c, "assignee");
             c.setProperty("assignee", reassignTo);
             save(fCase, c);
-            events.append(caseId, "CASE_REASSIGNED", actor, "", "",
-                    "SLA escalation reassignment", "\"from\":\"" + CaseEventWriter.esc(from)
-                            + "\",\"to\":\"" + CaseEventWriter.esc(reassignTo) + "\"");
+            append(caseId, "CASE_REASSIGNED", actor, "SLA escalation reassignment",
+                    "\"from\":\"" + CaseEventWriter.esc(from)
+                            + "\",\"to\":\"" + CaseEventWriter.esc(reassignTo) + "\"", asOf);
         }
     }
 
     // ---------- helpers ----------
+
+    /**
+     * Appends an event, handing the writer the sweep's moment (1.2.0; METHOD-2026-11-05-51, R34): {@code asOf}
+     * as an instant in the JVM's zone, as the transition guard turns its moment, so the event's stamps are
+     * the moment of the sweep that wrote it and not a clock read of the writer's own.
+     */
+    private void append(String caseId, String type, String actor, String reason, String extra,
+                        LocalDateTime asOf) {
+        events.atMoment(instantOf(asOf));
+        events.append(caseId, type, actor, "", "", reason, extra);
+    }
+
+    /** A moment of the sweep as an instant, in the JVM's zone. Null for null. */
+    static Instant instantOf(LocalDateTime moment) {
+        return moment == null ? null : moment.atZone(ZoneId.systemDefault()).toInstant();
+    }
 
     /** durationDays added per calendar: WORKING skips Sat/Sun + holiday CSV. */
     public static LocalDateTime addDays(LocalDateTime start, long days, FormRow calendar) {

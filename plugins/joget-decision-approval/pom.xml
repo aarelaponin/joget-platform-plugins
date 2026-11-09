@@ -29,8 +29,15 @@
          authority check) takes dateModified and modifiedBy / modifiedByName, its created three kept
          as loaded and filled only where the row holds no dateCreated. A minor step: no key added,
          nothing a configuration says reads otherwise; the engines gain a package-private run()
-         for their tests. -->
-    <version>1.4.0</version>
+         for their tests.
+         1.5.0 (METHOD-2026-11-05-51, R34; MT-DM's answer of 8 November 2026 to item 46's acceptance):
+         the events the service and the decision service append through joget-event-chain 2.1.0 are
+         stamped as the platform stamps a row, and each is handed the move's own moment (the `now`
+         the move is called with, or `asOf` for the sweep) as its instant, including the status
+         event the service's terminal move appends through joget-status-manager 2.1.0. The pins of
+         both move to 2.1.0. A minor step: no key added; nothing a configuration says reads
+         otherwise. -->
+    <version>1.5.0</version>
     <packaging>bundle</packaging>
     <name>joget-decision-approval</name>
     <description>Configurable decision &amp; approval service for Joget DX: authority-matrix
@@ -70,13 +77,13 @@
         <dependency>
             <groupId>com.fiscaladmin.joget</groupId>
             <artifactId>joget-event-chain</artifactId>
-            <version>2.0.0</version>
+            <version>2.1.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.fiscaladmin.joget</groupId>
             <artifactId>joget-status-manager</artifactId>
-            <version>2.0.0</version>
+            <version>2.1.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

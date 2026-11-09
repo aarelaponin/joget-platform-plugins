@@ -133,7 +133,7 @@ public class ApprovalService {
         }
         Route route = resolveRoute(actionType, materiality);
         if (route == null) {
-            event(caseId, "APPROVAL_NOT_REQUIRED", actor,
+            event(now, caseId, "APPROVAL_NOT_REQUIRED", actor,
                     "below approval band for " + actionType + " (materiality " + materiality + ")",
                     extra(entity, recordId, actionType, materiality, ""));
             return "AUTO (no approval required) -> " + runEffect(entity, recordId, actionType, actor, now);
@@ -161,11 +161,11 @@ public class ApprovalService {
         ap.setProperty("requiredAuthority", route.describe());
         ap.setProperty("status", "Pending"); // plain start (guarded moves run at decide)
         ap.setProperty("reason", "");
-        save(ap);
-        event(caseId, "APPROVAL_REQUESTED", actor,
+        save(ap, now);
+        event(now, caseId, "APPROVAL_REQUESTED", actor,
                 "approval requested: " + actionType + " -> " + route.describe(),
                 extra(entity, recordId, actionType, materiality, route.firstLevel()));
-        notify(caseId, roleGroupFor(route.firstLevel()), "APPROVAL_ASSIGNED",
+        notify(now, caseId, roleGroupFor(route.firstLevel()), "APPROVAL_ASSIGNED",
                 "approval needed: " + actionType + " -> " + route.firstLevel());
         return "PENDING (" + route.describe() + ", id=" + apId + ")";
     }
@@ -259,7 +259,7 @@ public class ApprovalService {
         String authority = p(ap, "requiredAuthority");
         // separation of duties — approver ≠ requester (four-eyes); blocking, request stays Pending
         if (approver != null && approver.equalsIgnoreCase(p(ap, "requestedBy"))) {
-            event(caseId, "APPROVAL_SOD_BLOCKED", approver,
+            event(now, caseId, "APPROVAL_SOD_BLOCKED", approver,
                     "separation of duties: approver == requester (" + approver + ")",
                     extra(entity, recordId, actionType, materiality, authority));
             return "SoD: approver == requester";
@@ -267,7 +267,7 @@ public class ApprovalService {
         // conflict of interest — an approver barred from this subject by an mmCoi EXCLUDE_APPROVER
         // rule may not decide it at all (blocking, request stays Pending)
         if (coiBarred(approver, caseId)) {
-            event(caseId, "APPROVAL_COI_BLOCKED", approver,
+            event(now, caseId, "APPROVAL_COI_BLOCKED", approver,
                     "conflict of interest: " + approver + " is barred from deciding this request",
                     extra(entity, recordId, actionType, materiality, authority));
             return "COI: approver barred";
@@ -275,7 +275,7 @@ public class ApprovalService {
         // auto-derived COI — when an mmCoi EXCLUDE_DECISION_MAKER rule is in force for the case
         // type, one person may not decide more than one request for the SAME taxpayer (TIN).
         if (autoCoiBarred(approver, caseId, ap.getId())) {
-            event(caseId, "APPROVAL_AUTOCOI_BLOCKED", approver,
+            event(now, caseId, "APPROVAL_AUTOCOI_BLOCKED", approver,
                     "auto-COI: " + approver + " already decided another request for this taxpayer",
                     extra(entity, recordId, actionType, materiality, authority));
             return "auto-COI: already decided for this taxpayer";
@@ -283,7 +283,7 @@ public class ApprovalService {
         // delegation binding — once a request is delegated, ONLY the named delegate may decide it.
         String delegatedTo = p(ap, "delegatedTo");
         if (!delegatedTo.isEmpty() && !delegatedTo.equalsIgnoreCase(approver)) {
-            event(caseId, "APPROVAL_DELEGATE_BLOCKED", approver,
+            event(now, caseId, "APPROVAL_DELEGATE_BLOCKED", approver,
                     "delegated to " + delegatedTo + "; only the delegate may decide",
                     extra(entity, recordId, actionType, materiality, authority));
             return "delegated to " + delegatedTo + "; not the delegate";
@@ -300,7 +300,7 @@ public class ApprovalService {
         // approve: rank gate against the CURRENT required level (chain cursor / single / quorum)
         String requiredLevel = p(ap, "requiredLevel");
         if (DecisionService.rank(approverLevel) < DecisionService.rank(requiredLevel)) {
-            event(caseId, "APPROVAL_RANK_BLOCKED", approver,
+            event(now, caseId, "APPROVAL_RANK_BLOCKED", approver,
                     "rank too low: " + approverLevel + " below required " + requiredLevel,
                     extra(entity, recordId, actionType, materiality, authority));
             return "rank too low: " + approverLevel + " < " + requiredLevel;
@@ -312,7 +312,7 @@ public class ApprovalService {
         }
         voters.add(approver);
         ap.setProperty("voters", String.join(",", voters));
-        event(caseId, "APPROVAL_DECISION", approver, "approve: " + reason,
+        event(now, caseId, "APPROVAL_DECISION", approver, "approve: " + reason,
                 extra(entity, recordId, actionType, materiality, requiredLevel)
                         + ",\"outcome\":\"approve\",\"level\":\"" + CaseEventWriter.esc(approverLevel) + "\"");
 
@@ -323,7 +323,7 @@ public class ApprovalService {
             if (step < chain.size()) {
                 ap.setProperty("currentStep", String.valueOf(step));
                 ap.setProperty("requiredLevel", chain.get(step));
-                save(ap);
+                save(ap, now);
                 return "chain advanced to step " + (step + 1) + "/" + chain.size()
                         + " (next: " + chain.get(step) + ")";
             }
@@ -333,7 +333,7 @@ public class ApprovalService {
             int quorum = Math.max((int) parseLong(p(ap, "quorum")), 1);
             ap.setProperty("approvalsCount", String.valueOf(cnt));
             if (cnt < quorum) {
-                save(ap);
+                save(ap, now);
                 return "quorum " + cnt + "/" + quorum + " (awaiting " + (quorum - cnt) + " more)";
             }
             // quorum reached -> complete
@@ -353,9 +353,10 @@ public class ApprovalService {
         ap.setProperty("decidedBy", approver);
         ap.setProperty("decidedAt", now.toString());
         // guarded Pending -> target (sets status + a STATUS_CHANGED row on the chain)
-        status.apply(F_APPROVAL, ap, "status", caseId, target, SCOPE, approver, reason);
-        save(ap);
-        event(caseId, "APPROVAL_DECISION", approver, target + ": " + reason,
+        status.apply(F_APPROVAL, ap, "status", caseId, target, SCOPE, approver, reason,
+                stamps.instantOf(now));    // 1.5.0: the status event is this move's reading
+        save(ap, now);
+        event(now, caseId, "APPROVAL_DECISION", approver, target + ": " + reason,
                 extra(entity, recordId, actionType, materiality, authority)
                         + ",\"outcome\":\"" + CaseEventWriter.esc(target) + "\"");
     }
@@ -397,18 +398,18 @@ public class ApprovalService {
                     ap.setProperty("escalations", String.valueOf(esc + 1));
                     ap.setProperty("deadline", asOf.plusDays(slaDays).toString());
                     ap.setProperty("requiredAuthority", to + " (escalated x" + (esc + 1) + ")");
-                    save(ap);
-                    event(caseId, "APPROVAL_ESCALATED", actor,
+                    save(ap, asOf);
+                    event(asOf, caseId, "APPROVAL_ESCALATED", actor,
                             "overdue: escalated " + from + " -> " + to + " (#" + (esc + 1) + ")",
                             extra(entity, recordId, actionType, materiality, to));
-                    notify(caseId, roleGroupFor(to), "APPROVAL_ESCALATED",
+                    notify(asOf, caseId, roleGroupFor(to), "APPROVAL_ESCALATED",
                             "overdue approval escalated to " + to);
                     escalated++;
                 } else {
                     String reason = "SLA timeout after " + esc + " escalations";
-                    event(caseId, "APPROVAL_TIMEOUT", actor, reason,
+                    event(asOf, caseId, "APPROVAL_TIMEOUT", actor, reason,
                             extra(entity, recordId, actionType, materiality, p(ap, "requiredLevel")));
-                    notify(caseId, p(ap, "requestedBy"), "APPROVAL_TIMEOUT",
+                    notify(asOf, caseId, p(ap, "requestedBy"), "APPROVAL_TIMEOUT",
                             "approval timed out (auto-rejected after " + esc + " escalations)");
                     finalize(ap, caseId, entity, recordId, actionType, materiality,
                             p(ap, "requiredAuthority"), "Rejected", actor, reason, asOf);
@@ -443,12 +444,12 @@ public class ApprovalService {
         }
         ap.setProperty("delegatedTo", delegateTo);
         ap.setProperty("delegatedBy", fromApprover);
-        save(ap);
-        event(p(ap, "caseId"), "APPROVAL_DELEGATED", fromApprover,
+        save(ap, now);
+        event(now, p(ap, "caseId"), "APPROVAL_DELEGATED", fromApprover,
                 "delegated to " + delegateTo + ": " + reason,
                 extra(p(ap, "entity"), p(ap, "recordId"), p(ap, "actionType"),
                         num(p(ap, "materiality")), p(ap, "requiredLevel")));
-        notify(p(ap, "caseId"), delegateTo, "APPROVAL_DELEGATED",
+        notify(now, p(ap, "caseId"), delegateTo, "APPROVAL_DELEGATED",
                 "approval delegated to you: " + reason);
         return "DELEGATED to " + delegateTo;
     }
@@ -596,7 +597,12 @@ public class ApprovalService {
                 + ",\"authority\":\"" + CaseEventWriter.esc(authority) + "\"";
     }
 
-    private void event(String caseId, String type, String actor, String reason, String extra) {
+    /** Appends an event, handing the writer the move's moment (1.5.0) so the event is stamped from it. */
+    private void event(LocalDateTime now, String caseId, String type, String actor, String reason,
+                       String extra) {
+        if (now != null) {
+            events.atMoment(stamps.instantOf(now));
+        }
         events.append(caseId, type, actor, "", "", reason, extra);
     }
 
@@ -605,11 +611,12 @@ public class ApprovalService {
      * a consumer dispatcher turns into an alert. Used on assignment, escalation, timeout and
      * delegation so the gate is not silent about who must act next.
      */
-    private void notify(String caseId, String recipient, String alertType, String summary) {
+    private void notify(LocalDateTime now, String caseId, String recipient, String alertType,
+                        String summary) {
         if (caseId == null || caseId.isEmpty() || recipient == null || recipient.trim().isEmpty()) {
             return;
         }
-        event(caseId, "NOTIF_PENDING", "system", summary,
+        event(now, caseId, "NOTIF_PENDING", "system", summary,
                 "\"recipient\":\"" + CaseEventWriter.esc(recipient) + "\",\"alertType\":\""
                         + CaseEventWriter.esc(alertType) + "\"");
     }
@@ -629,8 +636,9 @@ public class ApprovalService {
         return level;
     }
 
-    private void save(FormRow row) {
-        stamps.save(dao, F_APPROVAL, F_APPROVAL, row);      // 1.4.0: stamped as the platform stamps a row
+    /** Saves the request row stamped from the move's moment (1.5.0), the same instant its events are handed. */
+    private void save(FormRow row, LocalDateTime moment) {
+        stamps.save(dao, F_APPROVAL, F_APPROVAL, row, moment);
     }
 
     private void updateSchemas() {

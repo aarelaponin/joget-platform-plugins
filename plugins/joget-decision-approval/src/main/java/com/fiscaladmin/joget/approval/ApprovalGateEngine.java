@@ -27,7 +27,7 @@ public class ApprovalGateEngine extends DefaultApplicationPlugin {
     private static final String F_DECISION = "cmApprovalDecision";
 
     @Override public String getName() { return "Approval Gate Engine"; }
-    @Override public String getVersion() { return "1.4.0"; }
+    @Override public String getVersion() { return "1.5.0"; }
     @Override public String getDescription() {
         return "Decision & Approval — decide (approve/reject/return) then run the registered effect.";
     }
@@ -77,10 +77,11 @@ public class ApprovalGateEngine extends DefaultApplicationPlugin {
                 ? new AuthorityResolver(dao, AuthorityResolver.directoryGroups()).resolveLevel(approver)
                 : declaredLevel;
         ApprovalService svc = new ApprovalService(dao, new CaseEventWriter(dao, ApprovalService.F_EVENT), DecisionEffects.snapshot(), stamps);
-        String result = svc.decide(approvalId, approver, approverLevel, outcome, reason, LocalDateTime.now());
+        LocalDateTime moment = stamps.now();                // 1.5.0: the move's one reading of the clock
+        String result = svc.decide(approvalId, approver, approverLevel, outcome, reason, moment);
         LogUtil.info(CLASS_NAME, "DECIDE " + approvalId + " (" + outcome + "): " + result);
         dec.setProperty("result", result);
-        stamps.save(dao, F_DECISION, F_DECISION, dec);      // 1.4.0: the decision's result, stamped
+        stamps.save(dao, F_DECISION, F_DECISION, dec, moment);   // 1.4.0: the decision's result, stamped; 1.5.0: at the move's moment
         return null;
     }
 

@@ -68,6 +68,7 @@ public class HoldService {
         hold.setProperty("assertedAt", CaseOpsSupport.ISO.format(now));
         hold.setProperty("result", "ASSERTED");
         save(fHold, hold);
+        events.atMoment(CaseOpsSupport.instantOf(now));      // 1.2.0: the event is this move's reading
         events.append(caseId, "HOLD_ASSERTED", actor, "", "",
                 "hold asserted: " + scope,
                 "\"holdId\":\"" + CaseEventWriter.esc(holdId) + "\""
@@ -101,6 +102,7 @@ public class HoldService {
             hold.setProperty("releasedAt", CaseOpsSupport.ISO.format(now));
             hold.setProperty("releaseReason", reason);
             save(fHold, hold);
+            events.atMoment(CaseOpsSupport.instantOf(now));      // 1.2.0: the event is this move's reading
             events.append(caseId, "HOLD_RELEASED", actor, "", "",
                     "hold released: " + scope,
                     "\"holdId\":\"" + CaseEventWriter.esc(holdId) + "\""

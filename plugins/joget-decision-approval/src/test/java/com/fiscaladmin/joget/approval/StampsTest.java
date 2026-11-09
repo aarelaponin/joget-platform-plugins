@@ -44,7 +44,7 @@ public class StampsTest {
     static final Date AT = Date.from(INSTANT);
     /** A row the seed loader made on 6 November, by admin. */
     static final Date SEEDED = Date.from(Instant.parse("2026-11-06T12:36:51Z"));
-    static final LocalDateTime NOW = LocalDateTime.of(2026, 11, 8, 20, 25, 25);
+    static final LocalDateTime NOW = LocalDateTime.of(2026, 11, 8, 20, 25, 25, 400_000_000);
 
     private FormDataDao dao;
 
@@ -374,7 +374,7 @@ public class StampsTest {
         FormRow ap = pendingAp();
         when(dao.find(eq("cmApproval"), eq("cmApproval"), eq("WHERE e.customProperties.status = ?1"),
                 any(), isNull(), any(), anyInt(), anyInt())).thenReturn(set(ap));
-        FormRow run = seeded(row("SW1", "asOf", "2026-11-08T20:25:00"));
+        FormRow run = seeded(row("SW1", "asOf", "2026-11-08T20:25:25.400"));
         when(dao.load("cmApprovalSweep", "cmApprovalSweep", "SW1")).thenReturn(run);
         Map<String, Object> p = new HashMap<String, Object>();
         p.put("recordId", "SW1");

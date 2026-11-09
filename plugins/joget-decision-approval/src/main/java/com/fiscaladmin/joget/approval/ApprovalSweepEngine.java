@@ -27,7 +27,7 @@ public class ApprovalSweepEngine extends DefaultApplicationPlugin {
     private static final String F_SWEEP = "cmApprovalSweep";
 
     @Override public String getName() { return "Approval Sweep Engine"; }
-    @Override public String getVersion() { return "1.4.0"; }
+    @Override public String getVersion() { return "1.5.0"; }
     @Override public String getDescription() {
         return "Decision & Approval — SLA sweep: escalate then time out overdue requests.";
     }
@@ -71,21 +71,21 @@ public class ApprovalSweepEngine extends DefaultApplicationPlugin {
         String result = svc.sweep(asOf, actor);
         LogUtil.info(CLASS_NAME, "SWEEP: " + result);
         run.setProperty("result", result);
-        stamps.save(dao, F_SWEEP, F_SWEEP, run);            // 1.4.0: the sweep's result, stamped
+        stamps.save(dao, F_SWEEP, F_SWEEP, run, asOf);      // 1.4.0: the sweep's result, stamped; 1.5.0: at the sweep's moment, asOf
         return null;
     }
 
     /** blank -> now; "YYYY-MM-DDThh:mm[:ss]" -> that instant; "YYYY-MM-DD" -> start of day. */
     private LocalDateTime parseAsOf(String s) {
         if (s == null || s.trim().isEmpty()) {
-            return LocalDateTime.now();
+            return stamps.now();
         }
         String v = s.trim();
         try {
             return v.contains("T") ? LocalDateTime.parse(v) : LocalDate.parse(v).atStartOfDay();
         } catch (Exception e) {
             LogUtil.warn(CLASS_NAME, "SWEEP: unparseable asOf '" + v + "' — using now");
-            return LocalDateTime.now();
+            return stamps.now();
         }
     }
 
