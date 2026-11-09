@@ -1,6 +1,6 @@
 package com.fiscaladmin.joget.approval;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -26,7 +26,7 @@ public class AuthorityMatrixEngine extends DefaultApplicationPlugin {
     private static final String F_AUTH = "mmAuthority";
 
     @Override public String getName() { return "Authority Matrix Validator"; }
-    @Override public String getVersion() { return "1.5.0"; }
+    @Override public String getVersion() { return "1.6.0"; }
     @Override public String getDescription() {
         return "Decision & Approval — mmAuthority band consistency validation.";
     }
@@ -76,12 +76,13 @@ public class AuthorityMatrixEngine extends DefaultApplicationPlugin {
                 maps.add(m);
             }
         }
-        MatrixValidator.Result r = MatrixValidator.validate(maps, LocalDate.now().toString());
+        LocalDateTime moment = stamps.now();                // 1.6.0: the check's one reading of the clock
+        MatrixValidator.Result r = MatrixValidator.validate(maps, moment.toLocalDate().toString());
         row.setProperty("valid", String.valueOf(r.valid));
         row.setProperty("issueCount", String.valueOf(r.issues.size()));
         row.setProperty("issues", String.join("\n", r.issues));
         row.setProperty("result", "VALIDATE " + actionType + " (" + maps.size() + " bands): " + r);
-        save(dao, row);
+        save(dao, row, moment);
         LogUtil.info(CLASS_NAME, "VALIDATE " + actionType + ": " + r);
         return null;
     }
@@ -103,7 +104,8 @@ public class AuthorityMatrixEngine extends DefaultApplicationPlugin {
         return (rows == null || rows.isEmpty()) ? null : rows.get(0).getId();
     }
 
-    private void save(FormDataDao dao, FormRow row) {
-        stamps.save(dao, F_CHECK, F_CHECK, row);            // 1.4.0: the check's result, stamped
+    private void save(FormDataDao dao, FormRow row, LocalDateTime moment) {
+        // 1.4.0: the check's result, stamped; 1.6.0: at the reading the validation's day was taken from
+        stamps.save(dao, F_CHECK, F_CHECK, row, moment);
     }
 }

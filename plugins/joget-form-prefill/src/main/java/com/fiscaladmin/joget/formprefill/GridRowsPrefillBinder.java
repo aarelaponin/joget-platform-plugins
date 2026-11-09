@@ -44,7 +44,7 @@ public class GridRowsPrefillBinder extends FormBinder
     public String getName() { return "Grid Rows Prefill Binder"; }
 
     @Override
-    public String getVersion() { return "1.1.0"; }
+    public String getVersion() { return "1.1.1"; }
 
     @Override
     public String getLabel() { return "Grid Rows Prefill Binder"; }

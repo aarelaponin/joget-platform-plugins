@@ -131,7 +131,7 @@ public class ApprovalService {
         if (live != null) {
             return "already pending (" + live.getId() + ")"; // idempotent
         }
-        Route route = resolveRoute(actionType, materiality);
+        Route route = resolveRoute(actionType, materiality, now);
         if (route == null) {
             event(now, caseId, "APPROVAL_NOT_REQUIRED", actor,
                     "below approval band for " + actionType + " (materiality " + materiality + ")",
@@ -172,10 +172,12 @@ public class ApprovalService {
 
     /**
      * Resolve the authority route from {@code mmAuthority}: the band whose [amountMin, amountMax]
-     * contains the materiality. {@code null} when no band matches (no approval required).
+     * contains the materiality, among the bands in force on the day of {@code moment} - the day the move is
+     * made for: the request's {@code now}, the sweep's {@code asOf}, the route engine's one reading
+     * (1.6.0; the clock's own day before). {@code null} when no band matches (no approval required).
      */
-    Route resolveRoute(String actionType, double materiality) {
-        FormRow band = bandRow(actionType, materiality);
+    Route resolveRoute(String actionType, double materiality, LocalDateTime moment) {
+        FormRow band = bandRow(actionType, materiality, moment);
         if (band == null) {
             return null;
         }
@@ -196,17 +198,20 @@ public class ApprovalService {
         return new Route("SINGLE", Collections.singletonList(level), 1, sla, maxEsc);
     }
 
-    /** The mmAuthority band for (actionType, amount in [amountMin, amountMax]), or null. */
-    private FormRow bandRow(String actionType, double materiality) {
+    /**
+     * The mmAuthority band for (actionType, amount in [amountMin, amountMax]) in force on the day of
+     * {@code moment}, or null (1.6.0: the day it is handed, not the clock's).
+     */
+    private FormRow bandRow(String actionType, double materiality, LocalDateTime moment) {
         FormRowSet rows = dao.find(F_AUTH, F_AUTH,
                 "WHERE e.customProperties.actionType = ?1", new Object[]{actionType},
                 "dateCreated", Boolean.FALSE, 0, FETCH_ALL);
         if (rows == null) {
             return null;
         }
-        // effective-dating: only bands valid today; among overlapping matches the most recently
+        // effective-dating: only bands valid on the move's day; among overlapping matches the most recently
         // effective (then highest version) wins. ISO yyyy-MM-dd sorts lexicographically.
-        String today = LocalDateTime.now().toString().substring(0, 10);
+        String today = moment.toLocalDate().toString();
         FormRow best = null;
         String bestFrom = "";
         long bestVer = -1;
@@ -221,7 +226,7 @@ public class ApprovalService {
             String to = p(r, "effectiveTo");
             if ((!from.isEmpty() && from.compareTo(today) > 0)
                     || (!to.isEmpty() && to.compareTo(today) < 0)) {
-                continue; // not effective today
+                continue; // not effective on the move's day
             }
             long ver = parseLong(p(r, "version"));
             if (best == null || from.compareTo(bestFrom) > 0
@@ -387,7 +392,7 @@ public class ApprovalService {
                 String recordId = p(ap, "recordId");
                 String actionType = p(ap, "actionType");
                 double materiality = num(p(ap, "materiality"));
-                Route route = resolveRoute(actionType, materiality);
+                Route route = resolveRoute(actionType, materiality, asOf);
                 int maxEsc = route == null ? MAX_ESCALATIONS : route.maxEscalations;
                 int slaDays = route == null ? (int) SLA_DAYS : route.slaDays;
                 int esc = (int) parseLong(p(ap, "escalations"));

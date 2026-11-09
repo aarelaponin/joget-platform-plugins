@@ -52,6 +52,32 @@ At deploy time the pinned JAR is dropped into `<joget>/wflow/app_plugins/` (hot-
 or uploaded via Manage Plugins. `joget-spec-kit`'s `deploy` step resolves the pins and does
 this; it reads `registry.yaml` to know which plugins exist and how to configure them.
 
+## Placing the jars
+
+A plugin folder (`wflow/app_plugins`) installs the jars put in it **in the alphabetical order of their file names**, and a bundle that imports a package another bundle of the library exports does not resolve if it is installed first: the instance answers *Unable to resolve ... missing requirement ... osgi.wiring.package=...* and leaves the bundle not started. Placed together, a consumer whose name sorts before `joget-event-chain` or `joget-status-manager` can be installed before the bundle it imports (MT-DM's placing of 9 November 2026: `joget-case-ops` and `joget-decision-approval` failed this way and started only when touched again).
+
+So place the library bundles first and their consumers after them (wait until the plugin list shows a layer started), **or** place them all and restart the instance once; touching a failed jar again (a new modification time, the bytes unchanged) had the plugin manager install it again and start it, in MT-DM's placing.
+
+The order below is read by `placing_order.py` from each plugin's manifest and pom (a plugin depends on another when it imports a package the other exports), not written by hand. Each layer may be placed together; place a layer after the one before it has started.
+
+| Layer | Jars | Imports of the library's own packages |
+|---|---|---|
+| 1 | `joget-event-chain-2.1.0.jar` | none |
+| 1 | `joget-form-prefill-1.1.1.jar` | none |
+| 1 | `joget-require-guard-1.0.0.jar` | none |
+| 1 | `joget-tenant-1.0.0.jar` | none |
+| 1 | `joget-unique-guard-1.0.0.jar` | none |
+| 2 | `joget-sla-1.2.0.jar` | com.fiscaladmin.joget.eventchain (joget-event-chain) |
+| 2 | `joget-status-manager-2.1.0.jar` | com.fiscaladmin.joget.eventchain (joget-event-chain) |
+| 3 | `joget-case-ops-1.2.0.jar` | com.fiscaladmin.joget.eventchain (joget-event-chain); com.fiscaladmin.joget.statusmanager (joget-status-manager) |
+| 3 | `joget-decision-approval-1.6.0.jar` | com.fiscaladmin.joget.eventchain (joget-event-chain); com.fiscaladmin.joget.statusmanager (joget-status-manager) |
+| 3 | `joget-transition-guard-1.10.0.jar` | com.fiscaladmin.joget.eventchain (joget-event-chain); com.fiscaladmin.joget.statusmanager (joget-status-manager) |
+
+Sorting by name alone puts these before a bundle they import: `joget-case-ops-1.2.0.jar` before `joget-event-chain-2.1.0.jar`, `joget-status-manager-2.1.0.jar`; `joget-decision-approval-1.6.0.jar` before `joget-event-chain-2.1.0.jar`, `joget-status-manager-2.1.0.jar`.
+
+A jar of a version other than the one named here is placed by the same rule: by its bundle, first the bundles that import nothing of the library, then those that import them.
+
+
 ## Build & publish
 
 Builds run on a workstation with JDK + Maven (the Cowork sandbox has no Maven).

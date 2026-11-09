@@ -27,7 +27,7 @@ public class ApprovalGateEngine extends DefaultApplicationPlugin {
     private static final String F_DECISION = "cmApprovalDecision";
 
     @Override public String getName() { return "Approval Gate Engine"; }
-    @Override public String getVersion() { return "1.5.0"; }
+    @Override public String getVersion() { return "1.6.0"; }
     @Override public String getDescription() {
         return "Decision & Approval — decide (approve/reject/return) then run the registered effect.";
     }

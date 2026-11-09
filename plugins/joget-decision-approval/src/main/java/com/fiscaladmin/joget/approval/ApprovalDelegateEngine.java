@@ -26,7 +26,7 @@ public class ApprovalDelegateEngine extends DefaultApplicationPlugin {
     private static final String F_DELEGATE = "cmApprovalDelegate";
 
     @Override public String getName() { return "Approval Delegate Engine"; }
-    @Override public String getVersion() { return "1.5.0"; }
+    @Override public String getVersion() { return "1.6.0"; }
     @Override public String getDescription() {
         return "Decision & Approval — delegate a pending request to another approver.";
     }

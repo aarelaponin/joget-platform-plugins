@@ -1,5 +1,6 @@
 package com.fiscaladmin.joget.approval;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Map;
 
@@ -72,7 +73,7 @@ public class ApprovalRouteEngine extends DefaultApplicationPlugin {
     };
 
     @Override public String getName() { return "Approval Route Engine"; }
-    @Override public String getVersion() { return "1.5.0"; }
+    @Override public String getVersion() { return "1.6.0"; }
     @Override public String getDescription() {
         return "Decision & Approval — runs the transition guard, then sets the approval level a routed record's amount calls for.";
     }
@@ -96,6 +97,7 @@ public class ApprovalRouteEngine extends DefaultApplicationPlugin {
      * added to the move's result, or the guard's absence, or null where it had nothing to say.
      */
     String run(Map properties, FormDataDao dao, Guard guard) {
+        LocalDateTime moment = stamps.now();          // 1.6.0: the move's one reading of the clock
         String entity = str(properties, "entity");
         String tableName = str(properties, "tableName");
         String statusField = def(str(properties, "statusField"), "status");
@@ -129,7 +131,7 @@ public class ApprovalRouteEngine extends DefaultApplicationPlugin {
             LogUtil.warn(CLASS_NAME, said);
             if (saved != null) {
                 saved.setProperty(RESULT_FIELD, said);
-                save(dao, savedForm, savedTable, saved);
+                save(dao, savedForm, savedTable, saved, moment);
             }
             return said;
         }
@@ -159,7 +161,7 @@ public class ApprovalRouteEngine extends DefaultApplicationPlugin {
         if (Double.isNaN(amount)) {
             said = " · approval level NOT set: " + amountAttr + " '" + raw + "' is not an amount";
         } else {
-            String level = level(dao, actionType, amount);
+            String level = level(dao, actionType, amount, moment);
             if (level == null || level.isEmpty()) {
                 said = " · approval level NOT set: no band of " + actionType + " covers " + raw;
             } else {
@@ -170,25 +172,26 @@ public class ApprovalRouteEngine extends DefaultApplicationPlugin {
         }
         if (targetField.isEmpty()) {
             record.setProperty(RESULT_FIELD, Rows.prop(record, RESULT_FIELD) + said);
-            save(dao, recordForm, tableName, record);
+            save(dao, recordForm, tableName, record, moment);
         } else {
             if (levelled) {
-                save(dao, recordForm, tableName, record);
+                save(dao, recordForm, tableName, record, moment);
             }
             saved.setProperty(RESULT_FIELD, Rows.prop(saved, RESULT_FIELD) + said);
-            save(dao, savedForm, savedTable, saved);
+            save(dao, savedForm, savedTable, saved, moment);
         }
         LogUtil.info(CLASS_NAME, entity + " " + recordId + " " + action + said);
         return said;
     }
 
-    /** The level of the band of {@code actionType} that covers {@code amount}, by the service's
-     *  own routing over {@code mmAuthority}; null where none does. */
-    static String level(FormDataDao dao, String actionType, double amount) {
+    /** The level of the band of {@code actionType} that covers {@code amount} and is in force on the day of
+     *  {@code moment} (the engine's one reading), by the service's own routing over {@code mmAuthority};
+     *  null where none does. */
+    static String level(FormDataDao dao, String actionType, double amount, LocalDateTime moment) {
         ApprovalService svc = new ApprovalService(dao,
                 new CaseEventWriter(dao, ApprovalService.F_EVENT),
                 Collections.<String, DecisionEffect>emptyMap());
-        ApprovalService.Route r = svc.resolveRoute(actionType, amount);
+        ApprovalService.Route r = svc.resolveRoute(actionType, amount, moment);
         return r == null ? null : r.firstLevel();
     }
 
@@ -226,9 +229,10 @@ public class ApprovalRouteEngine extends DefaultApplicationPlugin {
         return rs == null || rs.size() != 1 ? null : rs.get(0);
     }
 
-    /** 1.4.0: the record's level and result, and the saved act's result, stamped as the platform stamps a row. */
-    private void save(FormDataDao dao, String form, String table, FormRow row) {
-        stamps.save(dao, form, table, row);
+    /** 1.4.0: the record's level and result, and the saved act's result, stamped as the platform stamps a row;
+     *  1.6.0: at the move's one reading, so the record and the act are one stamp. */
+    private void save(FormDataDao dao, String form, String table, FormRow row, LocalDateTime moment) {
+        stamps.save(dao, form, table, row, moment);
     }
 
     private static String str(Map m, String k) {

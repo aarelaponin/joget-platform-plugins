@@ -35,7 +35,7 @@ public class FormPrefillLoadBinder extends WorkflowFormBinder {
     public String getName() { return "Form Prefill Load Binder"; }
 
     @Override
-    public String getVersion() { return "1.0.1"; }
+    public String getVersion() { return "1.1.1"; }
 
     @Override
     public String getLabel() { return "Form Prefill Load Binder"; }

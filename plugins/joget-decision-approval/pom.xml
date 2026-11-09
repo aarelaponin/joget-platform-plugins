@@ -36,8 +36,16 @@
          the move is called with, or `asOf` for the sweep) as its instant, including the status
          event the service's terminal move appends through joget-status-manager 2.1.0. The pins of
          both move to 2.1.0. A minor step: no key added; nothing a configuration says reads
-         otherwise. -->
-    <version>1.5.0</version>
+         otherwise.
+         1.6.0 (METHOD-2026-11-05-67, R40; MT-DM's request of 9 November 2026, H3, and the two clock
+         readings the review of R36 left): every plugin class of the bundle reports the bundle's
+         version (RequesterWithheld read 1.3.1 and ApprovalInboxBinder 1.0.0 in the instance's plugin
+         list), held for every class by EveryClassReportsItsBundleVersionTest; the service looks the
+         authority matrix up at the day the move is handed (the request's now, the sweep's asOf, the
+         route engine's one reading) and no longer at the clock's day; the route engine and the
+         authority-matrix engine read the clock once and save every row they write on that reading.
+         A minor step: no key added; nothing a configuration says reads otherwise. -->
+    <version>1.6.0</version>
     <packaging>bundle</packaging>
     <name>joget-decision-approval</name>
     <description>Configurable decision &amp; approval service for Joget DX: authority-matrix

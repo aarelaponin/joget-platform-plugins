@@ -42,7 +42,7 @@ public class RequesterWithheld extends UserviewPermission implements FormPermiss
     private static final String CLASS_NAME = RequesterWithheld.class.getName();
 
     @Override public String getName() { return "Requester Withheld"; }
-    @Override public String getVersion() { return "1.3.1"; }
+    @Override public String getVersion() { return "1.6.0"; }
     @Override public String getDescription() {
         return "Decision & Approval - an act withheld from the person who asked for the record.";
     }

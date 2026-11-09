@@ -37,7 +37,7 @@ public class ApprovalInboxBinder extends DataListBinderDefault {
     };
 
     @Override public String getName() { return "Approval Inbox Binder"; }
-    @Override public String getVersion() { return "1.0.0"; }
+    @Override public String getVersion() { return "1.6.0"; }
     @Override public String getDescription() {
         return "Decision & Approval — per-user 'mine to decide' approvals inbox "
                 + "(directory-resolved eligibility; API-only).";

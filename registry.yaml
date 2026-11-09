@@ -225,7 +225,10 @@ plugins:
   - id: joget-form-prefill
     module: plugins/joget-form-prefill
     artifact: com.fiscaladmin.joget:joget-form-prefill
-    version: 1.1.0                  # 1.1.0 (joget-spec-kit METHOD-2026-10-24-01, 24 Oct 2026): the bundle
+    version: 1.1.1                  # 1.1.1 (METHOD-2026-11-05-67, R40, 9 Nov 2026): both binders report the
+                                    # bundle's version (FormPrefillLoadBinder said 1.0.1); nothing a spec
+                                    # says reads otherwise, registry_version does not move.
+                                    # 1.1.0 (joget-spec-kit METHOD-2026-10-24-01, 24 Oct 2026): the bundle
                                     # also registers GridRowsPrefillBinder, a grid's LOAD binder that loads
                                     # its lines as the platform's MultirowFormBinder does and, on a NEW
                                     # record, carries them from the rows of the record the form is opened
@@ -719,10 +722,10 @@ plugins:
   - id: joget-decision-approval
     module: plugins/joget-decision-approval
     artifact: com.fiscaladmin.joget:joget-decision-approval
-    version: 1.5.0
+    version: 1.6.0
     category: foundation
     tier: P
-    status: active            # service core (3a+3b) and its Joget plugins (3c, 165e2d3, 4 Jul 2026) shipped; ApprovalRouteEngine 1.2.0; RequesterWithheld 1.3.0; on jakarta.servlet 1.3.1; rows stamped as the platform stamps them 1.4.0; events stamped from the move's moment 1.5.0
+    status: active            # service core (3a+3b) and its Joget plugins (3c, 165e2d3, 4 Jul 2026) shipped; ApprovalRouteEngine 1.2.0; RequesterWithheld 1.3.0; on jakarta.servlet 1.3.1; rows stamped as the platform stamps them 1.4.0; events stamped from the move's moment 1.5.0; every class its bundle's version and the approvals read one day 1.6.0
     ships: code
     license: proprietary            # FiscalAdmin OÜ
     dx_compat: ["8.1", "9.x"]
@@ -760,7 +763,12 @@ plugins:
       way from the move's own moment - the now the move is called with, asOf for the sweep -
       the status event of its terminal move included; and the request row and the decision row a
       move saves are stamped from that same moment, so a row and its events are one reading
-      (1.5.0; EventStampsTest, OneReadingTest).
+      (1.5.0; EventStampsTest, OneReadingTest). Every plugin class reports the bundle's version (it
+      read 1.3.1 for RequesterWithheld and 1.0.0 for ApprovalInboxBinder in the instance's plugin
+      list); the authority matrix is looked up at the day the move is handed - the request's now, the
+      sweep's asOf, the route engine's one reading - and no longer at the clock's day; and the route
+      engine and the authority-matrix engine read the clock once and save every row they write on
+      that reading (1.6.0; EveryClassReportsItsBundleVersionTest, OneDayTest).
     registers:
       - com.fiscaladmin.joget.approval.ApprovalGateEngine
       - com.fiscaladmin.joget.approval.ApprovalSweepEngine
@@ -795,6 +803,8 @@ plugins:
       The platform's columns on every row saved (RowStamps) by METHOD-2026-11-05-45, on MT-DM's
       hand-off of 8 November 2026, item 46 (1.4.0; StampsTest); the registry's own version does
       not move.
+      Every class its bundle's version, and the approvals reading one day, by METHOD-2026-11-05-67
+      (R40), on MT-DM's request of 9 November 2026 (1.6.0); the registry's own version does not move.
     source_of_truth: this repo
 
   - id: joget-case-ops

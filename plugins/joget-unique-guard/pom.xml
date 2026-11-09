@@ -44,5 +44,9 @@
             <groupId>org.joget</groupId>
             <artifactId>wflow-core</artifactId>
         </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+        </dependency>
     </dependencies>
 </project>

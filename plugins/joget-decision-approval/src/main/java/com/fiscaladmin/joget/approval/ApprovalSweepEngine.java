@@ -27,7 +27,7 @@ public class ApprovalSweepEngine extends DefaultApplicationPlugin {
     private static final String F_SWEEP = "cmApprovalSweep";
 
     @Override public String getName() { return "Approval Sweep Engine"; }
-    @Override public String getVersion() { return "1.5.0"; }
+    @Override public String getVersion() { return "1.6.0"; }
     @Override public String getDescription() {
         return "Decision & Approval — SLA sweep: escalate then time out overdue requests.";
     }

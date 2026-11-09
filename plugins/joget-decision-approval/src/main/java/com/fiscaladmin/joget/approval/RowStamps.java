@@ -84,8 +84,9 @@ final class RowStamps {
     }
 
     /**
-     * The moment of an act that starts a move, read from this clock (1.5.0, version 2 of R34; R36): the gate and
-     * delegate engines read it once, call the service with it and save their result row with it, so the act, the
+     * The moment of an act that starts a move, read from this clock (1.5.0, version 2 of R34; R36; the route and
+     * authority-matrix engines since 1.6.0, R40): the gate, delegate, route and matrix engines read it once, call
+     * the service with it (the route engine, for the day its band is looked up at) and save their rows with it, so the act, the
      * engine's result row and the move's rows and events are one reading of the one clock. The sweep engine's
      * moment is its {@code asOf}: this reading where the {@code asOf} is blank or cannot be parsed, so one
      * reading; the {@code asOf} it was given otherwise, so no reading of the clock, and the result row, the

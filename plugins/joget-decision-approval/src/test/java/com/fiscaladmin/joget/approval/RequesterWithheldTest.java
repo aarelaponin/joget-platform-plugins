@@ -71,7 +71,7 @@ public class RequesterWithheldTest {
         String bytes = new String(out.toByteArray(), java.nio.charset.StandardCharsets.ISO_8859_1);
         assertTrue(bytes.contains("jakarta/servlet/http/HttpServletRequest"));
         assertFalse(bytes.contains("javax/servlet"));
-        assertEquals("1.3.1", new RequesterWithheld().getVersion());
+        // the version it reports is the bundle's, for every class: EveryClassReportsItsBundleVersionTest
     }
 
     @Test

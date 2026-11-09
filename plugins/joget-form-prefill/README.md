@@ -36,7 +36,7 @@ Copy the JAR into the instance's plugin folder (hot-reloads in ~10s), or upload 
 **Manage Plugins**:
 
 ```bash
-cp target/joget-form-prefill-1.1.0.jar <joget>/wflow/app_plugins/   # and remove the older joget-form-prefill-*.jar
+cp target/joget-form-prefill-1.1.1.jar <joget>/wflow/app_plugins/   # and remove the older joget-form-prefill-*.jar
 ```
 
 It registers two plugins: `com.fiscaladmin.joget.formprefill.FormPrefillLoadBinder` and, since 1.1.0,
