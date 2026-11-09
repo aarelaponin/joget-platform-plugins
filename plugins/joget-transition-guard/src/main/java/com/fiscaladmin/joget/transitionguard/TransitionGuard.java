@@ -1,8 +1,11 @@
 package com.fiscaladmin.joget.transitionguard;
 
 import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -90,6 +93,15 @@ import com.fiscaladmin.joget.statusmanager.StatusManager;
  * move's form may carry {@link MoveRefusal}, which judges the move as this guard does and shows the
  * refusal's own words on the page; this guard stays the refusal of record behind it.
  *
+ * <p><b>A move given its moment</b> (1.11.0; METHOD-2026-11-05-79, R46). An engine that runs this guard and then
+ * writes the same record itself (the approval route engine) reads the clock once and hands that reading in as the
+ * property {@code moveMoment}, an ISO-8601 instant with its zone or offset ({@code 2026-11-09T06:15:30.250Z}). Where
+ * it is present and parses, the move's moment and every stamp the guard writes for the move - the record, the act,
+ * the history entries and alerts, the rows a {@code related} line sets, the status event - are that instant (its
+ * moment in the clock's zone), and the guard reads no clock for the move. Where it is absent or blank the guard reads
+ * its clock once for the move, as before. Where it is present and does not parse, the guard refuses the move by name
+ * ({@code REJECTED: moveMoment ...}) and writes nothing. It is not one of the keys a configuration sets.
+ *
  * transitions format: {@code action>toState>nowField1,dayField@date,byField@actor>guardExpr>processId | ...}
  * <br>withheld format, one line each: {@code action>attribute}
  * <br>audit format, one line each: {@code action>form>table>column=source,column='word',...}
@@ -160,6 +172,34 @@ public class TransitionGuard extends DefaultApplicationPlugin {
         return new RowStamp(clock, who);
     }
 
+    /** The property an engine hands this guard with the one reading it made of the clock (1.11.0). */
+    static final String MOVE_MOMENT = "moveMoment";
+
+    /**
+     * The instant {@code moveMoment} holds (1.11.0), or null where the property is absent or blank: the guard then
+     * reads its own clock. Throws {@link IllegalArgumentException} naming the value where it is present and is not an
+     * ISO-8601 instant with a zone or an offset.
+     */
+    static Instant moveMomentOf(Map properties) {
+        String given = str(properties, MOVE_MOMENT).trim();
+        if (given.isEmpty()) return null;
+        try {
+            return OffsetDateTime.parse(given).toInstant();
+        } catch (DateTimeParseException e) {
+            throw new IllegalArgumentException(MOVE_MOMENT + " '" + given
+                    + "' is not an ISO-8601 instant (for example 2026-11-09T06:15:30.250Z)", e);
+        }
+    }
+
+    /**
+     * The stamp for a move whose properties are {@code properties} (1.11.0): the instant {@code moveMoment} hands, in the
+     * clock's zone, with no reading of the clock; else {@link #stampNow}, the clock read once as before.
+     */
+    RowStamp stampFor(Map properties) {
+        Instant handed = moveMomentOf(properties);
+        return handed == null ? stampNow() : new RowStamp(handed, clock.getZone(), who);
+    }
+
     /**
      * Who acted on a move, as the history reads it (1.9.0, MT-DM's hand-off of 8 November 2026, item
      * 46 (a)): the platform's user name, or the solution's word for a move with no person - an
@@ -177,7 +217,7 @@ public class TransitionGuard extends DefaultApplicationPlugin {
     }
 
     public String getName() { return "Lifecycle Transition Guard"; }
-    public String getVersion() { return "1.10.0"; }
+    public String getVersion() { return "1.11.0"; }
     public String getDescription() { return "Drives StatusManager transitions from a form action (generated from the L1 model)."; }
     public String getLabel() { return "Lifecycle Transition Guard"; }
     public String getClassName() { return getClass().getName(); }
@@ -200,6 +240,13 @@ public class TransitionGuard extends DefaultApplicationPlugin {
      */
     String run(Map properties, FormDataDao dao, MmConfigService cfg, StatusManager sm,
                GroupLookup groups, String actor) {
+        try {
+            moveMomentOf(properties);                 // 1.11.0: a moment handed in that does not parse refuses the move
+        } catch (IllegalArgumentException e) {
+            String said = "REJECTED: " + e.getMessage() + " - no move was made and nothing was written";
+            LogUtil.warn(CN, said);
+            return said;
+        }
         String entity = str(properties, "entity");
         String tableName = str(properties, "tableName");
         String statusField = def(str(properties, "statusField"), "status");
@@ -276,7 +323,7 @@ public class TransitionGuard extends DefaultApplicationPlugin {
             }
         }
         act.setProperty(RESULT_FIELD, result);
-        if (stamp == null) stamp = stampNow();
+        if (stamp == null) stamp = stampFor(properties);   // 1.11.0: the moment handed in, else the clock
         stamp.apply(act);
         FormRowSet aset = new FormRowSet();
         aset.add(act);
@@ -588,7 +635,7 @@ public class TransitionGuard extends DefaultApplicationPlugin {
         String result;
         boolean applied = false;
         boolean refused = false;
-        RowStamp stamp = stampNow();                  // 1.9.0: the one reading of the clock for this move
+        RowStamp stamp = stampFor(properties);        // 1.9.0: the one reading of the clock for this move; 1.11.0: or the moment handed in
         LocalDateTime at = stamp.at;
         try {
             if ("true".equalsIgnoreCase(str(properties, "checkRoles"))) {

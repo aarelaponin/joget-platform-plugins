@@ -1,5 +1,8 @@
 package com.fiscaladmin.joget.approval;
 
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -118,11 +121,19 @@ public class ApprovalRouteEngineTest {
     }
 
     @Test
-    public void theGuardIsRunWithTheSameProperties() {
+    public void theGuardIsRunWithTheSamePropertiesAndTheEnginesOneReadingAsMoveMoment() {
         Map<String, Object> p = props();
-        new ApprovalRouteEngine().run(p, dao, applies("awaiting_approval"));
+        Map<String, Object> given = new HashMap<String, Object>(p);
+        Clock fixed = Clock.fixed(Instant.parse("2026-11-09T06:15:30.250Z"), ZoneId.of("Europe/Malta"));
+        new ApprovalRouteEngine(new RowStamps(fixed, new RowStamps.Who() {
+            @Override public String username() { return "roleAnonymous"; }
+            @Override public String fullName() { return null; }
+        })).run(p, dao, applies("awaiting_approval"));
         assertEquals(1, guardCalls.size());
-        assertSame(p, guardCalls.get(0));
+        Map<Object, Object> handed = new HashMap<Object, Object>(guardCalls.get(0));
+        assertEquals("the engine's one reading, as an instant", "2026-11-09T06:15:30.250Z", handed.remove("moveMoment"));
+        assertEquals("every property it was given, as it was given", new HashMap<Object, Object>(given), handed);
+        assertEquals("the caller's own map is left as it was", given, p);
     }
 
     @Test

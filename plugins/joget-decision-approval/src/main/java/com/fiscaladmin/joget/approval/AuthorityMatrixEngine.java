@@ -26,7 +26,7 @@ public class AuthorityMatrixEngine extends DefaultApplicationPlugin {
     private static final String F_AUTH = "mmAuthority";
 
     @Override public String getName() { return "Authority Matrix Validator"; }
-    @Override public String getVersion() { return "1.6.0"; }
+    @Override public String getVersion() { return "1.6.1"; }
     @Override public String getDescription() {
         return "Decision & Approval — mmAuthority band consistency validation.";
     }

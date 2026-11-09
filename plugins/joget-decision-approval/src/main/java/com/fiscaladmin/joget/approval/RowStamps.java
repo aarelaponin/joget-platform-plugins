@@ -70,6 +70,14 @@ final class RowStamps {
         }
     };
 
+    /**
+     * The instant of the latest reading {@link #now} took on this thread (version 2 of R46, G3 of the review of version 1).
+     * A {@code LocalDateTime} does not say which pass of the hour that repeats when summer time ends it is in, so the
+     * instant read is kept beside it and given back by {@link #instantOf}; static, because the engines and the services
+     * each hold a {@code RowStamps} of their own and a move is read by one and turned by another, on one thread.
+     */
+    private static final ThreadLocal<Instant> READ = new ThreadLocal<Instant>();
+
     private final Clock clock;
     private final Who who;
 
@@ -93,15 +101,26 @@ final class RowStamps {
      * rows and the events carry that {@code asOf}. For the platform's clock it is {@code LocalDateTime.now()}.
      */
     LocalDateTime now() {
-        return LocalDateTime.now(clock);
+        Instant read = clock.instant();               // the one reading; its instant is kept (version 2)
+        READ.set(read);
+        return LocalDateTime.ofInstant(read, clock.getZone());
     }
 
     /**
      * A move's moment (the {@code now} the service is called with) as an instant, in the clock's
      * zone (the JVM's zone for the platform's clock): the instant the move's events are handed to
      * the event writer with, so an event's stamps and the move's own moment are one reading.
+     *
+     * <p>Version 2 of R46: a moment {@link #now} read is given back as the instant it was read, never turned back
+     * from its local time, which in the hour that repeats when summer time ends names two instants and takes the earlier.
+     * Only a local time no reading of this thread gave (the sweep's {@code asOf}, as the caller wrote it) is turned by the
+     * zone's rules, as before.
      */
     Instant instantOf(LocalDateTime moment) {
+        Instant read = READ.get();
+        if (read != null && LocalDateTime.ofInstant(read, clock.getZone()).equals(moment)) {
+            return read;
+        }
         return moment.atZone(clock.getZone()).toInstant();
     }
 

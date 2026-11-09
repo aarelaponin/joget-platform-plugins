@@ -55,8 +55,14 @@
          stamps a row (joget-event-chain 2.1.0), and the guard hands that call the move's own
          instant, so the event, the history entry and the rows the move writes are one reading.
          The pins of joget-event-chain and joget-status-manager move to 2.1.0. A minor step: no key
-         added; the moments, words, codes and moves read as before. -->
-    <version>1.10.0</version>
+         added; the moments, words, codes and moves read as before.
+         1.11.0 (METHOD-2026-11-05-79, R46; the act R40's G2 left): the guard takes the move's moment. A new
+         property that no configuration sets, moveMoment, an ISO-8601 instant: where an engine hands it, every stamp the
+         guard writes for the move (the record, the act, the history entries and alerts, the rows a `related` line sets and
+         the status event) is that instant and the guard reads no clock; where it is absent the guard reads its clock once, as
+         before; where it is present and does not parse the move is refused by name and nothing is written. A minor step: no
+         configuration key added, nothing a configuration says reads otherwise. -->
+    <version>1.11.0</version>
     <packaging>bundle</packaging>
     <name>joget-transition-guard</name>
     <description>Generic config-driven lifecycle transition guard (form post-processor -> StatusManager).</description>

@@ -2,6 +2,7 @@ package com.fiscaladmin.joget.approval;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.joget.apps.app.service.AppUtil;
@@ -23,8 +24,10 @@ import com.fiscaladmin.joget.eventchain.CaseEventWriter;
  * <p>A form post-processor standing in the one slot the transition guard would otherwise hold, on a
  * form whose moves include one that routes its record for approval. It runs the transition guard
  * first, by its class name ({@code guardClass}, through the platform's plugin manager; this bundle
- * imports nothing of the guard's), with the very properties it was given, so every move of the
- * form is made exactly as the guard alone makes it. Then, where the move asked for is a routing
+ * imports nothing of the guard's), with the properties it was given and one more, {@code moveMoment} (1.6.1): the
+ * instant of the engine's own one reading of the clock, which the guard writes on every row of the move in place of
+ * a reading of its own, so every move of the form is made exactly as the guard alone makes it, and the record the
+ * engine then saves, the act, the guard's history entries and the status event stand on one instant. Then, where the move asked for is a routing
  * move named in {@code routes} and the guard has applied it — the record now stands in the state
  * the move reaches — it reads the record's amount, finds the band of the authority matrix
  * ({@code mmAuthority}) that covers it by the service's own routing
@@ -41,6 +44,8 @@ public class ApprovalRouteEngine extends DefaultApplicationPlugin {
     private static final String CLASS_NAME = ApprovalRouteEngine.class.getName();
     static final String GUARD_CLASS = "com.fiscaladmin.joget.transitionguard.TransitionGuard";
     static final String RESULT_FIELD = "transition_result";
+    /** The property the guard reads the move's moment from (1.6.1): the engine's one reading, as an ISO-8601 instant. */
+    static final String MOVE_MOMENT = "moveMoment";
 
     private final RowStamps stamps;
 
@@ -73,7 +78,7 @@ public class ApprovalRouteEngine extends DefaultApplicationPlugin {
     };
 
     @Override public String getName() { return "Approval Route Engine"; }
-    @Override public String getVersion() { return "1.6.0"; }
+    @Override public String getVersion() { return "1.6.1"; }
     @Override public String getDescription() {
         return "Decision & Approval — runs the transition guard, then sets the approval level a routed record's amount calls for.";
     }
@@ -125,7 +130,11 @@ public class ApprovalRouteEngine extends DefaultApplicationPlugin {
         String[] route = route(str(properties, "routes"), action);
 
         // 2. the move itself, made by the transition guard
-        if (!guard.run(guardClass, properties)) {
+        // 1.6.1: the guard is handed this engine's one reading, so it reads no clock of its own for the move; the
+        // caller's map is left as it was
+        Map handed = new HashMap(properties == null ? Collections.emptyMap() : properties);
+        handed.put(MOVE_MOMENT, stamps.instantOf(moment).toString());
+        if (!guard.run(guardClass, handed)) {
             String said = "ERROR: the transition guard " + guardClass + " is not installed — "
                     + "no move was made";
             LogUtil.warn(CLASS_NAME, said);

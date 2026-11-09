@@ -44,8 +44,14 @@
          authority matrix up at the day the move is handed (the request's now, the sweep's asOf, the
          route engine's one reading) and no longer at the clock's day; the route engine and the
          authority-matrix engine read the clock once and save every row they write on that reading.
-         A minor step: no key added; nothing a configuration says reads otherwise. -->
-    <version>1.6.0</version>
+         A minor step: no key added; nothing a configuration says reads otherwise.
+         1.6.1 (METHOD-2026-11-05-79, R46; the act R40's G2 left): the route engine hands the transition guard its one
+         reading as the property moveMoment and saves the record on that same instant, so the record, the act, the
+         guard's history entries and the status event of a routed move are one instant (the guard 1.11.0 takes it;
+         an earlier guard ignores it). The bundle still imports nothing of the guard's: the guard is a test-scope
+         dependency, so the cases run the real guard. A patch step: no key added; nothing a configuration says reads
+         otherwise. -->
+    <version>1.6.1</version>
     <packaging>bundle</packaging>
     <name>joget-decision-approval</name>
     <description>Configurable decision &amp; approval service for Joget DX: authority-matrix
@@ -105,6 +111,14 @@
             <artifactId>jakarta.servlet-api</artifactId>
             <version>6.0.0</version>
             <scope>provided</scope>
+        </dependency>
+        <!-- 1.6.1: the cases of the route engine run the real transition guard (test scope only; the bundle imports
+             nothing of the guard's and its manifest is unchanged) -->
+        <dependency>
+            <groupId>com.fiscaladmin.joget</groupId>
+            <artifactId>joget-transition-guard</artifactId>
+            <version>1.11.0</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>junit</groupId>

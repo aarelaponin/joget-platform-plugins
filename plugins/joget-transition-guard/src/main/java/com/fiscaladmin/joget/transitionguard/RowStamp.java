@@ -3,6 +3,7 @@ package com.fiscaladmin.joget.transitionguard;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Date;
 
 import org.joget.apps.app.service.AppUtil;
@@ -77,8 +78,16 @@ final class RowStamp {
     final String name;
 
     RowStamp(Clock clock, Who who) {
-        this.instant = clock.instant();
-        this.at = LocalDateTime.ofInstant(instant, clock.getZone());
+        this(clock.instant(), clock.getZone(), who);
+    }
+
+    /**
+     * A stamp taken at an instant already read (1.11.0): the move's moment an engine handed the guard, so no
+     * clock is read here. The moment is that instant in {@code zone}; the user is read as the other constructor reads it.
+     */
+    RowStamp(Instant instant, ZoneId zone, Who who) {
+        this.instant = instant;
+        this.at = LocalDateTime.ofInstant(instant, zone);
         this.user = who.username();
         this.name = who.fullName();
     }
