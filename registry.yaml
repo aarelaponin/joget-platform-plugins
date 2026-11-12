@@ -18,6 +18,28 @@
 # tier:   G = generic-Joget (any app) · P = pattern-reusable (genericised then shipped)
 # status: active | planned | deprecated      ships: code | pattern
 
+# gen_datalists 0.13.0 and joget-list-formatters 1.0.0 (METHOD-2026-11-05-81, R47 version 2, 10 Nov 2026; MT-DM's
+# request of 9 Nov 2026): a column's `optionsValue` formatter that carries `unlisted: as_stored` is written as the
+# library's WordedOptionsFormatter (the new plugin below) in place of the platform's OptionsValueFormatter, with the
+# binder, the grid of further values (the kit's `ref.also`) and `split` of the spec. The platform's formatter replaces
+# its grid by its binder's rows whenever the binder answers, so a grid beside a form binder is never drawn; version 1's
+# grid beside it is removed. A spec without `unlisted` is emitted byte for byte as before (asserted literally in
+# test_gen_datalists_options_grid.py). registry_version stays 0.12.0, by this file's own rules for an optional key
+# (0.11.0's: "registry_version stays 0.11.0: a spec carrying neither key is emitted byte for byte as before ..., and
+# a bump would refuse every build pinned to 0.11.0") and for an entry (joget-transition-guard's: "the entry changes
+# no generator, so the registry version does not move" - here the generator changes by one optional key, so the first
+# rule is the one that applies): every list without the key is unchanged, and a bump would refuse every build
+# pinned to 0.12.0. The kit's registry mirror names joget-list-formatters, and the kit emits `ref.also` only where it
+# does.
+#
+# joget-list-formatters 1.0.0, corrected before it was committed or released (METHOD-2026-11-05-91, R52, 11 Nov 2026): the
+# formatter joins the worded parts of a split value with ", " (a comma and a space), as the platform's
+# OptionsValueFormatter.format does (constant #79 of its class file, a Utf8 two characters long); the text above and the
+# first build had ",", from javap -c's comment column, which shows no trailing space. A Java constant and descriptions: no
+# spec reads otherwise and no generator writes otherwise, so registry_version does not move, by the rule this file states at
+# joget-form-prefill 1.1.1 ("nothing a spec says reads otherwise, registry_version does not move") and at
+# joget-transition-guard ("the entry changes no generator, so the registry version does not move"); the bundle's version
+# stays 1.0.0, which no one has released.
 registry_version: 0.12.0  # 0.12.0: A LIST SORTED AS THE PLATFORM READS IT (METHOD-2026-11-05-17,
                           #        6 Nov 2026; MT-DM's hand-off of 5 Nov 2026, items 21, 10, 18).
                           #        Generators only; no plugin, no Java. gen_datalists:
@@ -963,6 +985,51 @@ plugins:
       The record search (8.2.0, METHOD-2026-09-28-01): RecordSearchSettings, RecordSearch,
       RecordSearchWebService, RecordSearchElement.ftl and record-search.js, with the plugin's
       first tests (mvn test; node --test src/test/js/record-search.test.js). Built, not deployed.
+    source_of_truth: this repo
+
+  - id: joget-list-formatters
+    module: plugins/joget-list-formatters
+    artifact: com.fiscaladmin.joget:joget-list-formatters
+    version: 1.0.0                  # 1.0.0 (METHOD-2026-11-05-81, R47 version 2, 10 Nov 2026; MT-DM's request of
+                                    # 9 Nov 2026): the bundle's first version, WordedOptionsFormatter. A new plugin
+                                    # and one optional key of gen_datalists (`unlisted`); registry_version stays 0.12.0
+                                    # (see the note above registry_version).
+    category: foundation
+    tier: G
+    status: active
+    ships: code
+    license: proprietary
+    dx_compat: ["9.x"]
+    java_release: 11
+    summary: >
+      Column formatters for a Joget list. WordedOptionsFormatter words a stored value from an options
+      binder's rows and a grid of further values: the platform's OptionsValueFormatter (jw-enterprise-plugins
+      9.0.7) fills its map from its `options` grid and then, whenever its binder answers, REPLACES the map with the
+      binder's rows (javap -c, getOptionMap), so a value the binder's form holds no row for - the solution's own
+      `system` beside a list of users - is shown as stored. This formatter keeps the binder's rows and adds the grid's
+      values only where no row holds them, can leave a value whole (`split` false) instead of cutting it on ';', and
+      shows any value it holds no words for exactly as stored. Plugin bundle: registers one column format,
+      exports no package.
+    registers:
+      - com.fiscaladmin.joget.lists.WordedOptionsFormatter
+    contract:
+      formatter_class: com.fiscaladmin.joget.lists.WordedOptionsFormatter
+      config_keys: [optionsBinder, options, split, unlisted]
+    binding:
+      rule: >
+        gen_datalists writes it for a column whose spec formatter (`type: optionsValue`) carries `unlisted: as_stored`:
+        the kit sets that key for a reference attribute that declares further values (`ref.also`, `split` true, as
+        the platform's formatter splits) and for a column of `unlisted_as_stored` over a list the administration
+        maintains (`split` false). The kit emits either only where its registry mirror names this plugin. A list
+        whose spec carries no `unlisted` is written with the platform's own formatter, as before.
+    provenance: >
+      METHOD-2026-11-05-81 (R47 version 2): the platform's interface (DataListColumnFormat) and its registration
+      (PluginManager.getPlugin -> loadOsgiPlugin) read by javap from jw 9.0.7; the rules held by WordingTest and
+      WordedOptionsFormatterTest against the platform's own types. METHOD-2026-11-05-91 (R52): the join of a split
+      value (OptionsValueFormatter.format) is ", ", a comma and a space - constant #79 of the class file, two
+      characters, read from the class file's bytes - and the platform's own format, loaded from the installation's
+      jar, and the bundle's give the same string on the same values (a parity check).
+      Built, not deployed: MT-DM proves it on its own deploy.
     source_of_truth: this repo
 
 # ---------------------------------------------------------------------------

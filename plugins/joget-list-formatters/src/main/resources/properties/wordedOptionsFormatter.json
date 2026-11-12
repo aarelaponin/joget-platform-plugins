@@ -1,0 +1,50 @@
+[{
+    "title": "Worded Options Formatter",
+    "properties": [
+        {
+            "name": "optionsBinder",
+            "label": "Options Binder",
+            "description": "The records whose values and words are drawn, as the Options Value Formatter takes its binder",
+            "type": "elementselect",
+            "options_ajax": "[CONTEXT_PATH]/web/property/json/getElements?classname=org.joget.apps.form.model.FormLoadOptionsBinder",
+            "url": "[CONTEXT_PATH]/web/property/json[APP_PATH]/getPropertyOptions"
+        },
+        {
+            "name": "options",
+            "label": "Further values",
+            "description": "Values the binder's records hold no row for, with their words. A record that holds the value keeps its own words.",
+            "type": "grid",
+            "columns": [
+                {
+                    "key": "value",
+                    "label": "Value"
+                },
+                {
+                    "key": "label",
+                    "label": "Label"
+                }
+            ]
+        },
+        {
+            "name": "split",
+            "label": "Split on ;",
+            "description": "True: a stored value is cut on ; and each part worded, then joined with a comma and a space (', ', as the Options Value Formatter does). False: the stored value is worded whole.",
+            "type": "selectbox",
+            "value": "true",
+            "options": [
+                {"value": "true", "label": "True"},
+                {"value": "false", "label": "False"}
+            ]
+        },
+        {
+            "name": "unlisted",
+            "label": "A value with no words",
+            "description": "A value that neither the binder nor the grid holds is shown exactly as stored.",
+            "type": "selectbox",
+            "value": "as_stored",
+            "options": [
+                {"value": "as_stored", "label": "Shown as stored"}
+            ]
+        }
+    ]
+}]

@@ -27,6 +27,16 @@ platform's BeanShellFormatter, since the platform has no number formatter (see c
 A spec using neither new key emits exactly the 0.11.0 filter and column (asserted literally in
 test_gen_datalists_order.py); the sort direction changes every list's `order` by design.
 
+0.13.0 (METHOD-2026-11-05-81, R47, version 2; MT-DM's request of 9 November 2026): a column's `optionsValue`
+formatter that carries `unlisted: as_stored` is written as the library's WordedOptionsFormatter
+(com.fiscaladmin.joget.lists.WordedOptionsFormatter, plugin joget-list-formatters 1.0.0) in place of the platform's
+OptionsValueFormatter. Its `optionsBinder` is the platform's FormOptionsBinder over the spec's formDefId (none where the
+spec names no form), its `options` grid is the spec's `options`, and its `split` is the spec's `split` (true unless the
+spec says false). The formatter words a stored value from the binder's rows and adds a grid value only where no row
+holds it; with split true it cuts the value on ";" and joins the worded parts with ", " (a comma and a space) as the platform's formatter does,
+with split false it looks the value up whole; a value it holds no words for is shown exactly as stored. A formatter
+without `unlisted` is written as before, byte for byte (test_gen_datalists_options_grid.py). See fk_format.
+
 Usage: gen_datalists.py <spec_dir> <out_dir>
 """
 import json
@@ -78,7 +88,40 @@ def badge_format(fmt):
             "properties": {"script": script}}
 
 
+WORDED_FORMATTER = "com.fiscaladmin.joget.lists.WordedOptionsFormatter"
+
+
+def worded_format(lookup):
+    """0.13.0 (R47, version 2): the formatter of a column whose spec carries `unlisted: as_stored`, the library's
+    WordedOptionsFormatter (joget-list-formatters 1.0.0). The binder is the one the platform's formatter takes, over the
+    spec's formDefId, or none where the spec names no form; `options` is the spec's grid of further values; `split` is
+    "true" unless the spec says false; `unlisted` is as_stored, the only value the formatter takes."""
+    if lookup["unlisted"] != "as_stored":
+        raise ValueError("a formatter's `unlisted` is as_stored, the only value the formatter takes, not %r"
+                         % (lookup["unlisted"],))
+    split = lookup.get("split", True)
+    if not isinstance(split, bool):
+        raise ValueError("a formatter's `split` is true or false, not %r" % (split,))
+    if lookup.get("formDefId"):
+        binder = {"className": "org.joget.apps.form.lib.FormOptionsBinder",
+                  "properties": {"formDefId": lookup["formDefId"],
+                                 "idColumn": lookup.get("idColumn", "code").removeprefix("c_"),
+                                 "labelColumn": lookup.get("labelColumn", "name").removeprefix("c_"),
+                                 "addEmptyOption": "true", "groupingColumn": "", "useAjax": "",
+                                 "extraCondition": "", "cacheInterval": "", "emptyLabel": ""}}
+    else:
+        binder = {"className": "", "properties": {}}
+    return {"className": WORDED_FORMATTER,
+            "properties": {"optionsBinder": binder,
+                           "options": [{"value": str(o["value"]), "label": str(o["label"])}
+                                       for o in lookup.get("options") or []],
+                           "split": "true" if split else "false",
+                           "unlisted": "as_stored"}}
+
+
 def fk_format(lookup):
+    if lookup.get("unlisted") is not None:
+        return worded_format(lookup)
     if lookup.get("options") is not None and not lookup.get("formDefId"):
         # 0.11.0 (METHOD-2026-09-26-02, point 19 (a)): a column over a FIXED list shows the
         # value's label from the list's values written into the formatter - the platform's own

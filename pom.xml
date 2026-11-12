@@ -56,6 +56,8 @@
         <module>plugins/joget-unique-guard</module>
         <module>plugins/joget-transition-guard</module>
         <module>plugins/joget-require-guard</module>
+        <!-- joget-list-formatters 1.0.0 (METHOD-2026-11-05-81, R47 version 2): the library's own column formatters -->
+        <module>plugins/joget-list-formatters</module>
     </modules>
 
     <!--

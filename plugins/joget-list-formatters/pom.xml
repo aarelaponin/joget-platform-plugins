@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.fiscaladmin.joget</groupId>
+        <artifactId>joget-platform-plugins</artifactId>
+        <version>1.0.0</version>
+        <relativePath>../../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>joget-list-formatters</artifactId>
+    <!-- 1.0.0 (METHOD-2026-11-05-81, R47 version 2; MT-DM's request of 9 November 2026): the library's own column formatters
+         for a list. One so far, WordedOptionsFormatter: the platform's OptionsValueFormatter (jw-enterprise-plugins 9.0.7)
+         fills its map from its `options` grid and then, whenever its options binder answers, REPLACES the map with the
+         binder's rows (javap -c of getOptionMap, offsets 23-243), and FormOptionsBinder.load never returns null, so a
+         value the binder's form holds no row for - the solution's own `system` beside a list of users - is shown as
+         stored. This formatter keeps the binder's rows and adds the grid's values only where no row holds them, can
+         leave a value whole (no split on ';'), and shows any value it holds no words for exactly as stored. -->
+    <version>1.0.0</version>
+    <packaging>bundle</packaging>
+    <name>joget-list-formatters</name>
+    <description>Column formatters for Joget DX lists: WordedOptionsFormatter words a stored value from an options
+        binder's rows and a grid of further values (a value no record of the binder's form holds), whole or split on
+        ';', and shows any other value exactly as stored. Plugin bundle (registers one DataListColumnFormat, exports
+        no package); depends on the Joget list, form and commons API only.</description>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Bundle-Activator>com.fiscaladmin.joget.lists.Activator</Bundle-Activator>
+                        <Export-Package></Export-Package>
+                        <Private-Package>{local-packages}</Private-Package>
+                        <Import-Package>org.joget.apps.app.service,org.joget.apps.datalist.model,org.joget.apps.form.model,org.joget.commons.util,org.joget.plugin.base,org.osgi.framework,*</Import-Package>
+                        <DynamicImport-Package>*</DynamicImport-Package>
+                    </instructions>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.joget</groupId>
+            <artifactId>wflow-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+        </dependency>
+    </dependencies>
+</project>
