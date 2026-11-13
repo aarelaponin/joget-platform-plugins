@@ -40,6 +40,17 @@
 # joget-form-prefill 1.1.1 ("nothing a spec says reads otherwise, registry_version does not move") and at
 # joget-transition-guard ("the entry changes no generator, so the registry version does not move"); the bundle's version
 # stays 1.0.0, which no one has released.
+#
+# gen_datalists 0.14.0 (METHOD-2026-11-05-87, R50, 12 Nov 2026; MT-DM's request of 10 Nov 2026): a column's `status_badge`
+# formatter may carry `names`, each state's identifier mapped to its words, which the badge's BeanShellFormatter script
+# draws in place of the capitalised code: a stored value a state names by that name, any other value exactly as stored
+# (not capitalised), an empty value empty; each name escaped for the HTML it is drawn in (&, <, >, ") and for the BeanShell
+# string it stands in (\ and "). The kit hands the names from the lifecycle, read as its State filter reads them, so a
+# list's badge and its filter read alike. A badge spec without `names` is emitted byte for byte as before (asserted
+# literally in test_gen_datalists_badge_words.py). registry_version stays 0.12.0, by this file's own rule for an optional
+# key (0.11.0's: "registry_version stays 0.11.0: a spec carrying neither key is emitted byte for byte as before ..., and a
+# bump would refuse every build pinned to 0.11.0"; applied to gen_datalists 0.13.0 above): every badge without the key is
+# unchanged, and a bump would refuse every build pinned to 0.12.0. No plugin, no Java.
 registry_version: 0.12.0  # 0.12.0: A LIST SORTED AS THE PLATFORM READS IT (METHOD-2026-11-05-17,
                           #        6 Nov 2026; MT-DM's hand-off of 5 Nov 2026, items 21, 10, 18).
                           #        Generators only; no plugin, no Java. gen_datalists:

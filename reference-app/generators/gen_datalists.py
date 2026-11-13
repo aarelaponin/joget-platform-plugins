@@ -37,6 +37,12 @@ holds it; with split true it cuts the value on ";" and joins the worded parts wi
 with split false it looks the value up whole; a value it holds no words for is shown exactly as stored. A formatter
 without `unlisted` is written as before, byte for byte (test_gen_datalists_options_grid.py). See fk_format.
 
+0.14.0 (METHOD-2026-11-05-87, R50; MT-DM's request of 10 November 2026): a `status_badge` formatter may carry `names`,
+each state's identifier mapped to its words, which the badge's script draws in place of the capitalised code: a value a
+state names by that name, any other value exactly as stored, an empty value empty. Each name is escaped for the HTML it is
+drawn in and for the BeanShell string it stands in. A badge without `names` is written byte for byte as 0.13.0 wrote it
+(test_gen_datalists_badge_words.py). See badge_format.
+
 Usage: gen_datalists.py <spec_dir> <out_dir>
 """
 import json
@@ -69,12 +75,44 @@ TONE_HEX = {"grey": "#546e7a", "blue": "#1565c0", "green": "#2e7d32",
             "amber": "#ef6c00", "red": "#c62828"}
 
 
+def _html_text(s: str) -> str:
+    """0.14.0: a text written into the page as HTML: `&`, `<`, `>` and `"` as their entities, `&` first."""
+    return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
+
+
 def badge_format(fmt):
     """status_badge → an enterprise BeanShellFormatter that renders the state value as a
     coloured HTML pill. `value` is bound by the formatter; the value→colour map comes from
-    the model's lifecycle tones, so the badge is deterministic and lifecycle-aware."""
+    the model's lifecycle tones, so the badge is deterministic and lifecycle-aware.
+
+    0.14.0 (METHOD-2026-11-05-87, R50; MT-DM's request of 10 November 2026): the spec's optional `names`, each state's
+    identifier mapped to its words (the kit reads them from the lifecycle as its State filter does), is written into
+    the script beside the colours. A stored value a state names is drawn by that name; a stored value no state names is
+    drawn exactly as stored, not capitalised; an empty value stays empty. Each name is escaped twice: for the HTML it is
+    drawn in (`&`, `<`, `>`, `"`), then for the BeanShell string it stands in (`\\` and `"`, _java_str). A spec without
+    `names` is written byte for byte as 0.13.0 wrote it, the stored code capitalised (asserted literally in
+    test_gen_datalists_badge_words.py)."""
     puts = "".join('m.put("%s","%s");' % (code, TONE_HEX.get(tone, TONE_HEX["grey"]))
                    for code, tone in fmt.get("tones", {}).items())
+    names = fmt.get("names")
+    if names is not None:
+        if not isinstance(names, dict) or not all(isinstance(n, str) for n in names.values()):
+            raise ValueError("a status badge's `names` maps each state's identifier to its words, as text, not %r"
+                             % (names,))
+        nputs = "".join("n.put(%s,%s);" % (_java_str(str(code)), _java_str(_html_text(name)))
+                        for code, name in names.items())
+        script = (
+            "java.util.Map m = new java.util.HashMap();" + puts +
+            "java.util.Map n = new java.util.HashMap();" + nputs +
+            'String v = (value==null)?"":value.toString();'
+            'if (v.equals("")) return "";'
+            'String bg = m.containsKey(v)?(String)m.get(v):"#546e7a";'
+            'String t = n.containsKey(v)?(String)n.get(v):v;'
+            'return "<span style=\\"display:inline-block;padding:2px 10px;border-radius:11px;'
+            'color:#fff;font-size:12px;line-height:18px;white-space:nowrap;background:"'
+            '+bg+"\\">"+t+"</span>";')
+        return {"className": "org.joget.plugin.enterprise.BeanShellFormatter",
+                "properties": {"script": script}}
     script = (
         "java.util.Map m = new java.util.HashMap();" + puts +
         'String v = (value==null)?"":value.toString();'
