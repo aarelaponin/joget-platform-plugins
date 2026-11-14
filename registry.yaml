@@ -51,6 +51,20 @@
 # key (0.11.0's: "registry_version stays 0.11.0: a spec carrying neither key is emitted byte for byte as before ..., and a
 # bump would refuse every build pinned to 0.11.0"; applied to gen_datalists 0.13.0 above): every badge without the key is
 # unchanged, and a bump would refuse every build pinned to 0.12.0. No plugin, no Java.
+#
+# gen_datalists 0.15.0 and joget-list-formatters 1.1.0 (METHOD-2026-11-05-89, R51, 13 Nov 2026; MT-DM's K1 of 11 Nov 2026):
+# a column's `optionsValue` formatter may carry `words`, the words of the list its code belongs to - a maintained list's
+# form (formDefId, idColumn, labelColumn) or a fixed list's rows (options) - and is then written as the library's
+# WordedOptionsFormatter with its second step (`wordsBinder`, `words`): the first map gives a value's code, the second
+# the code's words. The kit gives it to a column read through a reference (`via`) whose attribute is bound to a list,
+# which the platform's OptionsValueFormatter drew by its stored code (it has one map). A formatter without `words` is
+# emitted byte for byte as before (asserted literally in test_gen_datalists_via_words.py). registry_version stays 0.12.0,
+# by this file's own rule for an optional key, as joget-form-prefill 1.1.0 states it: "registry_version stays 0.11.0: a
+# spec carrying neither key is emitted byte for byte as before (test_gen_second_pass.py), and a bump would refuse every
+# build pinned to 0.11.0" (applied to gen_datalists 0.13.0 and 0.14.0 above): every list without the key is unchanged,
+# and a bump would refuse every build pinned to 0.12.0. The bundle moves 1.0.0 -> 1.1.0, a minor version for optional
+# keys, as this file moves a plugin for them ("8.1-SNAPSHOT -> 8.2.0 (minor: optional keys added; METHOD-2026-09-28-01)"):
+# without `wordsBinder` and `words` it words every value exactly as 1.0.0 does.
 registry_version: 0.12.0  # 0.12.0: A LIST SORTED AS THE PLATFORM READS IT (METHOD-2026-11-05-17,
                           #        6 Nov 2026; MT-DM's hand-off of 5 Nov 2026, items 21, 10, 18).
                           #        Generators only; no plugin, no Java. gen_datalists:
@@ -1001,7 +1015,11 @@ plugins:
   - id: joget-list-formatters
     module: plugins/joget-list-formatters
     artifact: com.fiscaladmin.joget:joget-list-formatters
-    version: 1.0.0                  # 1.0.0 (METHOD-2026-11-05-81, R47 version 2, 10 Nov 2026; MT-DM's request of
+    version: 1.1.0                  # 1.1.0 (METHOD-2026-11-05-89, R51, 13 Nov 2026; MT-DM's K1 of 11 Nov 2026):
+                                    # the optional second step, `wordsBinder` and `words` (a code's words), and one
+                                    # optional key of gen_datalists (`words`); registry_version stays 0.12.0 (see the
+                                    # note above registry_version).
+                                    # 1.0.0 (METHOD-2026-11-05-81, R47 version 2, 10 Nov 2026; MT-DM's request of
                                     # 9 Nov 2026): the bundle's first version, WordedOptionsFormatter. A new plugin
                                     # and one optional key of gen_datalists (`unlisted`); registry_version stays 0.12.0
                                     # (see the note above registry_version).
@@ -1019,27 +1037,36 @@ plugins:
       binder's rows (javap -c, getOptionMap), so a value the binder's form holds no row for - the solution's own
       `system` beside a list of users - is shown as stored. This formatter keeps the binder's rows and adds the grid's
       values only where no row holds them, can leave a value whole (`split` false) instead of cutting it on ';', and
-      shows any value it holds no words for exactly as stored. Plugin bundle: registers one column format,
-      exports no package.
+      shows any value it holds no words for exactly as stored. From 1.1.0 it can take a second step (`wordsBinder`,
+      `words`): the first map gives a value's code, the second the code's words, so a column read through a
+      reference whose attribute is bound to a list is drawn by that list's words. Plugin bundle: registers one
+      column format, exports no package.
     registers:
       - com.fiscaladmin.joget.lists.WordedOptionsFormatter
     contract:
       formatter_class: com.fiscaladmin.joget.lists.WordedOptionsFormatter
-      config_keys: [optionsBinder, options, split, unlisted]
+      config_keys: [optionsBinder, options, split, unlisted, wordsBinder, words]
     binding:
       rule: >
         gen_datalists writes it for a column whose spec formatter (`type: optionsValue`) carries `unlisted: as_stored`:
         the kit sets that key for a reference attribute that declares further values (`ref.also`, `split` true, as
         the platform's formatter splits) and for a column of `unlisted_as_stored` over a list the administration
         maintains (`split` false). The kit emits either only where its registry mirror names this plugin. A list
-        whose spec carries no `unlisted` is written with the platform's own formatter, as before.
+        whose spec carries no `unlisted` is written with the platform's own formatter, as before. From 1.1.0
+        gen_datalists writes it, with `wordsBinder` and `words`, for a column whose spec formatter carries `words`: the
+        kit sets that key for a column read through a reference (`via`) whose attribute is bound to a list, only where
+        its registry mirror names this plugin at 1.1.0 or later. A spec formatter with neither `unlisted` nor `words`
+        is written with the platform's own formatter, as before.
     provenance: >
       METHOD-2026-11-05-81 (R47 version 2): the platform's interface (DataListColumnFormat) and its registration
       (PluginManager.getPlugin -> loadOsgiPlugin) read by javap from jw 9.0.7; the rules held by WordingTest and
       WordedOptionsFormatterTest against the platform's own types. METHOD-2026-11-05-91 (R52): the join of a split
       value (OptionsValueFormatter.format) is ", ", a comma and a space - constant #79 of the class file, two
       characters, read from the class file's bytes - and the platform's own format, loaded from the installation's
-      jar, and the bundle's give the same string on the same values (a parity check).
+      jar, and the bundle's give the same string on the same values (a parity check). METHOD-2026-11-05-89 (R51):
+      the second step read against FormOptionsBinder.load and OptionsValueFormatter.getOptionMap as the webapp loads
+      them (its WEB-INF/classes, javap -c -p -v), held by WordingSecondStepTest and WordedOptionsFormatterSecondStepTest;
+      1.0.0's tests pass, and 1.0.0 and 1.1.0 word every value alike without the second step (a comparison on copies).
       Built, not deployed: MT-DM proves it on its own deploy.
     source_of_truth: this repo
 

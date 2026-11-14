@@ -34,8 +34,18 @@ import org.joget.plugin.base.PluginManager;
  * <li>{@code split}, {@code true} (the default, as the platform's formatter) or {@code false}: with false the stored
  * value is looked up whole;</li>
  * <li>{@code unlisted}, where {@code as_stored} is the only value it takes: a value the words hold nothing for is shown
- * exactly as stored.</li>
+ * exactly as stored;</li>
+ * <li>{@code wordsBinder} (1.1.0), an options binder configured as {@code optionsBinder} is, and {@code words} (1.1.0), a
+ * grid of {@code value} and {@code label}: where either is set, a value is worded in two steps. The first map (the
+ * {@code optionsBinder} rows merged with {@code options}, as 1.0.0 merges them) gives the value's code; the second map
+ * (the {@code wordsBinder} rows merged with {@code words}, the binder's rows first) gives the code's words. A value the
+ * first map holds nothing for is shown exactly as stored; a code the second map holds nothing for is shown as the code
+ * ({@link Wording#word(Object, boolean, Map, Map)}). It draws a column read through a reference whose attribute is bound
+ * to a list: the first binder, over the referred record's form, gives the attribute's stored code for the record's key;
+ * the second, over the list's own table, or the grid of a fixed list's rows, gives the list's words (METHOD-2026-11-05-89,
+ * R51; MT-DM's K1 of 11 November 2026). The platform's formatter has one map and cannot take the second step.</li>
  * </ul>
+ * Where neither {@code wordsBinder} nor {@code words} is set, a value is worded in one step, exactly as 1.0.0 words it.
  * A binder that fails to load leaves the grid's words, and never stops the list.
  *
  * <p>How the platform finds and calls it (jw 9.0.7, javap -c): the list calls {@code DataListColumnFormat.format(list,
@@ -46,9 +56,13 @@ import org.joget.plugin.base.PluginManager;
 public class WordedOptionsFormatter extends DataListColumnFormatDefault {
 
     /** The bundle's version; the pom's own, held by EveryClassReportsItsBundleVersionTest. */
-    static final String VERSION = "1.0.0";
+    static final String VERSION = "1.1.0";
 
     private Map<String, String> words;
+
+    /** 1.1.0: the second map, read once; {@code codeWordsRead} says it was read, as it is null without a second step. */
+    private Map<String, String> codeWords;
+    private boolean codeWordsRead;
 
     @Override
     public String getName() {
@@ -82,7 +96,7 @@ public class WordedOptionsFormatter extends DataListColumnFormatDefault {
 
     @Override
     public String format(DataList dataList, DataListColumn column, Object row, Object value) {
-        return Wording.word(value, split(), words());
+        return Wording.word(value, split(), words(), codeWords());
     }
 
     /** {@code split} is true unless it says false: the platform's formatter always splits. */
@@ -98,10 +112,33 @@ public class WordedOptionsFormatter extends DataListColumnFormatDefault {
         return words;
     }
 
+    /**
+     * 1.1.0: the second map, the code's words: the {@code wordsBinder} rows, then each {@code words} value no row holds,
+     * merged as {@link #words()} merges the first. Null where neither {@code wordsBinder} nor {@code words} is set: the
+     * value is then worded in one step, as 1.0.0 words it. Read once.
+     */
+    Map<String, String> codeWords() {
+        if (!codeWordsRead) {
+            codeWordsRead = true;
+            codeWords = secondStep() ? Wording.merge(binderWords("wordsBinder"), gridWords("words")) : null;
+        }
+        return codeWords;
+    }
+
+    /** 1.1.0: whether the formatter takes the second step: {@code wordsBinder} or {@code words} is set. */
+    boolean secondStep() {
+        return getProperty("wordsBinder") != null || getProperty("words") != null;
+    }
+
     /** The grid's pairs, as the platform reads them (getOptionMap, offsets 23-111). */
     Map<String, String> gridWords() {
+        return gridWords("options");
+    }
+
+    /** The pairs of the grid property {@code name} ({@code options}, or 1.1.0's {@code words}), read as the platform reads its grid. */
+    Map<String, String> gridWords(String name) {
         Map<String, String> grid = new LinkedHashMap<String, String>();
-        Object property = getProperty("options");
+        Object property = getProperty(name);
         Collection<?> entries = null;
         if (property instanceof Object[]) {
             entries = java.util.Arrays.asList((Object[]) property);
@@ -126,12 +163,19 @@ public class WordedOptionsFormatter extends DataListColumnFormatDefault {
 
     /** The binder's rows, value to words; none where there is no binder or it fails to load. */
     Map<String, String> binderWords() {
+        return binderWords("optionsBinder");
+    }
+
+    /** The rows of the binder property {@code name} ({@code optionsBinder}, or 1.1.0's {@code wordsBinder}), value to words. */
+    Map<String, String> binderWords(String name) {
         Map<String, String> rows = new LinkedHashMap<String, String>();
         FormRowSet set;
         try {
-            set = loadBinderRows();
+            set = loadBinderRows(name);
         } catch (Exception e) {
-            LogUtil.error(WordedOptionsFormatter.class.getName(), e, "The options binder did not load; the grid's words stand");
+            LogUtil.error(WordedOptionsFormatter.class.getName(), e, "optionsBinder".equals(name)
+                    ? "The options binder did not load; the grid's words stand"
+                    : "The binder " + name + " did not load; the grid's words stand");
             return rows;
         }
         if (set == null) {
@@ -162,7 +206,12 @@ public class WordedOptionsFormatter extends DataListColumnFormatDefault {
      * load with no element, no id and no form data. Null where no binder is named.
      */
     FormRowSet loadBinderRows() {
-        Object binderProperty = getProperty("optionsBinder");
+        return loadBinderRows("optionsBinder");
+    }
+
+    /** 1.1.0: the rows of the binder property {@code name}, loaded as {@link #loadBinderRows()} loads the options binder's. */
+    FormRowSet loadBinderRows(String name) {
+        Object binderProperty = getProperty(name);
         if (!(binderProperty instanceof Map)) {
             return null;
         }

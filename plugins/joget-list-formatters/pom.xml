@@ -18,13 +18,18 @@
          binder's rows (javap -c of getOptionMap, offsets 23-243), and FormOptionsBinder.load never returns null, so a
          value the binder's form holds no row for - the solution's own `system` beside a list of users - is shown as
          stored. This formatter keeps the binder's rows and adds the grid's values only where no row holds them, can
-         leave a value whole (no split on ';'), and shows any value it holds no words for exactly as stored. -->
-    <version>1.0.0</version>
+         leave a value whole (no split on ';'), and shows any value it holds no words for exactly as stored.
+         1.1.0 (METHOD-2026-11-05-89, R51; MT-DM's K1 of 11 November 2026): an optional second step, `wordsBinder` and
+         `words`: the first map gives a value's code, the second the code's words, so a column read through a reference
+         whose attribute is bound to a list is drawn by that list's words. Without either key a value is worded exactly
+         as 1.0.0 words it. -->
+    <version>1.1.0</version>
     <packaging>bundle</packaging>
     <name>joget-list-formatters</name>
     <description>Column formatters for Joget DX lists: WordedOptionsFormatter words a stored value from an options
         binder's rows and a grid of further values (a value no record of the binder's form holds), whole or split on
-        ';', and shows any other value exactly as stored. Plugin bundle (registers one DataListColumnFormat, exports
+        ';', and shows any other value exactly as stored; with `wordsBinder` or `words` (1.1.0) it words the value's code
+        in a second step. Plugin bundle (registers one DataListColumnFormat, exports
         no package); depends on the Joget list, form and commons API only.</description>
 
     <build>

@@ -43,6 +43,15 @@ state names by that name, any other value exactly as stored, an empty value empt
 drawn in and for the BeanShell string it stands in. A badge without `names` is written byte for byte as 0.13.0 wrote it
 (test_gen_datalists_badge_words.py). See badge_format.
 
+0.15.0 (METHOD-2026-11-05-89, R51; MT-DM's K1 of 11 November 2026): a column's `optionsValue` formatter may carry
+`words`, the words of the list the column's code belongs to: a maintained list's form (`formDefId`, `idColumn`,
+`labelColumn`), or a fixed list's rows (`options`). The kit gives it to a column read through a reference whose
+attribute is bound to a list, whose first map gives the attribute's stored code. The column is written as the library's
+WordedOptionsFormatter (plugin joget-list-formatters 1.1.0) with its second step: `wordsBinder`, the platform's
+FormOptionsBinder over the list's form (none for a fixed list), and `words`, the list's rows (none for a maintained
+list). A formatter without `words` is written exactly as 0.14.0 wrote it (test_gen_datalists_via_words.py). See
+worded_format.
+
 Usage: gen_datalists.py <spec_dir> <out_dir>
 """
 import json
@@ -134,6 +143,11 @@ def worded_format(lookup):
     WordedOptionsFormatter (joget-list-formatters 1.0.0). The binder is the one the platform's formatter takes, over the
     spec's formDefId, or none where the spec names no form; `options` is the spec's grid of further values; `split` is
     "true" unless the spec says false; `unlisted` is as_stored, the only value the formatter takes."""
+    words = lookup.get("words")
+    if words is not None and lookup.get("unlisted") is None:
+        # 0.15.0 (R51): a formatter that carries `words` and no `unlisted` is the worded formatter too; `unlisted` is
+        # as_stored, the only value the formatter takes
+        lookup = dict(lookup, unlisted="as_stored")
     if lookup["unlisted"] != "as_stored":
         raise ValueError("a formatter's `unlisted` is as_stored, the only value the formatter takes, not %r"
                          % (lookup["unlisted"],))
@@ -149,16 +163,39 @@ def worded_format(lookup):
                                  "extraCondition": "", "cacheInterval": "", "emptyLabel": ""}}
     else:
         binder = {"className": "", "properties": {}}
-    return {"className": WORDED_FORMATTER,
-            "properties": {"optionsBinder": binder,
-                           "options": [{"value": str(o["value"]), "label": str(o["label"])}
-                                       for o in lookup.get("options") or []],
-                           "split": "true" if split else "false",
-                           "unlisted": "as_stored"}}
+    out = {"className": WORDED_FORMATTER,
+           "properties": {"optionsBinder": binder,
+                          "options": [{"value": str(o["value"]), "label": str(o["label"])}
+                                      for o in lookup.get("options") or []],
+                          "split": "true" if split else "false",
+                          "unlisted": "as_stored"}}
+    if words is not None:
+        out["properties"]["wordsBinder"], out["properties"]["words"] = words_step(words)
+    return out
+
+
+def words_step(words):
+    """0.15.0 (METHOD-2026-11-05-89, R51; MT-DM's K1 of 11 November 2026): the second step of the worded formatter
+    (joget-list-formatters 1.1.0), from the spec's `words`: `wordsBinder`, the platform's FormOptionsBinder over a
+    maintained list's form, written as the first binder is written, or none for a fixed list; `words`, a fixed list's rows
+    as text, or none. `words` that is no mapping, or names neither a form nor rows, is refused."""
+    if not isinstance(words, dict) or not (words.get("formDefId") or words.get("options") is not None):
+        raise ValueError("a formatter's `words` names a list's form (formDefId) or carries its rows (options), not %r"
+                         % (words,))
+    if words.get("formDefId"):
+        binder = {"className": "org.joget.apps.form.lib.FormOptionsBinder",
+                  "properties": {"formDefId": words["formDefId"],
+                                 "idColumn": words.get("idColumn", "code").removeprefix("c_"),
+                                 "labelColumn": words.get("labelColumn", "name").removeprefix("c_"),
+                                 "addEmptyOption": "true", "groupingColumn": "", "useAjax": "",
+                                 "extraCondition": "", "cacheInterval": "", "emptyLabel": ""}}
+    else:
+        binder = {"className": "", "properties": {}}
+    return binder, [{"value": str(o["value"]), "label": str(o["label"])} for o in words.get("options") or []]
 
 
 def fk_format(lookup):
-    if lookup.get("unlisted") is not None:
+    if lookup.get("unlisted") is not None or lookup.get("words") is not None:
         return worded_format(lookup)
     if lookup.get("options") is not None and not lookup.get("formDefId"):
         # 0.11.0 (METHOD-2026-09-26-02, point 19 (a)): a column over a FIXED list shows the

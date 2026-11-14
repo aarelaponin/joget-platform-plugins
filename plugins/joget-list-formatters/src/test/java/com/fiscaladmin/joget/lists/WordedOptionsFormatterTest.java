@@ -283,7 +283,7 @@ public class WordedOptionsFormatterTest {
         WordedOptionsFormatter f = new WordedOptionsFormatter();
         assertTrue(f instanceof org.joget.apps.datalist.model.DataListColumnFormat);
         assertEquals("com.fiscaladmin.joget.lists.WordedOptionsFormatter", f.getClassName());
-        assertEquals("1.0.0", f.getVersion());
+        assertEquals("1.1.0", f.getVersion());   // moved for R51 (METHOD-2026-11-05-89): the bundle's version is 1.1.0
         assertEquals("Worded Options Formatter", f.getLabel());
     }
 }

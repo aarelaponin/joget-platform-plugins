@@ -64,7 +64,7 @@ The order below is read by `placing_order.py` from each plugin's manifest and po
 |---|---|---|
 | 1 | `joget-event-chain-2.1.0.jar` | none |
 | 1 | `joget-form-prefill-1.1.1.jar` | none |
-| 1 | `joget-list-formatters-1.0.0.jar` | none |
+| 1 | `joget-list-formatters-1.1.0.jar` | none |
 | 1 | `joget-require-guard-1.0.0.jar` | none |
 | 1 | `joget-tenant-1.0.0.jar` | none |
 | 1 | `joget-unique-guard-1.0.0.jar` | none |

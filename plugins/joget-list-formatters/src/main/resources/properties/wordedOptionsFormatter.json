@@ -26,6 +26,30 @@
             ]
         },
         {
+            "name": "wordsBinder",
+            "label": "Words Binder",
+            "description": "Optional (1.1.0): the records whose values and words word the code the Options Binder and Further values give, such as a list's own table. With it, or with Words, a value is worded in two steps: its code first, then the code's words. A value the first step holds nothing for is shown as stored; a code the second holds nothing for is shown as the code.",
+            "type": "elementselect",
+            "options_ajax": "[CONTEXT_PATH]/web/property/json/getElements?classname=org.joget.apps.form.model.FormLoadOptionsBinder",
+            "url": "[CONTEXT_PATH]/web/property/json[APP_PATH]/getPropertyOptions"
+        },
+        {
+            "name": "words",
+            "label": "Words",
+            "description": "Optional (1.1.0): codes with their words, beside the Words Binder's records, such as a fixed list's rows. A record of the Words Binder that holds the code keeps its own words.",
+            "type": "grid",
+            "columns": [
+                {
+                    "key": "value",
+                    "label": "Value"
+                },
+                {
+                    "key": "label",
+                    "label": "Label"
+                }
+            ]
+        },
+        {
             "name": "split",
             "label": "Split on ;",
             "description": "True: a stored value is cut on ; and each part worded, then joined with a comma and a space (', ', as the Options Value Formatter does). False: the stored value is worded whole.",
