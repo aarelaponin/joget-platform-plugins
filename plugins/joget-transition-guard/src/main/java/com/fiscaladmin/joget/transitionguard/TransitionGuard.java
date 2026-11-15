@@ -85,6 +85,18 @@ import com.fiscaladmin.joget.statusmanager.StatusManager;
  * a source is {@code moment}, {@code today} or a fixed {@code 'word'}. Fail-soft, as the rows
  * written beside a move are. An expression with no {@code none(...)} term is read as before.
  *
+ * <p><b>A row that must be there, and today</b> (1.12.0; METHOD-2026-11-05-97, R55; MT-DM's wave 12, the escalation
+ * held, requests 2 and 3). Beside {@code none(...)} a term may be {@code some(<entity> where <condition>)}, which holds
+ * where at least one row of that record meets the condition; the two are read by one pattern ({@link #OTHER}) and one
+ * count ({@link #evalOther}), and a term of either that cannot be counted refuses the move. A comparison of a condition
+ * may be {@code <attribute> before today}, which holds where the attribute holds a day before the move's own day,
+ * compared as a date is stored, year first ({@code yyyy-MM-dd}), and never where it is empty; or
+ * {@code <attribute> not before today}, its negation, which holds on an empty date. The move's day is the day of its
+ * one reading of the clock ({@link #stampFor}: the moment an engine hands in, else {@link #stampNow}) in the clock's
+ * zone - for the platform's clock, {@code Clock.systemDefaultZone()}, the JVM's default time zone - the day the source
+ * {@code today} writes; a {@code related} line's condition reads the same day. An expression with neither, and a
+ * condition with no comparison with today, are read exactly as before.
+ *
  * <p><b>A move withheld from its requester, and the name a move writes</b> (1.6.0;
  * METHOD-2026-10-16-01, construct 2). A line of {@code withheld} ({@code action>attribute}) names
  * the record's attribute holding who asked for it: the guard refuses the move to that person,
@@ -217,7 +229,7 @@ public class TransitionGuard extends DefaultApplicationPlugin {
     }
 
     public String getName() { return "Lifecycle Transition Guard"; }
-    public String getVersion() { return "1.11.0"; }
+    public String getVersion() { return "1.12.0"; }
     public String getDescription() { return "Drives StatusManager transitions from a form action (generated from the L1 model)."; }
     public String getLabel() { return "Lifecycle Transition Guard"; }
     public String getClassName() { return getClass().getName(); }
@@ -654,8 +666,8 @@ public class TransitionGuard extends DefaultApplicationPlugin {
                     throw new InvalidTransitionException(current, target,
                             "'" + actor + "' is the record's " + held + " and may not make this move");
             }
-            String guardFail = guardExpr.isEmpty() ? null
-                    : evalGuard(guardExpr, row, recordId, properties, dao);
+            String guardFail = guardExpr.isEmpty() ? null       // 1.12.0: the move's own day, for `before today`
+                    : evalGuard(guardExpr, row, recordId, properties, dao, at.toLocalDate().toString());
             if (guardFail != null)
                 throw new InvalidTransitionException(current, target, guardFail);
             sm.apply(entity, row, statusField, recordId, target,
@@ -824,10 +836,15 @@ public class TransitionGuard extends DefaultApplicationPlugin {
 
     // ------------------------------------------ another record's rows (METHOD-2026-10-08-11)
 
-    static final Pattern NONE = Pattern.compile("^none\\((\\S+) where (.+)\\)$");
+    /**
+     * A term over another record's rows (1.12.0): {@code none(<entity> where <condition>)}, which holds where no row
+     * meets the condition, or its counterpart {@code some(...)}, which holds where at least one does. Group 1 is the
+     * word, 2 the record, 3 the condition. Read for both by {@link #evalOther}, and by MoveRefusal.
+     */
+    static final Pattern OTHER = Pattern.compile("^(none|some)\\((\\S+) where (.+)\\)$");
     static final String WORD = "[A-Za-z0-9_.\\-]+";
     static final Pattern CMP = Pattern.compile("^([A-Za-z0-9_]+) (?:(=|!=) (" + WORD + ")"
-            + "|(in|not in) \\(([^()]*)\\)|(is null|is not null))$");
+            + "|(in|not in) \\(([^()]*)\\)|(is null|is not null)|(before today|not before today))$");
 
     /**
      * A move's guard: one or more terms joined by {@code and}. An expression with no
@@ -835,24 +852,49 @@ public class TransitionGuard extends DefaultApplicationPlugin {
      * term is asked in turn, and the first that fails refuses the move.
      */
     String evalGuard(String expr, FormRow row, String recordId, Map properties, FormDataDao dao) {
+        return evalGuard(expr, row, recordId, properties, dao, null);
+    }
+
+    /**
+     * A move's guard (1.12.0), with {@code today} the move's own day ({@code yyyy-MM-dd}, the clock's zone), which a
+     * comparison {@code before today} reads; where it is null, such a comparison cannot be read and refuses the move.
+     */
+    String evalGuard(String expr, FormRow row, String recordId, Map properties, FormDataDao dao, String today) {
         List<String> terms = andTerms(expr);
         boolean counts = false;
-        for (String t : terms) counts |= t.startsWith("none(");
+        for (String t : terms) counts |= isOther(t);
         if (!counts) return evalTerm(expr, row);
         for (String t : terms) {
-            String fail = t.startsWith("none(") ? evalNone(t, row, recordId, properties, dao)
-                                                : evalTerm(t, row);
+            String fail = isOther(t) ? evalOther(t, row, recordId, properties, dao, today)
+                                     : evalTerm(t, row);
             if (fail != null) return fail;
         }
         return null;
     }
 
-    /** {@code none(<entity> where <condition>)}: null when no row meets it; fail-closed. */
+    /** A term over another record's rows (1.12.0): one that begins {@code none(} or {@code some(}. */
+    static boolean isOther(String term) {
+        String t = term == null ? "" : term.trim();
+        return t.startsWith("none(") || t.startsWith("some(");
+    }
+
+    /** {@code none(<entity> where <condition>)}: null when no row meets it; fail-closed. As before 1.12.0. */
     String evalNone(String term, FormRow row, String recordId, Map properties,
                     FormDataDao dao) {
-        Matcher m = NONE.matcher(term.trim());
+        return evalOther(term, row, recordId, properties, dao, null);
+    }
+
+    /**
+     * A term over another record's rows (1.12.0), read for both words by one count: {@code none(...)} holds where no
+     * row meets the condition, {@code some(...)} where at least one does. Null where it holds, else the failure, in the
+     * same words for both ({@code guard failed: <term> (<n> row(s) of <record>)}); fail-closed for both: a term that
+     * cannot be read or counted refuses.
+     */
+    String evalOther(String term, FormRow row, String recordId, Map properties, FormDataDao dao, String today) {
+        Matcher m = OTHER.matcher(term.trim());
         if (!m.matches()) return "guard unparseable: '" + term + "'";
-        String other = m.group(1);
+        boolean some = "some".equals(m.group(1));
+        String other = m.group(2);
         String[] place = record(properties, other);
         if (place == null)
             return "guard '" + term + "': the guard is not told where '" + other + "' is kept (records)";
@@ -860,7 +902,7 @@ public class TransitionGuard extends DefaultApplicationPlugin {
         if (self.isEmpty())
             return "guard '" + term + "': the record has no " + str(properties, "thisKey") + " to compare";
         List<Object> params = new ArrayList<Object>();
-        String cond = condition(m.group(2), self, params);
+        String cond = condition(m.group(3), self, today, params);
         if (cond == null) return "guard unparseable: '" + term + "'";
         Long n;
         try {
@@ -870,7 +912,8 @@ public class TransitionGuard extends DefaultApplicationPlugin {
             return "guard '" + term + "' could not be counted: " + e.getMessage();
         }
         if (n == null) return "guard '" + term + "' could not be counted";
-        return n == 0L ? null : "guard failed: " + term + " (" + n + " row(s) of " + other + ")";
+        boolean holds = some ? n > 0L : n == 0L;
+        return holds ? null : "guard failed: " + term + " (" + n + " row(s) of " + other + ")";
     }
 
     /**
@@ -893,7 +936,7 @@ public class TransitionGuard extends DefaultApplicationPlugin {
                 if (self.isEmpty())
                     throw new IllegalStateException("the record has no " + str(properties, "thisKey"));
                 List<Object> params = new ArrayList<Object>();
-                String cond = condition(p[2].trim(), self, params);
+                String cond = condition(p[2].trim(), self, m.at.toLocalDate().toString(), params);   // 1.12.0
                 if (cond == null) throw new IllegalStateException("unparseable: '" + p[2] + "'");
                 FormRowSet rows = dao.find(place[0], place[1], cond, params.toArray(),
                         null, null, null, null);
@@ -950,6 +993,16 @@ public class TransitionGuard extends DefaultApplicationPlugin {
      * values appended to {@code params} (positional, ?1 ...), or null where it cannot be read.
      */
     static String condition(String cond, String self, List<Object> params) {
+        return condition(cond, self, null, params);
+    }
+
+    /**
+     * The condition as above (1.12.0), with {@code today} the move's own day ({@code yyyy-MM-dd}):
+     * {@code <column> before today} holds where the column holds a day before it, compared as a date is stored, year
+     * first, and never where it is empty; {@code <column> not before today} where it holds that day or a later one, or
+     * is empty. Where {@code today} is null or empty such a comparison cannot be read, and the condition is null.
+     */
+    static String condition(String cond, String self, String today, List<Object> params) {
         StringBuilder sb = new StringBuilder("WHERE ");
         boolean first = true;
         for (String part : andTerms(cond)) {
@@ -972,9 +1025,16 @@ public class TransitionGuard extends DefaultApplicationPlugin {
                 }
                 c = "in".equals(m.group(4)) ? col + " IN (" + q + ")"
                         : "(" + col + " NOT IN (" + q + ") OR " + col + " IS NULL)";
-            } else {
+            } else if (m.group(6) != null) {
                 c = "is null".equals(m.group(6)) ? "(" + col + " IS NULL OR " + col + " = '')"
                         : "(" + col + " IS NOT NULL AND " + col + " <> '')";
+            } else {
+                if (today == null || today.trim().isEmpty()) return null;     // 1.12.0: no day to compare with
+                params.add(today.trim());
+                int i = params.size();
+                c = "before today".equals(m.group(7))
+                        ? "(" + col + " IS NOT NULL AND " + col + " <> '' AND " + col + " < ?" + i + ")"
+                        : "(" + col + " IS NULL OR " + col + " = '' OR " + col + " >= ?" + i + ")";
             }
             sb.append(first ? "" : " AND ").append(c);
             first = false;

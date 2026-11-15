@@ -5,7 +5,7 @@
     { "name": "tableName", "label": "Table name", "type": "textfield" },
     { "name": "statusField", "label": "Status field", "type": "textfield", "value": "status" },
     { "name": "actionField", "label": "Action field", "type": "textfield", "value": "_action" },
-    { "name": "transitions", "label": "Transitions (action>to>nowFields>guard>process | ...); a now field marked @date is written as the day alone; a guard is terms joined by 'and', a term none(<entity> where <condition>) counting another record's rows", "type": "textarea" },
+    { "name": "transitions", "label": "Transitions (action>to>nowFields>guard>process | ...); a now field marked @date is written as the day alone; a guard is terms joined by 'and', a term none(<entity> where <condition>) or some(<entity> where <condition>) counting another record's rows; a condition may compare a date with the move's day (before today, not before today)", "type": "textarea" },
     { "name": "records", "label": "Other records a guard counts or a move sets, one line each (entity>form>table)", "type": "textarea" },
     { "name": "thisKey", "label": "The record's attribute that 'this' stands for in a condition (empty: its row id)", "type": "textfield" },
     { "name": "related", "label": "Columns set on a related record's rows after an applied move, one line each (action>entity>condition>column=moment|today|'word',...)", "type": "textarea" },

@@ -61,8 +61,14 @@
          guard writes for the move (the record, the act, the history entries and alerts, the rows a `related` line sets and
          the status event) is that instant and the guard reads no clock; where it is absent the guard reads its clock once, as
          before; where it is present and does not parse the move is refused by name and nothing is written. A minor step: no
-         configuration key added, nothing a configuration says reads otherwise. -->
-    <version>1.11.0</version>
+         configuration key added, nothing a configuration says reads otherwise.
+         1.12.0 (METHOD-2026-11-05-97, R55; MT-DM's wave 12, G-a and G-e): a guard term some(<entity> where <condition>),
+         the counterpart of none(...), read by one pattern and one count with it; a condition's comparison
+         <attribute> before today and not before today, against the day of the move's own reading of the clock, in its zone;
+         and MoveRefusal's `requires`, the move's requirement judged before the save as the root guard judges it, writing
+         the refusal's history rows with who asked. A minor step: one validator key added (requires), and nothing a
+         configuration without the new term, comparison or key says reads otherwise. -->
+    <version>1.12.0</version>
     <packaging>bundle</packaging>
     <name>joget-transition-guard</name>
     <description>Generic config-driven lifecycle transition guard (form post-processor -> StatusManager).</description>
