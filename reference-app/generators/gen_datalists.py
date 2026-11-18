@@ -52,6 +52,17 @@ FormOptionsBinder over the list's form (none for a fixed list), and `words`, the
 list). A formatter without `words` is written exactly as 0.14.0 wrote it (test_gen_datalists_via_words.py). See
 worded_format.
 
+0.16.0 (METHOD-2026-11-05-93, R53; MT-DM's request of 11 November 2026): a column's formatter may be `file`, a column
+whose cell holds the name of a file a form's file field stored. It is written through the platform's BeanShellFormatter,
+drawn as HTML, whose script draws a link to the platform's download address for that form, record and file where the row
+holds a name, the record's id (`record`, a column of the row) and a form the column may open (`form`; or `form_from`, a
+column of the row naming the form, with `forms`, the forms it may name), and the stored value, escaped for HTML, with no
+link everywhere else. The script reads the stored name from the row, not from the value the platform hands a formatter of
+a column drawn as HTML, which StringUtil.stripHtmlRelaxed has changed where the name holds `<` or `&`. A spec without a
+column of type `file` is written exactly as 0.15.0 wrote it
+(test_gen_datalists_file_column.py, which also runs the script on the installation's own BeanShellFormatter). See
+file_format.
+
 Usage: gen_datalists.py <spec_dir> <out_dir>
 """
 import json
@@ -269,6 +280,103 @@ def currency_format(fmt):
             "properties": {"script": script}}
 
 
+def _html_attr(var: str) -> str:
+    """0.16.0: the BeanShell expression that writes the text held in the script's variable `var` into HTML, as text or as an
+    attribute's value in double quotes: `&`, `<`, `>`, `"` and `'` as their entities, `&` first."""
+    return (var + '.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;")'
+            '.replace("\\"","&quot;").replace("\'","&#39;")')
+
+
+def _url_part(expr: str) -> str:
+    """0.16.0: the BeanShell expression that writes the text `expr` gives into one part of an address, as the platform's
+    ImageFormatter encodes a file's name (wflow-core 9.0.7, ImageFormatter.format, offsets 303-314): URLEncoder.encode(name,
+    "UTF8"), then every `+` replaced by `%20`."""
+    return 'java.net.URLEncoder.encode(' + expr + ',"UTF8").replaceAll("\\\\+","%20")'
+
+
+def file_format(fmt, name):
+    """0.16.0 (METHOD-2026-11-05-93, R53; MT-DM's request of 11 November 2026): a column `name` whose cell holds the name of a
+    file stored by a form's file field, drawn as a link that opens it.  The platform's own BeanShellFormatter runs the script
+    for each row (it binds `datalist`, `column`, `row` and `value`; jw-enterprise-plugins 9.0.7).  The script reads the stored
+    name from the row by the column's name (DataListService.evaluateColumnValueFromRow, as the platform's ImageFormatter reads
+    a row's id; then SecurityUtil.decrypt, as DataListDecorator.formatColumn does at offset 42), and not from `value`: for a
+    column drawn as HTML the platform hands its formatters the value stripped by StringUtil.stripHtmlRelaxed (formatColumn,
+    offsets 124-140), which changes a name holding `<` or `&`; `value` is read only where the row gives nothing.  Where the
+    row holds a file's name, the record's id (the spec's `record`, a column of the row) and a form the column may open (the
+    spec's `form`; or the spec's `form_from`, a column of the row that names the form, which must be one of the spec's
+    `forms`), the cell is a link to the platform's download address, built as the platform builds it: the context path from
+    the current request (WorkflowUtil.getHttpServletRequest), the app's id and version from the current app
+    (AppUtil.getCurrentAppDefinition), then `/web/client/app/<app>/<version>/form/download/<form>/<record>/<name>.` - the six
+    parts of the platform's ImageFormatter (constant #299) and the `.` its own file field writes after the name (FileUpload,
+    constant #792), which the address's controller takes off again (AppWebController.downloadUploadedFile, offsets 142-166);
+    each part URL-encoded as the platform encodes a file's name (_url_part), the address and the name escaped for the HTML
+    they stand in (_html_attr), opened in a new window (`target="_blank"`).  A cell that holds several names joined by `;`,
+    as a file field stores several files, gives one link for each, joined by ", ".  Everywhere else - an empty name, an empty
+    record id, a form the column may not open, no current request or no current app (an export), or any failure of the
+    script - the cell is drawn as it is stored, escaped for HTML, and with no link.  The values the spec names, and the
+    column's name, are written into the script as BeanShell strings (_java_str).  A spec that names neither `form` nor
+    `form_from`, both, `forms` beside `form`, `form_from` without `forms`, or no `record`, is refused."""
+    record = fmt.get("record")
+    form, form_from, forms = fmt.get("form"), fmt.get("form_from"), fmt.get("forms")
+    if not isinstance(record, str) or not record:
+        raise ValueError("a file column's `record` names the column of the row that holds the record's id in the form's "
+                         "table, not %r" % (record,))
+    if (form is None) == (form_from is None):
+        raise ValueError("a file column names its form by `form` or by `form_from` (a column of the row), one of the two, "
+                         "not form=%r and form_from=%r" % (form, form_from))
+    if form is not None:
+        if not isinstance(form, str) or not form:
+            raise ValueError("a file column's `form` is a form's id, not %r" % (form,))
+        if forms is not None:
+            raise ValueError("`forms` is the key of a file column whose form comes from a column of the row (`form_from`), "
+                             "and this column names its form by `form`")
+        allowed = [form]
+        form_of_row = "Object fo = " + _java_str(form) + ";"
+    else:
+        if not isinstance(form_from, str) or not form_from:
+            raise ValueError("a file column's `form_from` names the column of the row that holds the form's id, not %r"
+                             % (form_from,))
+        if not isinstance(forms, list) or not forms or not all(isinstance(x, str) and x for x in forms):
+            raise ValueError("a file column whose form comes from a column of the row (`form_from`) lists with `forms` the "
+                             "forms that column may name, not %r" % (forms,))
+        allowed = list(forms)
+        form_of_row = ("Object fo = org.joget.apps.datalist.service.DataListService.evaluateColumnValueFromRow(row,"
+                       + _java_str(form_from) + ");")
+    script = (
+        'String v = (value==null)?"":value.toString();'
+        'try {'
+        'Object so = org.joget.apps.datalist.service.DataListService.evaluateColumnValueFromRow(row,' + _java_str(name) + ');'
+        'if (so != null) v = org.joget.commons.util.SecurityUtil.decrypt(so.toString());'
+        '} catch (Exception x) {}'
+        'String e = ' + _html_attr("v") + ';'
+        'try {'
+        'java.util.Set fs = new java.util.HashSet();' + "".join("fs.add(%s);" % _java_str(x) for x in allowed) +
+        'Object ro = org.joget.apps.datalist.service.DataListService.evaluateColumnValueFromRow(row,' + _java_str(record) + ');'
+        'String id = (ro==null)?"":ro.toString().trim();' + form_of_row +
+        'String f = (fo==null)?"":fo.toString().trim();'
+        'if (v.trim().equals("") || id.equals("") || !fs.contains(f)) return e;'
+        'rq = org.joget.workflow.util.WorkflowUtil.getHttpServletRequest();'
+        'ad = org.joget.apps.app.service.AppUtil.getCurrentAppDefinition();'
+        'if (rq == null || ad == null) return e;'
+        'String b = rq.getContextPath() + "/web/client/app/" + ' + _url_part("ad.getAppId()") + ' + "/" + '
+        + _url_part("ad.getVersion().toString()") + ' + "/form/download/" + ' + _url_part("f") + ' + "/" + '
+        + _url_part("id") + ' + "/";'
+        'StringBuilder o = new StringBuilder();'
+        'String[] ps = v.split(";");'
+        'for (int i = 0; i < ps.length; i++) {'
+        'String p = ps[i];'
+        'if (p.trim().equals("")) continue;'
+        'String h = b + ' + _url_part("p") + ' + ".";'
+        'if (o.length() > 0) o.append(", ");'
+        'o.append("<a href=\\"" + ' + _html_attr("h") + ' + "\\" target=\\"_blank\\">" + ' + _html_attr("p") + ' + "</a>");'
+        '}'
+        'if (o.length() == 0) return e;'
+        'return o.toString();'
+        '} catch (Exception x) { return e; }')
+    return {"className": "org.joget.plugin.enterprise.BeanShellFormatter",
+            "properties": {"script": script}}
+
+
 def col(idx, name, label, fmt=None, action=None, render_html=False):
     """Full canonical column shape — ALWAYS sortable; label cleaned of provenance leaks."""
     return {"name": name, "id": f"column_{idx}", "label": clean_label(label), "hidden": "false",
@@ -445,6 +553,9 @@ def main():
                     cols.append(col(i, c["id"], c["label"], date_format(fmt), action))
                 elif fmt and fmt.get("type") == "currency":
                     cols.append(col(i, c["id"], c["label"], currency_format(fmt), action))
+                elif fmt and fmt.get("type") == "file":
+                    # 0.16.0 (R53): a stored file's name drawn as the link that opens it (file_format), as HTML
+                    cols.append(col(i, c["id"], c["label"], file_format(fmt, c["id"]), action, render_html=True))
                 else:
                     cols.append(col(i, c["id"], c["label"], None, action, bool(c.get("renderHtml"))))
             if d["binder"].get("type") == "jdbc":  # sanctioned raw-SQL slot (P3)

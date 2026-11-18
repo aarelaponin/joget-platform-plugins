@@ -33,6 +33,15 @@ import org.joget.commons.util.LogUtil;
  *              whenField|whenEquals|requiredFields(csv)|message
  *            The message is last and is taken verbatim to end of line, so it may contain
  *            pipes; the first three may not (the projector refuses a rule that would).
+ *            1.1.0 (joget-spec-kit R54, METHOD-2026-11-05-95): a line of `rules` that begins
+ *            `!refuse|` is a REFUSAL, of six fields:
+ *              !refuse|whenField|whenEquals|field|refusedValues(csv)|message
+ *            "When this action is taken, this field may not hold one of these values." It refuses
+ *            where the value given for `field` (the request, else the element, else the stored
+ *            row - valueOf) equals one of the refused values, letter case aside, and says the
+ *            message on that field, before anything is saved. An empty value is the requirement
+ *            rule's question, not this line's. A rule of 1.0.0 never begins `!refuse|` (its first
+ *            field is a field id), so every such line is read exactly as before.
  *   exists : one rule per line, EIGHT fields — the cross-record precondition:
  *              whenField|whenEquals|form|table|theirAttr|ourAttr|where|message
  *            "When this action is taken, a row must EXIST over there." Refuses when the
@@ -69,6 +78,9 @@ public class RequireGuard extends FormValidator {
 
     private static final String CLASS_NAME = RequireGuard.class.getName();
 
+    /** 1.1.0: the first field of a refusal line of `rules`, with its separator. */
+    static final String REFUSE_LINE = "!refuse|";
+
     @Override
     public String getName() {
         return "Require Guard";
@@ -76,7 +88,7 @@ public class RequireGuard extends FormValidator {
 
     @Override
     public String getVersion() {
-        return "1.0.0";
+        return "1.1.0";
     }
 
     @Override
@@ -245,6 +257,54 @@ public class RequireGuard extends FormValidator {
         return ok;
     }
 
+    /**
+     * 1.1.0 (joget-spec-kit R54, METHOD-2026-11-05-95): a refusal line of `rules`,
+     * {@code !refuse|whenField|whenEquals|field|refusedValues(csv)|message}. When the action is
+     * taken and the value given for {@code field} (valueOf: the request, else the element on the
+     * form, else the stored row) equals one of the refused values, letter case aside, the save is
+     * refused on that field in the line's words, before anything is stored. An empty value is not
+     * this line's question: the requirement rule of the same validation refuses it, in the same
+     * words, so a person never reads two refusals for one field. A malformed line is skipped, as a
+     * malformed requirement rule is (fail-open, logged).
+     */
+    private boolean checkRefused(String line, Form form, FormData data, Element element) {
+        String[] p = line.trim().split("\\|", 6);
+        if (p.length < 6) {
+            LogUtil.warn(CLASS_NAME, "require-guard: malformed refusal '" + line + "' — skipping");
+            return true;
+        }
+        String whenField = p[1].trim();
+        String whenEquals = p[2].trim();
+        String field = p[3].trim();
+        String message = p[5].trim();
+        List<String> refused = new ArrayList<String>();
+        for (String r : p[4].split(",")) {
+            if (!r.trim().isEmpty()) {
+                refused.add(r.trim());
+            }
+        }
+        if (whenField.isEmpty() || field.isEmpty() || refused.isEmpty()) {
+            LogUtil.warn(CLASS_NAME, "require-guard: refusal with no condition, no field or no value — skipping");
+            return true;
+        }
+        if (!whenEquals.equalsIgnoreCase(valueOf(whenField, form, data, element))) {
+            return true;                // not this action — nothing to say
+        }
+        String given = valueOf(field, form, data, element);
+        // an empty value equals no refused value (each is a value, empty ones dropped above): it is the requirement
+        // rule's question, in its own words
+        for (String r : refused) {
+            if (r.equalsIgnoreCase(given)) {
+                Element el = FormUtil.findElement(field, form, data);
+                String errorId = FormUtil.getElementParameterName(el != null ? el : element);
+                data.addFormError(errorId, message.isEmpty()
+                        ? "This value is not accepted for the selected action." : message);
+                return false;
+            }
+        }
+        return true;
+    }
+
     @Override
     public boolean validate(Element element, FormData data, String[] values) {
         String rulesCfg = (String) getProperty("rules");
@@ -268,6 +328,10 @@ public class RequireGuard extends FormValidator {
         }
         for (String line : rulesCfg.split("\\r?\\n")) {
             if (line == null || line.trim().isEmpty()) {
+                continue;
+            }
+            if (line.trim().startsWith(REFUSE_LINE)) {
+                ok = checkRefused(line, form, data, element) && ok;     // 1.1.0: a refusal line
                 continue;
             }
             String[] parts = line.split("\\|", 4);

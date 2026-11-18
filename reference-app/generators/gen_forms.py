@@ -42,6 +42,13 @@ def validator(field):
     req = bool(field.get("required"))
     numeric = bool(field.get("storeNumeric"))
     if not req and not numeric:
+        if field.get("required_mark"):
+            # joget-spec-kit R54 (METHOD-2026-11-05-95): the platform's required mark and no refusal - the
+            # BeanShellValidator's decoration (getElementDecoration returns its `decoration`) and a script that refuses
+            # nothing, on a field whose empty value another validator (the form root's RequireGuard) refuses in its own
+            # words, so that a person reads one refusal. Absent the key, every field is written as before.
+            return {"className": "org.joget.apps.form.lib.BeanShellValidator",
+                    "properties": {"script": "return true;", "decoration": "*"}}
         return dict(V_NONE)
     return {"className": "org.joget.apps.form.lib.DefaultValidator",
             "properties": {"mandatory": "true" if req else "",

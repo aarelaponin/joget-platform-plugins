@@ -11,10 +11,10 @@
     </parent>
     <groupId>com.fiscaladmin.joget</groupId>
     <artifactId>joget-require-guard</artifactId>
-    <version>1.0.0</version>
+    <version>1.1.0</version>
     <packaging>bundle</packaging>
     <name>joget-require-guard</name>
-    <description>Conditional-requirement form validator: when a field holds a given value, named fields must be present (entities[].validations).</description>
+    <description>Conditional-requirement form validator: when a field holds a given value, named fields must be present, and (1.1.0) a named field may not hold a refused value (entities[].validations).</description>
     <build>
         <plugins>
             <plugin>

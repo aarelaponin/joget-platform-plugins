@@ -65,6 +65,39 @@
 # and a bump would refuse every build pinned to 0.12.0. The bundle moves 1.0.0 -> 1.1.0, a minor version for optional
 # keys, as this file moves a plugin for them ("8.1-SNAPSHOT -> 8.2.0 (minor: optional keys added; METHOD-2026-09-28-01)"):
 # without `wordsBinder` and `words` it words every value exactly as 1.0.0 does.
+# gen_datalists 0.16.0 (METHOD-2026-11-05-93, R53, 14 Nov 2026; MT-DM's request of 11 Nov 2026, UC-DM-12-S04.L05): a
+# column's formatter may be `file` - a column whose cell holds the name of a file a form's file field stored, with `record`
+# (the column of the row holding the record's id) and `form`, or `form_from` (a column of the row naming the form) with
+# `forms` (the forms it may name). It is written as the platform's BeanShellFormatter, drawn as HTML: where the row holds a
+# name, an id and a form the column may open, a link to the platform's download address, built as the platform's
+# ImageFormatter builds it (<context>/web/client/app/<app>/<version>/form/download/<form>/<record>/<name>, each part
+# URL-encoded as it encodes a file's name) with the `.` the platform's file field writes after the name; everywhere else
+# the stored value, escaped for HTML, and no link. The stored name is read from the row (the value the platform hands a
+# formatter of a column drawn as HTML is stripped by StringUtil.stripHtmlRelaxed, which changes a name holding `<` or `&`).
+# A spec without such a column is emitted byte for byte as before
+# (test_gen_datalists_file_column.py, which also runs the script on the installation's own BeanShellFormatter).
+# registry_version stays 0.12.0, by this file's own rule for an optional key, as joget-form-prefill 1.1.0 states it:
+# "registry_version stays 0.11.0: a spec carrying neither key is emitted byte for byte as before (test_gen_second_pass.py),
+# and a bump would refuse every build pinned to 0.11.0" (applied to gen_datalists 0.13.0, 0.14.0 and 0.15.0 above): every
+# list without the key is unchanged, and a bump would refuse every build pinned to 0.12.0. No plugin, no Java.
+#
+# joget-require-guard 1.1.0 and gen_forms's optional `required_mark` (joget-spec-kit METHOD-2026-11-05-95, R54, 13 Nov 2026;
+# MT-DM's wave 12, its requests G-c, G-b and P-d). RequireGuard reads, beside its rule for an empty field, a REFUSAL line of
+# `rules`: `!refuse|whenField|whenEquals|field|refusedValues(csv)|message`, which refuses the save where the value given for
+# `field` (the request, else the element, else the stored row) is one of the refused values, letter case aside, in the
+# message, on that field, before anything is stored; an empty value is left to the requirement rule. A rule line of 1.0.0
+# never begins `!refuse|` (its first field is a field id), so every such line is read exactly as before. The bundle moves
+# 1.0.0 -> 1.1.0 by the rule this library states for its contracts (README.md, "Versioning & the config contract":
+# "Changing a contract key is a **major** bump; adding an optional one is minor; a bug fix is a patch"): the refusal is an
+# added, optional form of the `rules` key, whose config_keys stay [rules, exists]. gen_forms: a field's optional
+# `required_mark` writes the platform's BeanShellValidator with the decoration "*" and the script `return true;` in the
+# field's validator slot - the platform's required mark with no second refusal of the empty value, which the form root's
+# RequireGuard refuses in the validation's words (DefaultValidator's `mandatory` would refuse it again, and the platform
+# joins two errors of one field into one message). A field without the key is emitted byte for byte as before (asserted
+# literally in test_gen_forms_required_mark.py). registry_version stays 0.12.0, by this file's own rule for an optional key
+# (0.11.0's: "registry_version stays 0.11.0: a spec carrying neither key is emitted byte for byte as before ..., and a bump
+# would refuse every build pinned to 0.11.0"; applied to gen_datalists 0.13.0 and 0.14.0 above): every form without the key
+# is unchanged, and a bump would refuse every build pinned to 0.12.0.
 registry_version: 0.12.0  # 0.12.0: A LIST SORTED AS THE PLATFORM READS IT (METHOD-2026-11-05-17,
                           #        6 Nov 2026; MT-DM's hand-off of 5 Nov 2026, items 21, 10, 18).
                           #        Generators only; no plugin, no Java. gen_datalists:
@@ -335,7 +368,9 @@ plugins:
   - id: joget-require-guard
     module: plugins/joget-require-guard
     artifact: com.fiscaladmin.joget:joget-require-guard
-    version: 1.0.0
+    version: 1.1.0                  # 1.1.0 (joget-spec-kit METHOD-2026-11-05-95, R54, 13 Nov 2026): a refusal line of
+                                    # `rules` (`!refuse|...`), an added optional form of the key - minor, by README.md's
+                                    # rule; every 1.0.0 line read as before; see the note above registry_version.
     category: foundation
     tier: G
     status: active
@@ -360,7 +395,10 @@ plugins:
         `exists` with an EMPTY whenField is UNCONDITIONAL — the precondition holds on every
         save, which is what a REFERENTIAL rule needs (a create form carries no lc_action to
         condition on). Such a rule skips an empty correlation value: blank is a requiredness
-        question the `rules` leg owns.
+        question the `rules` leg owns. From 1.1.0 a line of `rules` beginning `!refuse|` is a REFUSAL
+        (`!refuse|whenField|whenEquals|field|refusedValues(csv)|message`): when the action is taken, the
+        value given for `field` may not be one of the refused values (letter case aside); an empty value
+        is the requirement rule's. No other line begins so, and every other line is read as in 1.0.0.
     provenance: UB-14b; found by executing registration's t03 (REG-FR-041) against the deployed app rather than reading it
     source_of_truth: this repo
 

@@ -7,7 +7,7 @@
                 "label": "Conditional requirements",
                 "type": "textarea",
                 "required": "False",
-                "description": "One rule per line: whenField|whenEquals|requiredFields(csv)|message. Emitted from the model's entities[].validations \u2014 not hand-authored."
+                "description": "One rule per line: whenField|whenEquals|requiredFields(csv)|message. From 1.1.0 a line may instead be a refusal: !refuse|whenField|whenEquals|field|refusedValues(csv)|message, which refuses the save where the value given for field is one of the refused values (letter case aside), in the message, on that field; an empty value is left to the requirement rule. Emitted from the model's entities[].validations (their require_fields and refuse) \u2014 not hand-authored."
             },
             {
                 "name": "exists",
