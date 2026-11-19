@@ -63,6 +63,12 @@ column of type `file` is written exactly as 0.15.0 wrote it
 (test_gen_datalists_file_column.py, which also runs the script on the installation's own BeanShellFormatter). See
 file_format.
 
+0.17.0 (METHOD-2026-11-05-125, R69; MT-DM's requests 7 and 14 of 16 and 18 November 2026): a custom datalist spec's
+`pageSize` is written as the datalist's `pageSize`, which the platform reads as the list's default page size (0, the
+platform's default, only where the spec gives none, as before); and its `noRows`, the list's own words for no rows, is
+built into the datalist in place of the platform's "Nothing found to display." (see no_rows_style). A spec with neither
+is written exactly as 0.16.0 wrote it (test_gen_datalists_page_size_and_no_rows.py).
+
 Usage: gen_datalists.py <spec_dir> <out_dir>
 """
 import json
@@ -512,14 +518,44 @@ def sort_order(desc) -> str:
     return ORDER_DESC if desc else ORDER_ASC
 
 
+def no_rows_style(dl_id, words):
+    """0.17.0 (METHOD-2026-11-05-125, R69; MT-DM's request 14 of 18 November 2026): the list's own words for no rows,
+    built into the datalist. The platform has no property for them: dataListView.jsp draws displaytag's
+    `basic.msg.empty_list_row`, `<tr class="empty"><td ...>Nothing found to display.</td></tr>`, for every list
+    (wflow-commons displaytag.properties), and DataList (wflow-core 9.0.7) carries no such word. It does draw the list's
+    own styles in the list's `<style>` (`${dataList.styles}`, dataListView.jsp): DataList.getStyles writes, for the
+    prefix FILTER_, `<selector> .dataList#dataList_<id> .filter-cell{<the property BUILDER_GENERATED_FILTER_STYLE>}`
+    (DataList.generateStyle, its recipe `\\u0001 \\u0001{\\u0001}`), and JsonUtil.generateBuilderProperties leaves that
+    property as the datalist gives it where the datalist gives BUILDER_GENERATED_FILTER_CSS. So the property closes that
+    rule and adds two of the list's own: the empty row's cell drawn with no words of its own, and the list's words drawn in
+    their place. The words are a CSS string: a backslash, a quotation mark, a line's end, `<` and `>` escaped, so that
+    no word can close the string or the `<style>` it stands in. Returns the two properties."""
+    w = str(words)
+    esc = (w.replace("\\", "\\\\").replace('"', '\\"').replace("\r\n", "\n").replace("\r", "\n")
+           .replace("\n", "\\A ").replace("<", "\\3C ").replace(">", "\\3E "))
+    sel = f".dataList#dataList_{dl_id} table tbody tr.empty td"
+    style = (f"}}{sel}{{font-size:0;visibility:hidden}}"
+             f"{sel}::before{{content:\"{esc}\";font-size:1rem;visibility:visible;white-space:pre-wrap}}"
+             f".dataList#dataList_{dl_id} .kit-no-rows{{")
+    return {"BUILDER_GENERATED_FILTER_CSS": "", "BUILDER_GENERATED_FILTER_STYLE": style}
+
+
 def envelope(dl_id, name, binder, cols, filters, row_actions, order_by="", order=ORDER_ASC,
-             actions=None):
-    return {"id": dl_id, "name": name, "binder": binder, "columns": cols,
-            "filters": filters, "actions": list(actions or []), "rowActions": row_actions,
-            "order": order, "orderBy": order_by, "useSession": "false",
-            "showPageSizeSelector": "true", "pageSize": 0,
-            "pageSizeSelectorOptions": "10,20,30,40,50,100",
-            "buttonPosition": "bothLeft", "checkboxPosition": "left"}
+             actions=None, page_size=None, no_rows=None):
+    """page_size and no_rows: 0.17.0 (METHOD-2026-11-05-125, R69; MT-DM's requests 7 and 14): the spec's `pageSize`,
+    written as the datalist's `pageSize` (0, the platform's own default, only where the spec gives none - the platform
+    reads it as the list's default page size, JsonUtil.parseDataListFromJsonObject: Integer.parseInt, setDefaultPageSize),
+    and the spec's `noRows`, built into the datalist by no_rows_style. A spec with neither is written byte for byte as
+    0.16.0 wrote it."""
+    out = {"id": dl_id, "name": name, "binder": binder, "columns": cols,
+           "filters": filters, "actions": list(actions or []), "rowActions": row_actions,
+           "order": order, "orderBy": order_by, "useSession": "false",
+           "showPageSizeSelector": "true", "pageSize": int(page_size) if page_size else 0,
+           "pageSizeSelectorOptions": "10,20,30,40,50,100",
+           "buttonPosition": "bothLeft", "checkboxPosition": "left"}
+    if no_rows:
+        out.update(no_rows_style(dl_id, no_rows))
+    return out
 
 
 def main():
@@ -581,7 +617,8 @@ def main():
             las = [list_action(i, a) for i, a in enumerate(d.get("actions", []))]
             dl = envelope(d["id"], d["name"], binder, cols, filters, ras,
                           d.get("sort", {}).get("column", ""),
-                          sort_order(d.get("sort", {}).get("desc")), actions=las)
+                          sort_order(d.get("sort", {}).get("desc")), actions=las,
+                          page_size=d.get("pageSize"), no_rows=d.get("noRows"))
             json.dump(dl, open(os.path.join(out_dir, d["id"] + ".json"), "w"), indent=2)
             count += 1
             print(f"  + {d['id']}.json (custom, {len(cols)} cols, {len(filters)} filters, {len(ras)} drill)")
